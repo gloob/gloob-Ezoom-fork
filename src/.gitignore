@@ -1,0 +1,9 @@
+ezoom_options.c
+ezoom_options.h
+
+build:
+ezoom.lo
+ezoom.o
+ezoom_options.lo
+ezoom_options.o
+libezoom.la
