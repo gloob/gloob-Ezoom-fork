@@ -1,0 +1,49 @@
+Timeline and TODO for the new zoom
+==================================
+
+1. Timeline
+2. Todo
+
+1. Timeline
+===========
+
+This is a very rough estimate and is very likely to change. It is based 
+mostly on Google Summer of Code's important dates. Google Summer of Code
+coding is scheduled to begin on 28th of May, but I expect to start work
+on the skeleton prior to that, as it is not directly related to the GSoC
+project. 
+
+June 1st - A working skeleton of a zoom plugin
+June 10th - Input enabled engine, no regressions from Beryl's inputzoom.c
+June 15th - Engine support for positioning the zoom
+June 25th - Cursor awareness
+June 29th - Zoom follows cursor
+
+July 9th - Mid term evaluation begins
+July 15th - Follow focus
+July 15th to 25th - Tune existing functionality.
+July 30th - Fit window to zoom and fit zoom to window
+
+August 1th to 20th - Polishing, testing, bug squashing and work on integration
+                     with the community releases.
+
+August 20th - Final evaluation begins
+
+2. Todo
+=======
+This will be a working-list and will be added to and removed from during the
+main development process (In other words; During the GSoC project's lifetime,
+the summer of 2007).
+
+  - Get a working buildsystem for multiple source files
+  - Document the code structure
+  - Initial dummy-build
+  - Initial engine design, specific functions.
+  - Initial design for AT-SPI integration.
+  - Actual zoom in the inputzoom engine.
+  - Input in the inputzoom engine.
+  - AT-SPI integration
+  - Natural and generic way of handeling the cursor
+  - Code to fit to a generic area
+  - Code to fit zoom to a window
+  - Code to fit a window to a specific zoom level

@@ -1,0 +1,57 @@
+Concept of the new zoom plugin
+==============================
+
+1. Overview
+2. Major goals
+3. Engines
+
+1. Overview
+===========
+The basic idea is to make this a lasting solution. Beryl's inputzoom.c offers
+input enabled zoom even though there is no input redirection/transformation,
+but will be redundant when input redirection/transformation is available. 
+So to avoid having to re-do this work when input transformation/redirection
+is available, a new plugin which will be able to work with multiple 
+technologies is necesarry.
+
+This zoom plugin will offer a system based on engines. An engine can be 
+input transformation zoom, or non-input transformation (Beryl's inputzoom),
+or any other thing people can come up with to alter how zoom is driven.
+
+It will also fetch data about the cursor, so zoom can follow the cursor,
+based on AT-SPI. This will be transparent to the engines: The engines will
+provide a method to center focus on a given area. And one to set focus to
+best match a given area, like a newly popped up window. 
+
+2. Major goals
+==============
+* Generic code design to allow for future extensibility, specially with
+  regards to input transformation/redirection.
+
+* Input enabled.
+
+* The ability to follow cursor focus.
+
+* Follow focus
+
+* Fit zoom to an area (window)
+
+* Fit window to zoom
+
+Avoiding to rewrite code, even in the future, is also an important goal, along
+with proper documentation of how the plugin works. There are many cool things
+I expect people will want to do with zoom when input transformation is 
+available, and to make sure that this plugin doesn't go obsolete, it is 
+important to be able to support those features.
+
+3. Engines
+==========
+A zoom engine is the method of zooming. The first engine will be the
+inputzoom.c from Beryl, as it is the only zoom engine available today for 
+Compiz that lets us keep input enabled. Changing this should be fairly easy,
+without having to redesign other parts of the code. An enginge structure will
+be defined, which each engine must fill. It will contain function pointers to
+various actions and events. These can be paintScreen, but also setZoomCentre(),
+and all of them must be supplied by an engine.
+
+The details of this structure will be updated as the needs become obvious. 
