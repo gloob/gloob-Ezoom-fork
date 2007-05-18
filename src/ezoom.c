@@ -118,8 +118,6 @@ static int ezoomGetVersion(CompPlugin *p, int version)
 
 CompPluginVTable ezoomVTable = {
 	"ezoom",
-	N_("ezoom"),
-	N_("Enhanced zoom plugin"),
 	ezoomGetVersion,
 	0,
 	ezoomInit,
