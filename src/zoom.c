@@ -44,7 +44,7 @@ static int displayPrivateIndex;
 
 typedef struct _ZoomDisplay {
     int		    screenPrivateIndex;
-    HandleEventProc handleEvent;
+    //HandleEventProc handleEvent;
 
     CompOption opt[ZOOM_DISPLAY_OPTION_NUM];
 } ZoomDisplay;
@@ -258,6 +258,49 @@ zoomPreparePaintScreen (CompScreen *s,
 }
 
 static void
+setCenter (CompScreen *s, int x, int y)
+{
+    ZOOM_SCREEN(s);
+
+    CompOutput *o = &s->outputDev[zs->zoomOutput];
+    float zoomFactor = zs->opt[ZOOM_SCREEN_OPTION_ZOOM_FACTOR].value.f;
+
+    zs->xTranslate =
+	((x - o->region.extents.x1) - o->width  / 2) * zs->newZoom /
+	(s->width);
+    zs->yTranslate =
+	((y - o->region.extents.y1) - o->height / 2) * zs->newZoom /
+	(s->height);
+
+    zs->xTranslate /= zs->newZoom;
+    zs->yTranslate /= zs->newZoom;
+    printf("x: %d y: %d currentZoom: %f newZoom: %f xtrans: %f ytrans: %f zoomFactor: %f\n",x,y,zs->currentZoom,zs->newZoom,zs->xTranslate, zs->yTranslate,zoomFactor);
+}
+
+/* Update the mouse position.
+ * Based on the zoom engine in use, we will have to move the zoom area.
+ * This might have to be added to a timer. 
+ */
+static void
+updateMousePosition (CompScreen *s)
+{
+    Window root_return;
+    Window child_return;
+    int rootX, rootY;
+    int winX, winY;
+    unsigned int maskReturn;
+    XQueryPointer (s->display->display, s->root,
+		  &root_return, &child_return,
+		  &rootX, &rootY, &winX, &winY, &maskReturn);
+
+    if (TRUE)//rootX != zs->mouseX || rootY != zs->mouseY)
+    {
+	    setCenter (s, rootX, rootY);
+	    damageScreen (s);
+    }
+}
+
+static void
 zoomDonePaintScreen (CompScreen *s)
 {
     ZOOM_SCREEN (s);
@@ -267,6 +310,7 @@ zoomDonePaintScreen (CompScreen *s)
 	if (zs->currentZoom != zs->newZoom ||
 	    zs->xVelocity || zs->yVelocity || zs->zVelocity)
 	    damageScreen (s);
+	updateMousePosition(s);
     }
 
     UNWRAP (zs, s, donePaintScreen);
@@ -486,7 +530,7 @@ zoomTerminate (CompDisplay     *d,
 
     return FALSE;
 }
-
+/*
 static void
 zoomHandleEvent (CompDisplay *d,
 		 XEvent      *event)
@@ -502,7 +546,6 @@ zoomHandleEvent (CompDisplay *d,
 
 	    if (zs->grabIndex && zs->grabbed)
 	    {
-	    	printf("Hei...\n");
 		GLfloat pointerDx;
 		GLfloat pointerDy;
 
@@ -536,7 +579,7 @@ zoomHandleEvent (CompDisplay *d,
     (*d->handleEvent) (d, event);
     WRAP (zd, d, handleEvent, zoomHandleEvent);
 }
-
+*/
 static void
 zoomUpdateCubeOptions (CompScreen *s)
 {
@@ -649,7 +692,7 @@ zoomInitDisplay (CompPlugin  *p,
 	return FALSE;
     }
 
-    WRAP (zd, d, handleEvent, zoomHandleEvent);
+//    WRAP (zd, d, handleEvent, zoomHandleEvent);
 
     d->privates[displayPrivateIndex].ptr = zd;
 
@@ -664,7 +707,7 @@ zoomFiniDisplay (CompPlugin  *p,
 
     freeScreenPrivateIndex (d, zd->screenPrivateIndex);
 
-    UNWRAP (zd, d, handleEvent);
+//    UNWRAP (zd, d, handleEvent);
 
     compFiniDisplayOptions (d, zd->opt, ZOOM_DISPLAY_OPTION_NUM);
 
