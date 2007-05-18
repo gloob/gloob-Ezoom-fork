@@ -82,6 +82,11 @@ typedef struct _ZoomScreen {
     GLfloat xtrans;
     GLfloat ytrans;
     GLfloat ztrans;
+    
+    int mouseX;
+    int mouseY;
+
+    Bool syncMouse;
 
     XPoint savedPointer;
     Bool   grabbed;
@@ -257,13 +262,18 @@ zoomPreparePaintScreen (CompScreen *s,
     WRAP (zs, s, preparePaintScreen, zoomPreparePaintScreen);
 }
 
+
+/* Sets the center of the zoom area to X,Y.
+ * We have to be able to warp the pointer here: If we are moved by
+ * anything except mouse movement, we have to sync the
+ * mouse pointer. This is to allow input, and is NOT necesarry
+ * when input redirection is available to us.
+ */
 static void
 setCenter (CompScreen *s, int x, int y)
 {
     ZOOM_SCREEN(s);
-
     CompOutput *o = &s->outputDev[zs->zoomOutput];
-    float zoomFactor = zs->opt[ZOOM_SCREEN_OPTION_ZOOM_FACTOR].value.f;
 
     zs->xTranslate =
 	((x - o->region.extents.x1) - o->width  / 2) * zs->newZoom /
@@ -274,7 +284,39 @@ setCenter (CompScreen *s, int x, int y)
 
     zs->xTranslate /= zs->newZoom;
     zs->yTranslate /= zs->newZoom;
-    printf("x: %d y: %d currentZoom: %f newZoom: %f xtrans: %f ytrans: %f zoomFactor: %f\n",x,y,zs->currentZoom,zs->newZoom,zs->xTranslate, zs->yTranslate,zoomFactor);
+
+    if ((x != zs->mouseX || y != zs->mouseY) && zs->syncMouse)
+	warpPointer (s, pointerX - x, pointerY - y);
+}
+
+
+/* Sets the zoom (or scale) level.
+ */
+static void
+setScale(CompScreen *s, float x, float y)
+{
+    float value = x > y ? y : x;
+    ZOOM_SCREEN(s);
+    if (value >= 1.0f) // DEFAULT_Z_CAMERA - (DEFAULT_Z_CAMERA / 10.0f))
+    {
+	value = 1.0f;
+	zs->grabbed = FALSE;
+    } 
+    else 
+    {
+	if (value * DEFAULT_Z_CAMERA < 0.1f)
+	    value = zs->newZoom; 
+
+	if (!zs->grabbed)
+	    zs->zoomOutput = outputDeviceForPoint (s, pointerX, pointerY);
+
+	zs->grabbed = TRUE;
+	zs->grabIndex = 1;
+    }
+
+    zs->newZoom = value;
+    printf("New value: %f\n",value);
+    damageScreen(s);
 }
 
 /* Update the mouse position.
@@ -293,10 +335,20 @@ updateMousePosition (CompScreen *s)
 		  &root_return, &child_return,
 		  &rootX, &rootY, &winX, &winY, &maskReturn);
 
-    if (TRUE)//rootX != zs->mouseX || rootY != zs->mouseY)
+
+    ZOOM_SCREEN(s);
+    if (rootX != zs->mouseX || rootY != zs->mouseY)
     {
+	if (rootX > s->width || rootY > s->height)
+	    return;
+
+	zs->mouseX = rootX;
+	zs->mouseY = rootY;
+	if (zs->syncMouse)
+	{
 	    setCenter (s, rootX, rootY);
 	    damageScreen (s);
+	}
     }
 }
 
@@ -400,48 +452,14 @@ zoomIn (CompDisplay     *d,
 	if (otherScreenGrabExist (s, "zoom", "scale", 0))
 	    return FALSE;
 
-	if (!zs->grabIndex)
-	{
-	    zs->grabIndex = 1; // pushScreenGrab (s, s->normalCursor, "zoom");
+	float zoomFactor = zs->opt[ZOOM_SCREEN_OPTION_ZOOM_FACTOR].value.f;
+	int   x, y;
 
-	    zs->savedPointer.x = pointerX;
-	    zs->savedPointer.y = pointerY;
+	x = getIntOptionNamed (option, nOption, "x", 0);
+	y = getIntOptionNamed (option, nOption, "y", 0);
 
-	    zs->zoomOutput = outputDeviceForPoint (s, pointerX, pointerY);
-	}
-
-	if (zs->grabIndex)
-	{
-	    float zoomFactor = zs->opt[ZOOM_SCREEN_OPTION_ZOOM_FACTOR].value.f;
-	    int   x, y;
-
-	    x = getIntOptionNamed (option, nOption, "x", 0);
-	    y = getIntOptionNamed (option, nOption, "y", 0);
-
-	    zs->grabbed = TRUE;
-
-	    if (zs->newZoom / zoomFactor * DEFAULT_Z_CAMERA >= 0.1f)
-	    {
-		zs->newZoom /= zoomFactor;
-
-		damageScreen (s);
-
-		if (zs->currentZoom == 1.0f)
-		{
-		    CompOutput *o = &s->outputDev[zs->zoomOutput];
-
-		    zs->xTranslate =
-			((x - o->region.extents.x1) - o->width  / 2) /
-			(s->width  * zoomFactor);
-		    zs->yTranslate =
-			((y - o->region.extents.y1) - o->height / 2) /
-			(s->height * zoomFactor);
-
-		    zs->xTranslate /= zs->newZoom;
-		    zs->yTranslate /= zs->newZoom;
-		}
-	    }
-	}
+	setScale (s, zs->newZoom/zoomFactor, zs->newZoom/zoomFactor);
+	setCenter (s, x, y);
     }
 
     return TRUE;
@@ -481,18 +499,7 @@ zoomOut (CompDisplay     *d,
     if (s)
     {
 	ZOOM_SCREEN (s);
-
-	if (zs->grabIndex)
-	{
-	    zs->newZoom *= zs->opt[ZOOM_SCREEN_OPTION_ZOOM_FACTOR].value.f;
-	    if (zs->newZoom > DEFAULT_Z_CAMERA - (DEFAULT_Z_CAMERA / 10.0f))
-	    {
-		zs->grabbed = FALSE;
-		zs->newZoom = 1.0f;
-	    }
-
-	    damageScreen (s);
-	}
+	setScale (s, zs->newZoom * zs->opt[ZOOM_SCREEN_OPTION_ZOOM_FACTOR].value.f, 2.0f);
     }
 
     return TRUE;
@@ -765,6 +772,11 @@ zoomInitScreen (CompPlugin *p,
     zs->grabbed = FALSE;
 
     zs->zoomOutput = 0;
+
+    zs->mouseX = -1;
+    zs->mouseY = -1;
+
+    zs->syncMouse = TRUE;
 
     zs->pointerSensitivity =
 	zs->opt[ZOOM_SCREEN_OPTION_POINTER_SENSITIVITY].value.f *
