@@ -244,7 +244,7 @@ zoomPreparePaintScreen (CompScreen *s,
 		{
 		    zs->xVelocity = zs->yVelocity = 0.0f;
 
-		    removeScreenGrab (s, zs->grabIndex, &zs->savedPointer);
+		    //removeScreenGrab (s, zs->grabIndex, &zs->savedPointer);
 		    zs->grabIndex = FALSE;
 		    break;
 		}
@@ -358,7 +358,7 @@ zoomIn (CompDisplay     *d,
 
 	if (!zs->grabIndex)
 	{
-	    zs->grabIndex = pushScreenGrab (s, s->invisibleCursor, "zoom");
+	    zs->grabIndex = 1; // pushScreenGrab (s, s->normalCursor, "zoom");
 
 	    zs->savedPointer.x = pointerX;
 	    zs->savedPointer.y = pointerY;
@@ -400,7 +400,7 @@ zoomIn (CompDisplay     *d,
 	}
     }
 
-    return FALSE;
+    return TRUE;
 }
 
 static Bool
@@ -418,7 +418,7 @@ zoomInitiate (CompDisplay     *d,
     if (state & CompActionStateInitButton)
 	action->state |= CompActionStateTermButton;
 
-    return FALSE;
+    return TRUE;
 }
 
 static Bool
@@ -451,7 +451,7 @@ zoomOut (CompDisplay     *d,
 	}
     }
 
-    return FALSE;
+    return TRUE;
 }
 
 static Bool
@@ -492,9 +492,7 @@ zoomHandleEvent (CompDisplay *d,
 		 XEvent      *event)
 {
     CompScreen *s;
-
     ZOOM_DISPLAY (d);
-
     switch (event->type) {
     case MotionNotify:
 	s = findScreenAtDisplay (d, event->xmotion.root);
@@ -504,6 +502,7 @@ zoomHandleEvent (CompDisplay *d,
 
 	    if (zs->grabIndex && zs->grabbed)
 	    {
+	    	printf("Hei...\n");
 		GLfloat pointerDx;
 		GLfloat pointerDy;
 
@@ -529,10 +528,10 @@ zoomHandleEvent (CompDisplay *d,
 		damageScreen (s);
 	    }
 	}
+    	break;	
     default:
 	break;
     }
-
     UNWRAP (zd, d, handleEvent);
     (*d->handleEvent) (d, event);
     WRAP (zd, d, handleEvent, zoomHandleEvent);
