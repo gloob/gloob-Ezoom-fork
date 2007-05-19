@@ -158,41 +158,9 @@
 	    </option>
 	</display>
 	<screen>
-	    <option type="bool" name="invert_y">
-		<short>Pointer Invert Y</short>
-		<short xml:lang="ca">Punter inverteix Y</short>
-		<short xml:lang="cs">Pointer Invert Y</short>
-		<short xml:lang="da">Omvendt Y-akse for markør</short>
-		<short xml:lang="de">Y umkehren für Zeiger</short>
-		<short xml:lang="es">Invertir Y en puntero</short>
-		<short xml:lang="fi">Peilaa osoittimen Y-akseli</short>
-		<short xml:lang="fr">Inversion Y du pointeur</short>
-		<short xml:lang="hu">Y mutató invertálása</short>
-		<short xml:lang="it">Inversione puntatore Y</short>
-		<short xml:lang="ja">ポインタ反転Y</short>
-		<short xml:lang="pl">Odwrócenie osi Y dla wskaźnika</short>
-		<short xml:lang="pt">Inverter Y com o Ponteiro</short>
-		<short xml:lang="pt_BR">Inverter Y com o Ponteiro</short>
-		<short xml:lang="ru">Инвертировать для курсора ось Y</short>
-		<short xml:lang="zh_CN">指针反转 Y</short>
-		<short xml:lang="zh_TW">指標反轉 Y 軸</short>
-		<long>Invert Y axis for pointer movement</long>
-		<long xml:lang="ca">Inverteix l'eix Y per al moviment del punter</long>
-		<long xml:lang="cs">Invertovat osu Y pro pohyb ukazatele</long>
-		<long xml:lang="da">Vend Y-aksen for markørbevægelser</long>
-		<long xml:lang="de">Y-Achse für Zeigerbewegung umkehren</long>
-		<long xml:lang="es">Invertir eje Y para movimiento de puntero</long>
-		<long xml:lang="fi">Peilaa osoittimen Y-suuntainen liike</long>
-		<long xml:lang="fr">Insérer l'axe Y pour le mouvement du pointeur</long>
-		<long xml:lang="hu">Y tengely átalakítása a mutató mozgásához</long>
-		<long xml:lang="it">Inverti asse Y per spostamento puntatore</long>
-		<long xml:lang="ja">ポインタ移動用にY 軸を反転させる</long>
-		<long xml:lang="pl">Odwróć oś Y dla ruchu wskaźnika</long>
-		<long xml:lang="pt">Inverter o eixo Y para movimento do ponteiro</long>
-		<long xml:lang="pt_BR">Inverter o eixo Y para movimento do ponteiro</long>
-		<long xml:lang="ru">Инвертировать ось Y для перемещений курсора</long>
-		<long xml:lang="zh_CN">反转 Y 轴（对于指针移动）</long>
-		<long xml:lang="zh_TW">指標移動時反轉 Y 軸</long>
+	    <option type="bool" name="follow_focus">
+		<short>Follow focus</short>
+		<long>Move the zoom area when focus changes</long>
 		<default>false</default>
 	    </option>
 	    <option type="float" name="sensitivity">

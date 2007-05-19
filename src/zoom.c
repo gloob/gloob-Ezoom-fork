@@ -44,12 +44,12 @@ static int displayPrivateIndex;
 
 typedef struct _ZoomDisplay {
     int		    screenPrivateIndex;
-    //HandleEventProc handleEvent;
+    HandleEventProc handleEvent;
 
     CompOption opt[ZOOM_DISPLAY_OPTION_NUM];
 } ZoomDisplay;
 
-#define ZOOM_SCREEN_OPTION_POINTER_INVERT_Y    0
+#define ZOOM_SCREEN_OPTION_FOLLOW_FOCUS        0
 #define ZOOM_SCREEN_OPTION_POINTER_SENSITIVITY 1
 #define ZOOM_SCREEN_OPTION_SPEED	       2
 #define ZOOM_SCREEN_OPTION_TIMESTEP	       3
@@ -262,12 +262,34 @@ zoomPreparePaintScreen (CompScreen *s,
     WRAP (zs, s, preparePaintScreen, zoomPreparePaintScreen);
 }
 
+/* Syncs the center, based on translations, back to the mouse. 
+ * This should be called when doing non-IR zooming and moving the zoom
+ * area based on events other than mouse movement.
+ */
+static void
+syncCenterToMouse (CompScreen *s)
+{
+    ZOOM_SCREEN(s);
+    CompOutput *o = &s->outputDev[zs->zoomOutput];
+
+    float x = (float) ((zs->xTranslate * s->width) + (o->width / 2) + o->region.extents.x1);
+    float y = (float) ((zs->yTranslate * s->height) + (o->height / 2) + o->region.extents.y1);
+
+    if (((int)x != zs->mouseX || (int)y != zs->mouseY) && zs->grabbed)
+    {
+	warpPointer (s, x - pointerX , y - pointerY );
+	zs->mouseX = x;
+	zs->mouseY = y;
+    }
+    // printf("Warp: x: %f y: %f transX: %f transY: %f newZoom: %f\n", x, y, zs->xTranslate, zs->yTranslate, zs->newZoom);
+}
 
 /* Sets the center of the zoom area to X,Y.
  * We have to be able to warp the pointer here: If we are moved by
  * anything except mouse movement, we have to sync the
  * mouse pointer. This is to allow input, and is NOT necesarry
  * when input redirection is available to us.
+ * The center is not the center of the screen. This is the target-center.
  */
 static void
 setCenter (CompScreen *s, int x, int y)
@@ -276,19 +298,32 @@ setCenter (CompScreen *s, int x, int y)
     CompOutput *o = &s->outputDev[zs->zoomOutput];
 
     zs->xTranslate =
-	((x - o->region.extents.x1) - o->width  / 2) * zs->newZoom /
+	(float) ((x - o->region.extents.x1) - o->width  / 2) /
 	(s->width);
-    zs->yTranslate =
-	((y - o->region.extents.y1) - o->height / 2) * zs->newZoom /
+    zs->yTranslate = (float)
+	((y - o->region.extents.y1) - o->height / 2) /
 	(s->height);
 
-    zs->xTranslate /= zs->newZoom;
-    zs->yTranslate /= zs->newZoom;
-
-    if ((x != zs->mouseX || y != zs->mouseY) && zs->syncMouse)
-	warpPointer (s, pointerX - x, pointerY - y);
+    if (zs->syncMouse)
+	syncCenterToMouse (s);
 }
 
+/* 
+ * Zooms the area described. 
+ * FIXME: This does not work as intended. 
+ * It is currently just an ugly way to do setCenter(). 
+ * It SHOULD calulcate how to make x + width/2 be at the senter of the screen.
+ */
+static void
+setZoomArea (CompScreen *s, int x, int y, int width, int height)
+{
+    ZOOM_SCREEN (s);
+    zs->xTranslate = (float) (-(s->width/2) + (x+width/2)) / s->width;
+    zs->yTranslate = (float) (-(s->height/2) + (y+height/2)) / s->height;
+    if (zs->syncMouse)
+	syncCenterToMouse (s);
+
+}
 
 /* Sets the zoom (or scale) level.
  */
@@ -315,7 +350,6 @@ setScale(CompScreen *s, float x, float y)
     }
 
     zs->newZoom = value;
-    printf("New value: %f\n",value);
     damageScreen(s);
 }
 
@@ -537,48 +571,22 @@ zoomTerminate (CompDisplay     *d,
 
     return FALSE;
 }
-/*
+
 static void
 zoomHandleEvent (CompDisplay *d,
 		 XEvent      *event)
 {
-    CompScreen *s;
-    ZOOM_DISPLAY (d);
+    ZOOM_DISPLAY(d);
+    CompWindow *w;
     switch (event->type) {
-    case MotionNotify:
-	s = findScreenAtDisplay (d, event->xmotion.root);
-	if (s)
-	{
-	    ZOOM_SCREEN (s);
-
-	    if (zs->grabIndex && zs->grabbed)
-	    {
-		GLfloat pointerDx;
-		GLfloat pointerDy;
-
-		pointerDx = pointerX - lastPointerX;
-		pointerDy = pointerY - lastPointerY;
-
-		if (event->xmotion.x_root < 50	           ||
-		    event->xmotion.y_root < 50	           ||
-		    event->xmotion.x_root > s->width  - 50 ||
-		    event->xmotion.y_root > s->height - 50)
-		{
-		    warpPointer (s,
-				 (s->width  / 2) - pointerX,
-				 (s->height / 2) - pointerY);
-		}
-
-		if (zs->opt[ZOOM_SCREEN_OPTION_POINTER_INVERT_Y].value.b)
-		    pointerDy = -pointerDy;
-
-		zs->xVelocity += pointerDx * zs->pointerSensitivity;
-		zs->yVelocity += pointerDy * zs->pointerSensitivity;
-
-		damageScreen (s);
-	    }
-	}
-    	break;	
+    case FocusIn:
+	w = findWindowAtDisplay(d, event->xfocus.window);
+	if (w == NULL) 
+	    break;
+	ZOOM_SCREEN (w->screen);
+	if (!zs->opt[ZOOM_SCREEN_OPTION_FOLLOW_FOCUS].value.b)
+	    break;
+	setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height);
     default:
 	break;
     }
@@ -586,7 +594,7 @@ zoomHandleEvent (CompDisplay *d,
     (*d->handleEvent) (d, event);
     WRAP (zd, d, handleEvent, zoomHandleEvent);
 }
-*/
+
 static void
 zoomUpdateCubeOptions (CompScreen *s)
 {
@@ -699,7 +707,7 @@ zoomInitDisplay (CompPlugin  *p,
 	return FALSE;
     }
 
-//    WRAP (zd, d, handleEvent, zoomHandleEvent);
+    WRAP (zd, d, handleEvent, zoomHandleEvent);
 
     d->privates[displayPrivateIndex].ptr = zd;
 
@@ -714,7 +722,7 @@ zoomFiniDisplay (CompPlugin  *p,
 
     freeScreenPrivateIndex (d, zd->screenPrivateIndex);
 
-//    UNWRAP (zd, d, handleEvent);
+    UNWRAP (zd, d, handleEvent);
 
     compFiniDisplayOptions (d, zd->opt, ZOOM_DISPLAY_OPTION_NUM);
 
@@ -722,7 +730,7 @@ zoomFiniDisplay (CompPlugin  *p,
 }
 
 static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
-    { "invert_y", "bool", 0, 0, 0 },
+    { "follow_focus", "bool", 0, 0, 0 },
     { "sensitivity", "float", "<min>0.01</min>", 0, 0 },
     { "speed", "float", "<min>0.1</min>", 0, 0 },
     { "timestep", "float", "<min>0.1</min>", 0, 0 },
