@@ -110,48 +110,6 @@ typedef struct _ZoomScreen {
 
 #define NUM_OPTIONS(s) (sizeof ((s)->opt) / sizeof (CompOption))
 
-static CompOption *
-zoomGetScreenOptions (CompPlugin *plugin,
-		      CompScreen *screen,
-		      int	 *count)
-{
-    ZOOM_SCREEN (screen);
-
-    *count = NUM_OPTIONS (zs);
-    return zs->opt;
-}
-
-static Bool
-zoomSetScreenOption (CompPlugin      *plugin,
-		     CompScreen      *screen,
-		     char	     *name,
-		     CompOptionValue *value)
-{
-    CompOption *o;
-    int	       index;
-
-    ZOOM_SCREEN (screen);
-
-    o = compFindOption (zs->opt, NUM_OPTIONS (zs), name, &index);
-    if (!o)
-	return FALSE;
-
-    switch (index) {
-    case ZOOM_SCREEN_OPTION_POINTER_SENSITIVITY:
-	if (compSetFloatOption (o, value))
-	{
-	    zs->pointerSensitivity = o->value.f *
-		ZOOM_POINTER_SENSITIVITY_FACTOR;
-	    return TRUE;
-	}
-	break;
-    default:
-	return compSetScreenOption (screen, o, value);
-    }
-
-    return FALSE;
-}
-
 static int
 adjustZoomVelocity (ZoomScreen *zs)
 {
@@ -170,6 +128,8 @@ adjustZoomVelocity (ZoomScreen *zs)
 
     return (fabs (d) < 0.1f && fabs (zs->zVelocity) < 0.005f);
 }
+
+
 
 static void
 zoomPreparePaintScreen (CompScreen *s,
@@ -572,6 +532,7 @@ zoomTerminate (CompDisplay     *d,
     return FALSE;
 }
 
+/* Fetches focus changes and adjusts the zoom area */
 static void
 zoomHandleEvent (CompDisplay *d,
 		 XEvent      *event)
@@ -595,6 +556,8 @@ zoomHandleEvent (CompDisplay *d,
     WRAP (zd, d, handleEvent, zoomHandleEvent);
 }
 
+
+/* Settings etc, boring stuff */
 static void
 zoomUpdateCubeOptions (CompScreen *s)
 {
@@ -613,6 +576,48 @@ zoomUpdateCubeOptions (CompScreen *s)
 	if (option)
 	    zs->maxTranslate = option->value.b ? 0.85f : 1.5f;
     }
+}
+
+static CompOption *
+zoomGetScreenOptions (CompPlugin *plugin,
+		      CompScreen *screen,
+		      int	 *count)
+{
+    ZOOM_SCREEN (screen);
+
+    *count = NUM_OPTIONS (zs);
+    return zs->opt;
+}
+
+static Bool
+zoomSetScreenOption (CompPlugin      *plugin,
+		     CompScreen      *screen,
+		     char	     *name,
+		     CompOptionValue *value)
+{
+    CompOption *o;
+    int	       index;
+
+    ZOOM_SCREEN (screen);
+
+    o = compFindOption (zs->opt, NUM_OPTIONS (zs), name, &index);
+    if (!o)
+	return FALSE;
+
+    switch (index) {
+    case ZOOM_SCREEN_OPTION_POINTER_SENSITIVITY:
+	if (compSetFloatOption (o, value))
+	{
+	    zs->pointerSensitivity = o->value.f *
+		ZOOM_POINTER_SENSITIVITY_FACTOR;
+	    return TRUE;
+	}
+	break;
+    default:
+	return compSetScreenOption (screen, o, value);
+    }
+
+    return FALSE;
 }
 
 static Bool
