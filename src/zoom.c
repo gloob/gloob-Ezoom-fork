@@ -21,6 +21,8 @@
  * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Author: David Reveman <davidr@novell.com>
+ * Heavily modified by: Kristian Lyngstol <kristian@bohemians.org>
+ *			(Input enabled, focus tracking, and more)
  */
 
 #include <stdio.h>
