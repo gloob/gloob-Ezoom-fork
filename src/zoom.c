@@ -268,6 +268,22 @@ setCenter (CompScreen *s, int x, int y)
 	syncCenterToMouse (s);
 }
 
+/* Makes sure we're not attempting to translate too far */
+static inline void
+constrainZoomTranslate (CompScreen *s)
+{
+    ZOOM_SCREEN (s);
+    if (zs->xTranslate > 0.5f)
+	zs->xTranslate = 0.5f;
+    else if (zs->xTranslate < -0.5f)
+	zs->xTranslate = -0.5f;
+
+    if (zs->yTranslate > 0.5f)
+	zs->yTranslate = 0.5f;
+    else if (zs->yTranslate < -0.5f)
+	zs->yTranslate = -0.5f;
+}
+
 /* 
  * Zooms the area described. 
  * FIXME: This does not work as intended. 
@@ -278,8 +294,9 @@ static void
 setZoomArea (CompScreen *s, int x, int y, int width, int height)
 {
     ZOOM_SCREEN (s);
-    zs->xTranslate = (float) (-(s->width/2) + (x+width/2)) / s->width;
-    zs->yTranslate = (float) (-(s->height/2) + (y+height/2)) / s->height;
+    zs->xTranslate = (float) 2.0f * (-(s->width/2) + (x+width/2)) / s->width;
+    zs->yTranslate = (float) 2.0f * (-(s->height/2) + (y+height/2)) / s->height;
+    constrainZoomTranslate (s);
     if (zs->syncMouse)
 	syncCenterToMouse (s);
 
