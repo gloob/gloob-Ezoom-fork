@@ -304,16 +304,16 @@ constrainZoomTranslate (CompScreen *s)
 
 /* 
  * Zooms the area described. 
- * FIXME: This does not work as intended. 
- * It is currently just an ugly way to do setCenter(). 
- * It SHOULD calulcate how to make x + width/2 be at the senter of the screen.
+ * FIXME: The math here is simply wrong. It's accurate for newZoom == 0.5f,
+ * but then it's off. (TODO).
  */
 static void
 setZoomArea (CompScreen *s, int x, int y, int width, int height)
 {
     ZOOM_SCREEN (s);
-    zs->xTranslate = (float) 2.0f * (-(s->width/2) + (x+width/2)) / s->width;
-    zs->yTranslate = (float) 2.0f * (-(s->height/2) + (y+height/2)) / s->height;
+    zs->xTranslate = (float) (1.0f + 2.0f*zs->newZoom) * (float) ((x + width/2) - (s->width/2)) / (s->width); 
+    zs->yTranslate = (float) (1.0f + 2.0f*zs->newZoom) * (float) ((y + height/2) - (s->height/2)) / (s->height); 
+
     constrainZoomTranslate (s);
     if (zs->syncMouse)
 	syncCenterToMouse (s);
