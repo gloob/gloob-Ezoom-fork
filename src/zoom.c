@@ -59,6 +59,16 @@ typedef struct _ZoomDisplay {
 #define ZOOM_SCREEN_OPTION_FILTER_LINEAR       5
 #define ZOOM_SCREEN_OPTION_NUM		       6
 
+/* Defines the state and behavior of focus tracking */
+typedef struct _FocusTracking
+{
+    Bool enabled;
+    Bool screenGrab; // Set if we detected a screen grab
+		     // We need this for move and resize, as we get
+		     // focus change events when the grab is released.
+
+} FocusTracking;
+
 typedef struct _ZoomScreen {
     PreparePaintScreenProc	 preparePaintScreen;
     DonePaintScreenProc		 donePaintScreen;
@@ -96,6 +106,9 @@ typedef struct _ZoomScreen {
     float maxTranslate;
 
     int zoomOutput;
+
+    FocusTracking focusTracking;
+
 } ZoomScreen;
 
 #define GET_ZOOM_DISPLAY(d)				      \
@@ -560,13 +573,29 @@ zoomHandleEvent (CompDisplay *d,
     CompWindow *w;
     switch (event->type) {
     case FocusIn:
+
 	w = findWindowAtDisplay(d, event->xfocus.window);
 	if (w == NULL) 
 	    break;
+
 	ZOOM_SCREEN (w->screen);
+	if (otherScreenGrabExist (w->screen, 0)) 
+	{
+	    zs->focusTracking.screenGrab = TRUE;
+	    break;
+	}
+	
+	if (zs->focusTracking.screenGrab)
+	{
+	    zs->focusTracking.screenGrab = FALSE;
+	    break;
+	}
+	
 	if (!zs->opt[ZOOM_SCREEN_OPTION_FOLLOW_FOCUS].value.b)
 	    break;
+	
 	setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height);
+
     default:
 	break;
     }
@@ -809,6 +838,9 @@ zoomInitScreen (CompPlugin *p,
     zs->mouseY = -1;
 
     zs->syncMouse = TRUE;
+
+    zs->focusTracking.enabled = TRUE;
+    zs->focusTracking.screenGrab = FALSE;
 
     zs->pointerSensitivity =
 	zs->opt[ZOOM_SCREEN_OPTION_POINTER_SENSITIVITY].value.f *
