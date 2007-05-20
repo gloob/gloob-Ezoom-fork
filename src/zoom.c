@@ -30,6 +30,7 @@
 #include <string.h>
 #include <math.h>
 #include <sys/time.h>
+#include <time.h>
 
 #include <compiz.h>
 
@@ -108,6 +109,8 @@ typedef struct _ZoomScreen {
     int zoomOutput;
 
     FocusTracking focusTracking;
+
+    time_t lastChange;
 
 } ZoomScreen;
 
@@ -367,7 +370,7 @@ updateMousePosition (CompScreen *s)
     {
 	if (rootX > s->width || rootY > s->height)
 	    return;
-
+	zs->lastChange = time(NULL);
 	zs->mouseX = rootX;
 	zs->mouseY = rootY;
 	if (zs->syncMouse)
@@ -591,6 +594,8 @@ zoomHandleEvent (CompDisplay *d,
 	    break;
 	}
 	
+	if (time(NULL) - zs->lastChange  < 3)
+	    break;
 	if (!zs->opt[ZOOM_SCREEN_OPTION_FOLLOW_FOCUS].value.b)
 	    break;
 	
