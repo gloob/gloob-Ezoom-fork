@@ -163,6 +163,30 @@
 		<long>Move the zoom area when focus changes</long>
 		<default>false</default>
 	    </option>
+	    <option type="bool" name="sync_mouse">
+		<short>Sync Mouse</short>
+		<long>Allways keep the mouse in the correct place. This is needed for input enabled zoom without input redirection.</long>
+		<default>true</default>
+	    </option>
+	    <option type="int" name="follow_focus_delay">
+		<short>Follow Focus Delay</short>
+		<long>Only attempt to center newly focused windows if the mouse hasn't moved in this amount of seconds. Use this to avoid jumping when using sloppy focus.</long>
+		<default>1</default>
+		<min>0</min>
+		<max>15</max>
+	    </option>
+	    <option type="int" name="mouse_poll_interval">
+		<short>Mouse Poll Interval</short>
+		<long>How often to poll the mouse position, in miliseconds. Reduce this to reduce choppy behavior.</long>
+		<default>10</default>
+		<min>1</min>
+		<max>500</max>
+	    </option>
+	    <option type="bool" name="sync_mouse">
+		<short>Sync Mouse</short>
+		<long>Allways keep the mouse in the correct place. This is needed for input enabled zoom without input redirection.</long>
+		<default>true</default>
+	    </option>
 	    <option type="float" name="sensitivity">
 		<short>Pointer Sensitivity</short>
 		<short xml:lang="ca">Sensibilitat del punter</short>

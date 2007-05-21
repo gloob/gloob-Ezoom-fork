@@ -58,7 +58,10 @@ typedef struct _ZoomDisplay {
 #define ZOOM_SCREEN_OPTION_TIMESTEP	       3
 #define ZOOM_SCREEN_OPTION_ZOOM_FACTOR         4
 #define ZOOM_SCREEN_OPTION_FILTER_LINEAR       5
-#define ZOOM_SCREEN_OPTION_NUM		       6
+#define ZOOM_SCREEN_OPTION_SYNC_MOUSE	       6
+#define ZOOM_SCREEN_OPTION_POLL_INTERVAL       7
+#define ZOOM_SCREEN_OPTION_FOCUS_DELAY	       8
+#define ZOOM_SCREEN_OPTION_NUM		       9
 
 /* Defines the state and behavior of focus tracking */
 typedef struct _FocusTracking
@@ -67,7 +70,6 @@ typedef struct _FocusTracking
     Bool screenGrab; // Set if we detected a screen grab
 		     // We need this for move and resize, as we get
 		     // focus change events when the grab is released.
-
 } FocusTracking;
 
 typedef struct _ZoomScreen {
@@ -78,9 +80,9 @@ typedef struct _ZoomScreen {
 
     CompOption opt[ZOOM_SCREEN_OPTION_NUM];
 
-    float pointerSensitivity;
+    CompTimeoutHandle mouseIntervalTimeoutHandle;
 
-    int grabIndex;
+    float pointerSensitivity;
 
     GLfloat currentZoom;
     GLfloat newZoom;
@@ -99,8 +101,6 @@ typedef struct _ZoomScreen {
     int mouseX;
     int mouseY;
 
-    Bool syncMouse;
-
     XPoint savedPointer;
     Bool   grabbed;
 
@@ -111,8 +111,10 @@ typedef struct _ZoomScreen {
     FocusTracking focusTracking;
 
     time_t lastChange;
-
 } ZoomScreen;
+
+static void
+updateMousePosition (CompScreen *s);
 
 #define GET_ZOOM_DISPLAY(d)				      \
     ((ZoomDisplay *) (d)->privates[displayPrivateIndex].ptr)
@@ -155,7 +157,7 @@ zoomPreparePaintScreen (CompScreen *s,
 {
     ZOOM_SCREEN (s);
 
-    if (zs->grabIndex)
+    if (zs->grabbed)
     {
 	int   steps;
 	float amount, chunk;
@@ -221,14 +223,13 @@ zoomPreparePaintScreen (CompScreen *s,
 	    zs->xtrans = -zs->xTranslate * (1.0f - zs->currentZoom);
 	    zs->ytrans = zs->yTranslate * (1.0f - zs->currentZoom);
 
-	    if (!zs->grabbed)
+	    if (zs->newZoom == 1.0f)
 	    {
 		if (zs->currentZoom == 1.0f && zs->zVelocity == 0.0f)
 		{
 		    zs->xVelocity = zs->yVelocity = 0.0f;
+		    zs->grabbed = FALSE;
 
-		    //removeScreenGrab (s, zs->grabIndex, &zs->savedPointer);
-		    zs->grabIndex = FALSE;
 		    break;
 		}
 	    }
@@ -282,7 +283,7 @@ setCenter (CompScreen *s, int x, int y)
 	((y - o->region.extents.y1) - o->height / 2) /
 	(s->height);
 
-    if (zs->syncMouse)
+    if (zs->opt[ZOOM_SCREEN_OPTION_SYNC_MOUSE].value.b)
 	syncCenterToMouse (s);
 }
 
@@ -315,10 +316,30 @@ setZoomArea (CompScreen *s, int x, int y, int width, int height)
     zs->yTranslate = (float) (1.0f + 2.0f*zs->newZoom) * (float) ((y + height/2) - (s->height/2)) / (s->height); 
 
     constrainZoomTranslate (s);
-    if (zs->syncMouse)
+    if (zs->opt[ZOOM_SCREEN_OPTION_SYNC_MOUSE].value.b)
 	syncCenterToMouse (s);
 
 }
+
+/* Timeout handler to poll the mouse. Returns false (and thereby does not get
+ * re-added to the queue) when zoom is not active.
+ */
+static Bool 
+updateMouseInterval (void *vs)
+{
+    CompScreen *s = vs;
+    ZOOM_SCREEN (s);
+
+    if (!zs->grabbed)
+    {
+	zs->mouseIntervalTimeoutHandle = FALSE;
+	return FALSE;
+    }
+    
+    updateMousePosition(s);
+    return TRUE;
+}
+
 
 /* Sets the zoom (or scale) level.
  */
@@ -330,7 +351,6 @@ setScale(CompScreen *s, float x, float y)
     if (value >= 1.0f) // DEFAULT_Z_CAMERA - (DEFAULT_Z_CAMERA / 10.0f))
     {
 	value = 1.0f;
-	zs->grabbed = FALSE;
     } 
     else 
     {
@@ -338,10 +358,12 @@ setScale(CompScreen *s, float x, float y)
 	    value = zs->newZoom; 
 
 	if (!zs->grabbed)
+	{
 	    zs->zoomOutput = outputDeviceForPoint (s, pointerX, pointerY);
+	    zs->mouseIntervalTimeoutHandle = compAddTimeout(zs->opt[ZOOM_SCREEN_OPTION_POLL_INTERVAL].value.i, updateMouseInterval, s);
+	}
 
 	zs->grabbed = TRUE;
-	zs->grabIndex = 1;
     }
 
     zs->newZoom = value;
@@ -373,7 +395,7 @@ updateMousePosition (CompScreen *s)
 	zs->lastChange = time(NULL);
 	zs->mouseX = rootX;
 	zs->mouseY = rootY;
-	if (zs->syncMouse)
+	if (zs->opt[ZOOM_SCREEN_OPTION_SYNC_MOUSE].value.b)
 	{
 	    setCenter (s, rootX, rootY);
 	    damageScreen (s);
@@ -386,12 +408,11 @@ zoomDonePaintScreen (CompScreen *s)
 {
     ZOOM_SCREEN (s);
 
-    if (zs->grabIndex)
+    if (zs->grabbed)
     {
 	if (zs->currentZoom != zs->newZoom ||
 	    zs->xVelocity || zs->yVelocity || zs->zVelocity)
 	    damageScreen (s);
-	updateMousePosition(s);
     }
 
     UNWRAP (zs, s, donePaintScreen);
@@ -411,13 +432,13 @@ zoomPaintScreen (CompScreen		 *s,
 
     ZOOM_SCREEN (s);
 
-    if (zs->grabIndex)
+    if (zs->grabbed)
     {
 	mask &= ~PAINT_SCREEN_REGION_MASK;
 	mask |= PAINT_SCREEN_CLEAR_MASK;
     }
 
-    if (zs->grabIndex && zs->zoomOutput == output)
+    if (zs->grabbed && zs->zoomOutput == output)
     {
 	ScreenPaintAttrib sa = *sAttrib;
 	int		  saveFilter;
@@ -553,11 +574,9 @@ zoomTerminate (CompDisplay     *d,
 	if (xid && s->root != xid)
 	    continue;
 
-	if (zs->grabIndex)
+	if (zs->grabbed)
 	{
 	    zs->newZoom = 1.0f;
-	    zs->grabbed = FALSE;
-
 	    damageScreen (s);
 	}
     }
@@ -594,7 +613,7 @@ zoomHandleEvent (CompDisplay *d,
 	    break;
 	}
 	
-	if (time(NULL) - zs->lastChange  < 3)
+	if (time(NULL) - zs->lastChange < zs->opt[ZOOM_SCREEN_OPTION_FOCUS_DELAY].value.i)
 	    break;
 	if (!zs->opt[ZOOM_SCREEN_OPTION_FOLLOW_FOCUS].value.b)
 	    break;
@@ -793,7 +812,10 @@ static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
     { "speed", "float", "<min>0.1</min>", 0, 0 },
     { "timestep", "float", "<min>0.1</min>", 0, 0 },
     { "zoom_factor", "float", "<min>1.01</min>", 0, 0 },
-    { "filter_linear", "bool", 0, 0, 0 }
+    { "filter_linear", "bool", 0, 0, 0 },
+    { "sync_mouse", "bool", 0, 0, 0 },
+    { "mouse_poll_interval", "int", "<min>1</min>", 0, 0 },
+    { "follow_focus_delay", "int", "<min>0</min>", 0, 0 }
 };
 
 static Bool
@@ -818,8 +840,6 @@ zoomInitScreen (CompPlugin *p,
 	return FALSE;
     }
 
-    zs->grabIndex = 0;
-
     zs->currentZoom = 1.0f;
     zs->newZoom = 1.0f;
 
@@ -842,9 +862,7 @@ zoomInitScreen (CompPlugin *p,
     zs->mouseX = -1;
     zs->mouseY = -1;
 
-    zs->syncMouse = TRUE;
-
-    zs->focusTracking.enabled = TRUE;
+    zs->focusTracking.enabled = zs->opt[ZOOM_SCREEN_OPTION_FOLLOW_FOCUS].value.b;
     zs->focusTracking.screenGrab = FALSE;
 
     zs->pointerSensitivity =
@@ -868,6 +886,8 @@ zoomFiniScreen (CompPlugin *p,
 		CompScreen *s)
 {
     ZOOM_SCREEN (s);
+    if (zs->mouseIntervalTimeoutHandle) 
+	compRemoveTimeout (zs->mouseIntervalTimeoutHandle);
 
     UNWRAP (zs, s, preparePaintScreen);
     UNWRAP (zs, s, donePaintScreen);
