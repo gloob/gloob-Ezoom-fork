@@ -499,9 +499,7 @@ zoomPaintScreen (CompScreen		 *s,
 
 	saveFilter = s->filter[SCREEN_TRANS_FILTER];
 
-	if (zs->opt[ZOOM_SCREEN_OPTION_ZOOM_FACTOR].value.f == 2.0f &&
-	    (zs->opt[ZOOM_SCREEN_OPTION_FILTER_LINEAR].value.b ||
-	     zs->zVelocity != 0.0f))
+	if (zs->opt[ZOOM_SCREEN_OPTION_FILTER_LINEAR].value.b)
 	    s->filter[SCREEN_TRANS_FILTER] = COMP_TEXTURE_FILTER_GOOD;
 	else
 	    s->filter[SCREEN_TRANS_FILTER] = COMP_TEXTURE_FILTER_FAST;
