@@ -255,7 +255,7 @@
 		<long xml:lang="ru">Скорость изменения масштаба</long>
 		<long xml:lang="zh_CN">缩放速度</long>
 		<long xml:lang="zh_TW">縮放速度</long>
-		<default>1.5</default>
+		<default>25</default>
 		<min>0.1</min>
 		<max>100</max>
 		<precision>0.1</precision>
