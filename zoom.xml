@@ -182,11 +182,6 @@
 		<min>1</min>
 		<max>500</max>
 	    </option>
-	    <option type="bool" name="sync_mouse">
-		<short>Sync Mouse</short>
-		<long>Allways keep the mouse in the correct place. This is needed for input enabled zoom without input redirection.</long>
-		<default>true</default>
-	    </option>
 	    <option type="float" name="sensitivity">
 		<short>Pointer Sensitivity</short>
 		<short xml:lang="ca">Sensibilitat del punter</short>
@@ -262,7 +257,7 @@
 		<long xml:lang="zh_TW">縮放速度</long>
 		<default>1.5</default>
 		<min>0.1</min>
-		<max>50</max>
+		<max>100</max>
 		<precision>0.1</precision>
 	    </option>
 	    <option type="float" name="timestep">
