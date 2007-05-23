@@ -43,11 +43,19 @@ static int displayPrivateIndex;
 #define ZOOM_DISPLAY_OPTION_INITIATE 0
 #define ZOOM_DISPLAY_OPTION_IN	     1
 #define ZOOM_DISPLAY_OPTION_OUT	     2
-#define ZOOM_DISPLAY_OPTION_NUM	     3
+#define ZOOM_DISPLAY_OPTION_SPECIFIC_1 3
+#define ZOOM_DISPLAY_OPTION_SPECIFIC_2 4
+#define ZOOM_DISPLAY_OPTION_SPECIFIC_3 5
+#define ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_1 6
+#define ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_2 7
+#define ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_3 8
+#define ZOOM_DISPLAY_OPTION_SPECIFIC_TARGET_FOCUS 9
+#define ZOOM_DISPLAY_OPTION_NUM	     10
 
 typedef struct _ZoomDisplay {
     int		    screenPrivateIndex;
     HandleEventProc handleEvent;
+    Bool grabbed;
 
     CompOption opt[ZOOM_DISPLAY_OPTION_NUM];
 } ZoomDisplay;
@@ -389,6 +397,7 @@ setScale(CompScreen *s, float x, float y)
 {
     float value = x > y ? y : x;
     ZOOM_SCREEN(s);
+    zs->moving = TRUE;
     if (value >= 1.0f) // DEFAULT_Z_CAMERA - (DEFAULT_Z_CAMERA / 10.0f))
     {
 	value = 1.0f;
@@ -403,7 +412,6 @@ setScale(CompScreen *s, float x, float y)
 	    zs->zoomOutput = outputDeviceForPoint (s, pointerX, pointerY);
 	    zs->mouseIntervalTimeoutHandle = compAddTimeout(zs->opt[ZOOM_SCREEN_OPTION_POLL_INTERVAL].value.i, updateMouseInterval, s);
 	}
-	zs->moving = TRUE;
 	zs->grabbed = TRUE;
     }
 
@@ -554,6 +562,90 @@ zoomIn (CompDisplay     *d,
     return TRUE;
 }
 
+/* Zoom to a specific level.
+ * taget defines the target zoom level.
+ * First set the scale level and mark the display as grabbed internally (to
+ * catch the FocusIn event). Either target the focused window or the mouse,
+ * depending on settings.
+ * FIXME: A bit of a mess...
+ */
+static Bool
+zoomSpecific (CompDisplay     *d,
+	CompAction      *action,
+	CompActionState state,
+	CompOption      *option,
+	int		nOption,
+	float		target)
+{
+    CompScreen *s;
+    Window     xid;
+
+    xid = getIntOptionNamed (option, nOption, "root", 0);
+
+    s = findScreenAtDisplay (d, xid);
+    if (s)
+    {
+	if (otherScreenGrabExist (s, "zoom", "scale", 0))
+	    return FALSE;
+
+	int   x, y;
+
+	x = getIntOptionNamed (option, nOption, "x", 0);
+	y = getIntOptionNamed (option, nOption, "y", 0);
+	
+	setScale (s, target, target);
+
+	ZOOM_DISPLAY (d);
+	ZOOM_SCREEN (s);
+	zd->grabbed = TRUE;
+
+	if (zs->newZoom == 1.0f)
+	    return TRUE;
+	CompWindow *w;
+	w = findWindowAtDisplay(d, d->activeWindow);
+	if (zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_TARGET_FOCUS].value.b 
+	    && w && w->screen->root == s->root)
+	    setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height);
+	else
+	    setCenter (s, x, y, FALSE);
+    }
+
+    return TRUE;
+}
+static Bool
+zoomSpecific1 (CompDisplay     *d,
+	CompAction      *action,
+	CompActionState state,
+	CompOption      *option,
+	int		nOption)
+{
+    ZOOM_DISPLAY (d);
+    return zoomSpecific (d, action, state, option, nOption, zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_1].value.f);
+}
+
+static Bool
+zoomSpecific2 (CompDisplay     *d,
+	CompAction      *action,
+	CompActionState state,
+	CompOption      *option,
+	int		nOption)
+{
+    ZOOM_DISPLAY (d);
+    return zoomSpecific (d, action, state, option, nOption, zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_2].value.f);
+}
+
+static Bool
+zoomSpecific3 (CompDisplay     *d,
+	CompAction      *action,
+	CompActionState state,
+	CompOption      *option,
+	int		nOption)
+{
+    ZOOM_DISPLAY (d);
+    return zoomSpecific (d, action, state, option, nOption, zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_3].value.f);
+}
+
+
 static Bool
 zoomInitiate (CompDisplay     *d,
 	      CompAction      *action,
@@ -634,6 +726,11 @@ zoomHandleEvent (CompDisplay *d,
     CompWindow *w;
     switch (event->type) {
     case FocusIn:
+	if (zd->grabbed == TRUE)
+	{
+	    zd->grabbed = FALSE;
+	    break;
+	}
 
 	w = findWindowAtDisplay(d, event->xfocus.window);
 	if (w == NULL) 
@@ -760,6 +857,18 @@ zoomGetDisplayOptions (CompPlugin  *plugin,
     *count = NUM_OPTIONS (zd);
     return zd->opt;
 }
+static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
+    { "initiate", "action", 0, zoomInitiate, zoomTerminate },
+    { "zoom_in", "action", 0, zoomIn, 0 },
+    { "zoom_out", "action", 0, zoomOut, 0 },
+    { "zoom_specific_1", "action", 0, zoomSpecific1, 0 },
+    { "zoom_specific_2", "action", 0, zoomSpecific2, 0 },
+    { "zoom_specific_3", "action", 0, zoomSpecific3, 0 },
+    { "zoom_spec1", "float", "<min>0.1</min><max>1.0</max><default>1.0</default>", 0, 0 },
+    { "zoom_spec2", "float", "<min>0.1</min><max>1.0</max><default>0.5</default>", 0, 0 },
+    { "zoom_spec3", "float", "<min>0.1</min><max>1.0</max><default>0.2</default>", 0, 0 },
+    { "spec_target_focus", "bool", "<default>true</default>", 0, 0 }
+};
 
 static Bool
 zoomSetDisplayOption (CompPlugin      *plugin,
@@ -788,11 +897,6 @@ zoomSetDisplayOption (CompPlugin      *plugin,
     return FALSE;
 }
 
-static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
-    { "initiate", "action", 0, zoomInitiate, zoomTerminate },
-    { "zoom_in", "action", 0, zoomIn, 0 },
-    { "zoom_out", "action", 0, zoomOut, 0 }
-};
 
 static Bool
 zoomInitDisplay (CompPlugin  *p,

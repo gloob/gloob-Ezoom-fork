@@ -116,6 +116,30 @@
 		    <button>&lt;Super&gt;Button4</button>
 		</default>
 	    </option>
+	    <option type="action" name="zoom_specific_1">
+		<short>Zoom Specific Level 1</short>
+		<long>Zoom to the specific zoom level 1</long>
+		<allowed key="true" button="true"/>
+		<default>
+		    <key>&lt;Super&gt;1</key>
+		</default>
+	    </option>
+	    <option type="action" name="zoom_specific_2">
+		<short>Zoom Specific Level 2</short>
+		<long>Zoom to the specific zoom level 2</long>
+		<allowed key="true" button="true"/>
+		<default>
+		    <key>&lt;Super&gt;2</key>
+		</default>
+	    </option>
+	    <option type="action" name="zoom_specific_3">
+		<short>Zoom Specific Level 3</short>
+		<long>Zoom to the specific zoom level 3</long>
+		<allowed key="true" button="true"/>
+		<default>
+		    <key>&lt;Super&gt;3</key>
+		</default>
+	    </option>
 	    <option type="action" name="zoom_out">
 		<short>Zoom Out</short>
 		<short xml:lang="ca">Allunya el zoom</short>
@@ -155,6 +179,35 @@
 		<default>
 		    <button>&lt;Super&gt;Button5</button>
 		</default>
+	    </option>
+	    <option type="float" name="zoom_spec1">
+		<short>Specific zoom factor 1</short>
+		<long>Zoom level to go to when triggering hotkey 1</long>
+		<default>1.0</default>
+		<min>0.1</min>
+		<max>1.0</max>
+		<precision>0.01</precision>
+	    </option>
+	    <option type="float" name="zoom_spec2">
+		<short>Specific zoom factor 2</short>
+		<long>Zoom level to go to when triggering hotkey 2</long>
+		<default>0.5</default>
+		<min>0.1</min>
+		<max>1.0</max>
+		<precision>0.01</precision>
+	    </option>
+	    <option type="float" name="zoom_spec3">
+		<short>Specific zoom factor 3</short>
+		<long>Zoom level to go to when triggering hotkey 3</long>
+		<default>0.2</default>
+		<min>0.1</min>
+		<max>1.0</max>
+		<precision>0.01</precision>
+	    </option>
+	    <option type="bool" name="spec_target_focus">
+		<short>Target Focus on Specific level</short>
+		<long>Enable this to target the focused window when jumping to a specific window. Disable to target mouse.</long>
+		<default>true</default>
 	    </option>
 	</display>
 	<screen>
