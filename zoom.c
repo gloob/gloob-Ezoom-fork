@@ -300,7 +300,7 @@ syncCenterToMouse (CompScreen *s)
     float x = (float) ((zs->realXTranslate * s->width) + (o->width / 2) + o->region.extents.x1);
     float y = (float) ((zs->realYTranslate * s->height) + (o->height / 2) + o->region.extents.y1);
 
-    if (((int)x != zs->mouseX || (int)y != zs->mouseY) && zs->grabbed)
+    if (((int)x != zs->mouseX || (int)y != zs->mouseY) && zs->grabbed && zs->newZoom != 1.0f)
     {
 	warpPointer (s, x - pointerX , y - pointerY );
 	zs->mouseX = x;
@@ -361,13 +361,18 @@ constrainZoomTranslate (CompScreen *s)
  * but then it's off. (TODO).
  */
 static void
-setZoomArea (CompScreen *s, int x, int y, int width, int height)
+setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
 {
     ZOOM_SCREEN (s);
     zs->xTranslate = (float) (1.0f + 2.0f*zs->newZoom) * (float) ((x + width/2) - (s->width/2)) / (s->width); 
     zs->yTranslate = (float) (1.0f + 2.0f*zs->newZoom) * (float) ((y + height/2) - (s->height/2)) / (s->height); 
     zs->moving = TRUE;
 
+    if (instant)
+    {
+	zs->realXTranslate = zs->xTranslate;
+	zs->realYTranslate = zs->yTranslate;
+    }
     constrainZoomTranslate (s);
 }
 
@@ -414,7 +419,11 @@ setScale(CompScreen *s, float x, float y)
 	}
 	zs->grabbed = TRUE;
     }
-
+    if (value == 1.0f)
+    {
+	zs->xTranslate = 0.0f;
+	zs->yTranslate = 0.0f;
+    }
     zs->newZoom = value;
     damageScreen(s);
 }
@@ -589,29 +598,31 @@ zoomSpecific (CompDisplay     *d,
 	    return FALSE;
 
 	int   x, y;
+	Bool wasZoomed;
+
+	ZOOM_DISPLAY (d);
+	ZOOM_SCREEN (s);
 
 	x = getIntOptionNamed (option, nOption, "x", 0);
 	y = getIntOptionNamed (option, nOption, "y", 0);
 	
+	wasZoomed = zs->newZoom == 1.0f;
 	setScale (s, target, target);
-
-	ZOOM_DISPLAY (d);
-	ZOOM_SCREEN (s);
 	zd->grabbed = TRUE;
 
-	if (zs->newZoom == 1.0f)
-	    return TRUE;
 	CompWindow *w;
 	w = findWindowAtDisplay(d, d->activeWindow);
 	if (zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_TARGET_FOCUS].value.b 
 	    && w && w->screen->root == s->root)
-	    setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height);
+	    setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height, wasZoomed);
 	else
 	    setCenter (s, x, y, FALSE);
+	
     }
 
     return TRUE;
 }
+
 static Bool
 zoomSpecific1 (CompDisplay     *d,
 	CompAction      *action,
@@ -753,7 +764,7 @@ zoomHandleEvent (CompDisplay *d,
 	    break;
 	if (!zs->opt[ZOOM_SCREEN_OPTION_FOLLOW_FOCUS].value.b)
 	    break;
-	setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height);
+	setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height, FALSE);
 
     default:
 	break;
