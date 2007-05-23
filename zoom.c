@@ -230,17 +230,6 @@ zoomPreparePaintScreen (CompScreen *s,
 		zs->realYTranslate += (zs->yVelocity * chunk) / s->redrawTime;
 	    }
 
-
-	    if (zs->xTranslate < -zs->maxTranslate)
-		zs->xTranslate = -zs->maxTranslate;
-	    else if (zs->xTranslate > zs->maxTranslate)
-		zs->xTranslate = zs->maxTranslate;
-
-	    if (zs->yTranslate < -zs->maxTranslate)
-		zs->yTranslate = -zs->maxTranslate;
-	    else if (zs->yTranslate > zs->maxTranslate)
-		zs->yTranslate = zs->maxTranslate;
-
 	    if (adjustZoomVelocity (zs))
 	    {
 		zs->currentZoom = zs->newZoom;
@@ -322,12 +311,10 @@ setCenter (CompScreen *s, int x, int y, Bool instant)
     ZOOM_SCREEN(s);
     CompOutput *o = &s->outputDev[zs->zoomOutput];
 
-    zs->xTranslate =
-	(float) ((x - o->region.extents.x1) - o->width  / 2) /
-	(s->width);
-    zs->yTranslate = (float)
-	((y - o->region.extents.y1) - o->height / 2) /
-	(s->height);
+    zs->xTranslate = (float) 
+	((x - o->region.extents.x1) - o->width  / 2) / (s->width);
+    zs->yTranslate = (float) 
+	((y - o->region.extents.y1) - o->height / 2) / (s->height);
     
     if (instant)
     {
@@ -339,7 +326,9 @@ setCenter (CompScreen *s, int x, int y, Bool instant)
     } 
 }
 
-/* Makes sure we're not attempting to translate too far */
+/* Makes sure we're not attempting to translate too far.
+ * We are restricted to 0.5 because 
+ * */
 static inline void
 constrainZoomTranslate (CompScreen *s)
 {
@@ -353,6 +342,16 @@ constrainZoomTranslate (CompScreen *s)
 	zs->yTranslate = 0.5f;
     else if (zs->yTranslate < -0.5f)
 	zs->yTranslate = -0.5f;
+
+    if (zs->xTranslate < -zs->maxTranslate)
+	zs->xTranslate = -zs->maxTranslate;
+    else if (zs->xTranslate > zs->maxTranslate)
+	zs->xTranslate = zs->maxTranslate;
+
+    if (zs->yTranslate < -zs->maxTranslate)
+	zs->yTranslate = -zs->maxTranslate;
+    else if (zs->yTranslate > zs->maxTranslate)
+	zs->yTranslate = zs->maxTranslate;
 }
 
 /* 
@@ -603,9 +602,6 @@ zoomSpecific (CompDisplay     *d,
 	ZOOM_DISPLAY (d);
 	ZOOM_SCREEN (s);
 
-	x = getIntOptionNamed (option, nOption, "x", 0);
-	y = getIntOptionNamed (option, nOption, "y", 0);
-	
 	wasZoomed = zs->newZoom == 1.0f;
 	setScale (s, target, target);
 	zd->grabbed = TRUE;
@@ -616,10 +612,12 @@ zoomSpecific (CompDisplay     *d,
 	    && w && w->screen->root == s->root)
 	    setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height, wasZoomed);
 	else
+	{
+	    x = getIntOptionNamed (option, nOption, "x", 0);
+	    y = getIntOptionNamed (option, nOption, "y", 0);
 	    setCenter (s, x, y, FALSE);
-	
+	}
     }
-
     return TRUE;
 }
 
