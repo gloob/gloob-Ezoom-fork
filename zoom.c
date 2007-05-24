@@ -295,7 +295,7 @@ syncCenterToMouse (CompScreen *s)
 	warpPointer (s, x - pointerX , y - pointerY );
 	zs->mouseX = x;
 	zs->mouseY = y;
-    }
+    } 
 }
 
 /* Sets the center of the zoom area to X,Y.
@@ -453,10 +453,10 @@ updateMousePosition (CompScreen *s)
     {
 	if (rootX > s->width || rootY > s->height)
 	    return;
+	zs->mouseX = rootX;
+	zs->mouseY = rootY;
 	if (zs->opt[ZOOM_SCREEN_OPTION_SYNC_MOUSE].value.b && !zs->moving)
 	{
-	    zs->mouseX = rootX;
-	    zs->mouseY = rootY;
 	    zs->lastChange = time(NULL);
 	    setCenter (s, rootX, rootY, TRUE);
 	    damageScreen (s);
