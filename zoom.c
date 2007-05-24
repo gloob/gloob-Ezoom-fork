@@ -856,6 +856,7 @@ zoomHandleEvent (CompDisplay *d,
 	case FocusIn:
 	    if ((event->xfocus.mode != NotifyNormal) && (lastMapped != event->xfocus.window))
 		break;
+	    lastMapped = 0;
 	    w = findWindowAtDisplay(d, event->xfocus.window);
 	    if (w == NULL) 
 		break;
