@@ -62,7 +62,6 @@ typedef enum _ZsOpt
 typedef struct _ZoomDisplay {
     int		    screenPrivateIndex;
     HandleEventProc handleEvent;
-    Bool grabbed;
 
     CompOption opt[DOPT_NUM];
 } ZoomDisplay;
@@ -645,7 +644,6 @@ zoomSpecific (CompDisplay     *d,
 
 	wasZoomed = zs->newZoom == 1.0f;
 	setScale (s, target, target);
-	zd->grabbed = TRUE;
 
 	CompWindow *w;
 	w = findWindowAtDisplay(d, d->activeWindow);
@@ -714,8 +712,6 @@ zoomPanLeft (CompDisplay     *d,
     s = findScreenAtDisplay (d, xid);
     if (!s)
 	return TRUE;
-    ZOOM_DISPLAY (d);
-    zd->grabbed = TRUE;
     panZoom (s, -1, 0);
     return TRUE;
 }
@@ -732,8 +728,6 @@ zoomPanRight (CompDisplay     *d,
     s = findScreenAtDisplay (d, xid);
     if (!s)
 	return TRUE;
-    ZOOM_DISPLAY (d);
-    zd->grabbed = TRUE;
     panZoom (s, 1, 0);
     return TRUE;
 }
@@ -750,8 +744,6 @@ zoomPanUp (CompDisplay     *d,
     s = findScreenAtDisplay (d, xid);
     if (!s)
 	return TRUE;
-    ZOOM_DISPLAY (d);
-    zd->grabbed = TRUE;
     panZoom (s, 0, -1);
     return TRUE;
 }
@@ -768,8 +760,6 @@ zoomPanDown (CompDisplay     *d,
     s = findScreenAtDisplay (d, xid);
     if (!s)
 	return TRUE;
-    ZOOM_DISPLAY (d);
-    zd->grabbed = TRUE;
     panZoom (s, 0, 1);
     return TRUE;
 }
@@ -849,6 +839,11 @@ zoomTerminate (CompDisplay     *d,
 /* Fetches focus changes and adjusts the zoom area. 
  * The focus handeling should be moved into a separate function
  * before a release.
+ * The lastMapped is a hack to ensure that newly mapped windows are
+ * caught even if the grab that (possibly) triggered them affected
+ * the mode. Windows created by a keybind (like creating a terminal
+ * on a keybind) tends to trigger FocusIn events with mode other than
+ * Normal. This works around this problem.
  */
 static void
 zoomHandleEvent (CompDisplay *d,
@@ -856,13 +851,11 @@ zoomHandleEvent (CompDisplay *d,
 {
     ZOOM_DISPLAY(d);
     CompWindow *w;
+    static Window lastMapped = 0;
     switch (event->type) {
 	case FocusIn:
-	    if (zd->grabbed == TRUE)
-	    {
-		zd->grabbed = FALSE;
+	    if ((event->xfocus.mode != NotifyNormal) && (lastMapped != event->xfocus.window))
 		break;
-	    }
 	    w = findWindowAtDisplay(d, event->xfocus.window);
 	    if (w == NULL) 
 		break;
@@ -876,10 +869,10 @@ zoomHandleEvent (CompDisplay *d,
 		break;
 	    if (!zs->opt[SOPT_FOLLOW_FOCUS].value.b)
 		break;
-	    if (event->xfocus.mode != NotifyNormal)
-		break;
 	    setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height, FALSE);
-
+	    break;
+	case MapNotify:
+	    lastMapped = event->xmap.window;
 	default:
 	    break;
     }
