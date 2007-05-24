@@ -40,36 +40,42 @@ static CompMetadata zoomMetadata;
 
 static int displayPrivateIndex;
 
-#define ZOOM_DISPLAY_OPTION_INITIATE 0
-#define ZOOM_DISPLAY_OPTION_IN	     1
-#define ZOOM_DISPLAY_OPTION_OUT	     2
-#define ZOOM_DISPLAY_OPTION_SPECIFIC_1 3
-#define ZOOM_DISPLAY_OPTION_SPECIFIC_2 4
-#define ZOOM_DISPLAY_OPTION_SPECIFIC_3 5
-#define ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_1 6
-#define ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_2 7
-#define ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_3 8
-#define ZOOM_DISPLAY_OPTION_SPECIFIC_TARGET_FOCUS 9
-#define ZOOM_DISPLAY_OPTION_NUM	     10
+typedef enum _ZsOpt
+{
+    DOPT_INITIATE = 0,
+    DOPT_IN,
+    DOPT_OUT,
+    DOPT_SPECIFIC_1,
+    DOPT_SPECIFIC_2,
+    DOPT_SPECIFIC_3,
+    DOPT_SPECIFIC_LEVEL_1,
+    DOPT_SPECIFIC_LEVEL_2,
+    DOPT_SPECIFIC_LEVEL_3,
+    DOPT_SPECIFIC_TARGET_FOCUS,
+    DOPT_NUM
+} ZoomDisplayOptions;
 
 typedef struct _ZoomDisplay {
     int		    screenPrivateIndex;
     HandleEventProc handleEvent;
     Bool grabbed;
 
-    CompOption opt[ZOOM_DISPLAY_OPTION_NUM];
+    CompOption opt[DOPT_NUM];
 } ZoomDisplay;
 
-#define ZOOM_SCREEN_OPTION_FOLLOW_FOCUS        0
-#define ZOOM_SCREEN_OPTION_POINTER_SENSITIVITY 1
-#define ZOOM_SCREEN_OPTION_SPEED	       2
-#define ZOOM_SCREEN_OPTION_TIMESTEP	       3
-#define ZOOM_SCREEN_OPTION_ZOOM_FACTOR         4
-#define ZOOM_SCREEN_OPTION_FILTER_LINEAR       5
-#define ZOOM_SCREEN_OPTION_SYNC_MOUSE	       6
-#define ZOOM_SCREEN_OPTION_POLL_INTERVAL       7
-#define ZOOM_SCREEN_OPTION_FOCUS_DELAY	       8
-#define ZOOM_SCREEN_OPTION_NUM		       9
+typedef enum _ZdOpt
+{
+    SOPT_FOLLOW_FOCUS = 0,
+    SOPT_POINTER_SENSITIVITY,
+    SOPT_SPEED,
+    SOPT_TIMESTEP,
+    SOPT_ZOOM_FACTOR,
+    SOPT_FILTER_LINEAR,
+    SOPT_SYNC_MOUSE,
+    SOPT_POLL_INTERVAL,
+    SOPT_FOCUS_DELAY,
+    SOPT_NUM
+} ZoomScreenOptions;
 
 /* Defines the state and behavior of focus tracking */
 typedef struct _FocusTracking
@@ -86,7 +92,7 @@ typedef struct _ZoomScreen {
     PaintScreenProc		 paintScreen;
     SetScreenOptionForPluginProc setScreenOptionForPlugin;
 
-    CompOption opt[ZOOM_SCREEN_OPTION_NUM];
+    CompOption opt[SOPT_NUM];
 
     CompTimeoutHandle mouseIntervalTimeoutHandle;
 
@@ -219,8 +225,8 @@ zoomPreparePaintScreen (CompScreen *s,
 	float amount, chunk;
 
 	amount = msSinceLastPaint * 0.05f *
-	    zs->opt[ZOOM_SCREEN_OPTION_SPEED].value.f;
-	steps  = amount / (0.5f * zs->opt[ZOOM_SCREEN_OPTION_TIMESTEP].value.f);
+	    zs->opt[SOPT_SPEED].value.f;
+	steps  = amount / (0.5f * zs->opt[SOPT_TIMESTEP].value.f);
 	if (!steps) steps = 1;
 	chunk  = amount / (float) steps;
 	while (steps--)
@@ -270,7 +276,7 @@ zoomPreparePaintScreen (CompScreen *s,
 		    break;
 		}
 	    }
-	    if (zs->opt[ZOOM_SCREEN_OPTION_SYNC_MOUSE].value.b && zs->moving)
+	    if (zs->opt[SOPT_SYNC_MOUSE].value.b && zs->moving)
 		syncCenterToMouse (s);
 
 	    if (!zs->xVelocity && !zs->yVelocity && !zs->zVelocity)
@@ -342,7 +348,7 @@ zoomPaintScreen (CompScreen		 *s,
 	mask |= PAINT_SCREEN_TRANSFORMED_MASK;
 	saveFilter = s->filter[SCREEN_TRANS_FILTER];
 
-	if (zs->opt[ZOOM_SCREEN_OPTION_FILTER_LINEAR].value.b)
+	if (zs->opt[SOPT_FILTER_LINEAR].value.b)
 	    s->filter[SCREEN_TRANS_FILTER] = COMP_TEXTURE_FILTER_GOOD;
 	else
 	    s->filter[SCREEN_TRANS_FILTER] = COMP_TEXTURE_FILTER_FAST;
@@ -472,7 +478,7 @@ setScale(CompScreen *s, float x, float y)
 	if (!zs->grabbed)
 	{
 	    zs->zoomOutput = outputDeviceForPoint (s, pointerX, pointerY);
-	    zs->mouseIntervalTimeoutHandle = compAddTimeout(zs->opt[ZOOM_SCREEN_OPTION_POLL_INTERVAL].value.i, updateMouseInterval, s);
+	    zs->mouseIntervalTimeoutHandle = compAddTimeout(zs->opt[SOPT_POLL_INTERVAL].value.i, updateMouseInterval, s);
 	}
 	zs->grabbed = TRUE;
     }
@@ -536,7 +542,7 @@ updateMousePosition (CompScreen *s)
 	    return;
 	zs->mouseX = rootX;
 	zs->mouseY = rootY;
-	if (zs->opt[ZOOM_SCREEN_OPTION_SYNC_MOUSE].value.b && !zs->moving)
+	if (zs->opt[SOPT_SYNC_MOUSE].value.b && !zs->moving)
 	{
 	    zs->lastChange = time(NULL);
 	    setCenter (s, rootX, rootY, TRUE);
@@ -584,7 +590,7 @@ zoomIn (CompDisplay     *d,
 	if (otherScreenGrabExist (s, "zoom", "scale", 0))
 	    return FALSE;
 
-	float zoomFactor = zs->opt[ZOOM_SCREEN_OPTION_ZOOM_FACTOR].value.f;
+	float zoomFactor = zs->opt[SOPT_ZOOM_FACTOR].value.f;
 	int   x, y;
 
 	x = getIntOptionNamed (option, nOption, "x", 0);
@@ -634,7 +640,7 @@ zoomSpecific (CompDisplay     *d,
 
 	CompWindow *w;
 	w = findWindowAtDisplay(d, d->activeWindow);
-	if (zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_TARGET_FOCUS].value.b 
+	if (zd->opt[DOPT_SPECIFIC_TARGET_FOCUS].value.b 
 	    && w && w->screen->root == s->root)
 	{
 	    setZoomArea (w->screen, w->serverX, w->serverY, 
@@ -659,7 +665,7 @@ zoomSpecific1 (CompDisplay     *d,
 {
     ZOOM_DISPLAY (d);
     return zoomSpecific (d, action, state, option, nOption, 
-			 zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_1].value.f);
+			 zd->opt[DOPT_SPECIFIC_LEVEL_1].value.f);
 }
 
 static Bool
@@ -671,7 +677,7 @@ zoomSpecific2 (CompDisplay     *d,
 {
     ZOOM_DISPLAY (d);
     return zoomSpecific (d, action, state, option, nOption, 
-			 zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_2].value.f);
+			 zd->opt[DOPT_SPECIFIC_LEVEL_2].value.f);
 }
 
 static Bool
@@ -683,7 +689,7 @@ zoomSpecific3 (CompDisplay     *d,
 {
     ZOOM_DISPLAY (d);
     return zoomSpecific (d, action, state, option, nOption, 
-			 zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_3].value.f);
+			 zd->opt[DOPT_SPECIFIC_LEVEL_3].value.f);
 }
 
 
@@ -721,7 +727,7 @@ zoomOut (CompDisplay     *d,
     if (s)
     {
 	ZOOM_SCREEN (s);
-	setScale (s, zs->newZoom * zs->opt[ZOOM_SCREEN_OPTION_ZOOM_FACTOR].value.f, 2.0f);
+	setScale (s, zs->newZoom * zs->opt[SOPT_ZOOM_FACTOR].value.f, 2.0f);
     }
 
     return TRUE;
@@ -794,9 +800,9 @@ zoomHandleEvent (CompDisplay *d,
 	    }
 	    
 	    if (time(NULL) - zs->lastChange < 
-		zs->opt[ZOOM_SCREEN_OPTION_FOCUS_DELAY].value.i)
+		zs->opt[SOPT_FOCUS_DELAY].value.i)
 		break;
-	    if (!zs->opt[ZOOM_SCREEN_OPTION_FOLLOW_FOCUS].value.b)
+	    if (!zs->opt[SOPT_FOLLOW_FOCUS].value.b)
 		break;
 	    setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height, FALSE);
 
@@ -855,7 +861,7 @@ zoomSetScreenOption (CompPlugin      *plugin,
 	return FALSE;
 
     switch (index) {
-	case ZOOM_SCREEN_OPTION_POINTER_SENSITIVITY:
+	case SOPT_POINTER_SENSITIVITY:
 	    if (compSetFloatOption (o, value))
 	    {
 		zs->pointerSensitivity = o->value.f *
@@ -926,7 +932,7 @@ zoomSetDisplayOption (CompPlugin      *plugin,
 	return FALSE;
 
     switch (index) {
-	case ZOOM_DISPLAY_OPTION_OUT:
+	case DOPT_OUT:
 	    if (compSetActionOption (o, value))
 		return TRUE;
 	    break;
@@ -949,7 +955,7 @@ zoomInitDisplay (CompPlugin  *p,
 					     &zoomMetadata,
 					     zoomDisplayOptionInfo,
 					     zd->opt,
-					     ZOOM_DISPLAY_OPTION_NUM))
+					     DOPT_NUM))
     {
 	free (zd);
 	return FALSE;
@@ -958,7 +964,7 @@ zoomInitDisplay (CompPlugin  *p,
     zd->screenPrivateIndex = allocateScreenPrivateIndex (d);
     if (zd->screenPrivateIndex < 0)
     {
-	compFiniDisplayOptions (d, zd->opt, ZOOM_DISPLAY_OPTION_NUM);
+	compFiniDisplayOptions (d, zd->opt, DOPT_NUM);
 	free (zd);
 	return FALSE;
     }
@@ -975,7 +981,7 @@ zoomFiniDisplay (CompPlugin  *p,
     ZOOM_DISPLAY (d);
     freeScreenPrivateIndex (d, zd->screenPrivateIndex);
     UNWRAP (zd, d, handleEvent);
-    compFiniDisplayOptions (d, zd->opt, ZOOM_DISPLAY_OPTION_NUM);
+    compFiniDisplayOptions (d, zd->opt, DOPT_NUM);
     free (zd);
 }
 
@@ -1005,7 +1011,7 @@ zoomInitScreen (CompPlugin *p,
 					    &zoomMetadata,
 					    zoomScreenOptionInfo,
 					    zs->opt,
-					    ZOOM_SCREEN_OPTION_NUM))
+					    SOPT_NUM))
     {
 	free (zs);
 	return FALSE;
@@ -1026,10 +1032,10 @@ zoomInitScreen (CompPlugin *p,
     zs->mouseX = -1;
     zs->mouseY = -1;
     zs->moving = FALSE;
-    zs->focusTracking.enabled = zs->opt[ZOOM_SCREEN_OPTION_FOLLOW_FOCUS].value.b;
+    zs->focusTracking.enabled = zs->opt[SOPT_FOLLOW_FOCUS].value.b;
     zs->focusTracking.screenGrab = FALSE;
     zs->pointerSensitivity =
-	zs->opt[ZOOM_SCREEN_OPTION_POINTER_SENSITIVITY].value.f *
+	zs->opt[SOPT_POINTER_SENSITIVITY].value.f *
 	ZOOM_POINTER_SENSITIVITY_FACTOR;
 
     WRAP (zs, s, preparePaintScreen, zoomPreparePaintScreen);
@@ -1055,7 +1061,7 @@ zoomFiniScreen (CompPlugin *p,
     UNWRAP (zs, s, paintScreen);
     UNWRAP (zs, s, setScreenOptionForPlugin);
 
-    compFiniScreenOptions (s, zs->opt, ZOOM_SCREEN_OPTION_NUM);
+    compFiniScreenOptions (s, zs->opt, SOPT_NUM);
     free (zs);
 }
 
@@ -1065,9 +1071,9 @@ zoomInit (CompPlugin *p)
     if (!compInitPluginMetadataFromInfo (&zoomMetadata,
 					 p->vTable->name,
 					 zoomDisplayOptionInfo,
-					 ZOOM_DISPLAY_OPTION_NUM,
+					 DOPT_NUM,
 					 zoomScreenOptionInfo,
-					 ZOOM_SCREEN_OPTION_NUM))
+					 SOPT_NUM))
 	return FALSE;
 
     displayPrivateIndex = allocateDisplayPrivateIndex ();
