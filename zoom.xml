@@ -214,7 +214,7 @@
 	    <option type="bool" name="follow_focus">
 		<short>Follow focus</short>
 		<long>Move the zoom area when focus changes</long>
-		<default>false</default>
+		<default>true</default>
 	    </option>
 	    <option type="bool" name="sync_mouse">
 		<short>Sync Mouse</short>
@@ -385,7 +385,7 @@
 		<long xml:lang="ru">Коэффициент масштабирования</long>
 		<long xml:lang="zh_CN">缩放比例</long>
 		<long xml:lang="zh_TW">縮放倍率</long>
-		<default>2</default>
+		<default>1.150</default>
 		<min>1.01</min>
 		<max>3</max>
 		<precision>0.01</precision>
@@ -409,7 +409,7 @@
 		<short xml:lang="zh_CN">过滤器线性</short>
 		<short xml:lang="zh_TW">線性過濾器</short>
 		<long>Use linear filter when zoomed in</long>
-		<default>false</default>
+		<default>true</default>
 	    </option>
 	</screen>
     </plugin>
