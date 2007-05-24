@@ -99,7 +99,6 @@ typedef struct _ZoomScreen {
     GLfloat yVelocity;
     GLfloat zVelocity;
 
-
     GLfloat xTranslate; // Target (Modify this for fluent movement)
     GLfloat yTranslate;
 
@@ -163,6 +162,8 @@ adjustZoomVelocity (ZoomScreen *zs)
     return (fabs (d) < 0.1f && fabs (zs->zVelocity) < 0.005f);
 }
 
+/* Adjust the X/Y velocity based on target translation and real translation.
+ */
 static Bool adjustXYVelocity (ZoomScreen *zs)
 {
     if (zs->realXTranslate == zs->xTranslate && zs->realYTranslate == zs->yTranslate)
@@ -294,7 +295,6 @@ syncCenterToMouse (CompScreen *s)
 	warpPointer (s, x - pointerX , y - pointerY );
 	zs->mouseX = x;
 	zs->mouseY = y;
-	//printf("Warp: x: %f y: %f transX: %f transY: %f newZoom: %f\n", x, y, zs->xTranslate, zs->yTranslate, zs->newZoom);
     }
 }
 
@@ -363,16 +363,21 @@ static void
 setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
 {
     ZOOM_SCREEN (s);
-    zs->xTranslate = (float) (1.0f + 2.0f*zs->newZoom) * (float) ((x + width/2) - (s->width/2)) / (s->width); 
-    zs->yTranslate = (float) (1.0f + 2.0f*zs->newZoom) * (float) ((y + height/2) - (s->height/2)) / (s->height); 
+    zs->xTranslate = (float) 
+	(1.0f + 2.0f*zs->newZoom) * (float) ((x + width/2) - (s->width/2))
+	/ (s->width); 
+    zs->yTranslate = (float) 
+	(1.0f + 2.0f*zs->newZoom) * (float) ((y + height/2) - (s->height/2)) 
+	/ (s->height);
     zs->moving = TRUE;
+
+    constrainZoomTranslate (s);
 
     if (instant)
     {
 	zs->realXTranslate = zs->xTranslate;
 	zs->realYTranslate = zs->yTranslate;
     }
-    constrainZoomTranslate (s);
 }
 
 /* Timeout handler to poll the mouse. Returns false (and thereby does not get
@@ -392,7 +397,6 @@ updateMouseInterval (void *vs)
     updateMousePosition(s);
     return TRUE;
 }
-
 
 /* Sets the zoom (or scale) level.
  */
@@ -502,7 +506,6 @@ zoomPaintScreen (CompScreen		 *s,
 
 	sa.xTranslate += zs->xtrans;
 	sa.yTranslate += zs->ytrans;
-
 	sa.zCamera = -zs->ztrans;
 
 	/* hack to get sides rendered correctly */
@@ -512,7 +515,6 @@ zoomPaintScreen (CompScreen		 *s,
 	    sa.xRotate -= 0.000001f;
 
 	mask |= PAINT_SCREEN_TRANSFORMED_MASK;
-
 	saveFilter = s->filter[SCREEN_TRANS_FILTER];
 
 	if (zs->opt[ZOOM_SCREEN_OPTION_FILTER_LINEAR].value.b)
@@ -548,12 +550,11 @@ zoomIn (CompDisplay     *d,
     Window     xid;
 
     xid = getIntOptionNamed (option, nOption, "root", 0);
-
     s = findScreenAtDisplay (d, xid);
+
     if (s)
     {
 	ZOOM_SCREEN (s);
-
 	if (otherScreenGrabExist (s, "zoom", "scale", 0))
 	    return FALSE;
 
@@ -566,7 +567,6 @@ zoomIn (CompDisplay     *d,
 	setScale (s, zs->newZoom/zoomFactor, zs->newZoom/zoomFactor);
 	setCenter (s, x, y, TRUE);
     }
-
     return TRUE;
 }
 
@@ -589,8 +589,8 @@ zoomSpecific (CompDisplay     *d,
     Window     xid;
 
     xid = getIntOptionNamed (option, nOption, "root", 0);
-
     s = findScreenAtDisplay (d, xid);
+
     if (s)
     {
 	if (otherScreenGrabExist (s, "zoom", "scale", 0))
@@ -610,7 +610,10 @@ zoomSpecific (CompDisplay     *d,
 	w = findWindowAtDisplay(d, d->activeWindow);
 	if (zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_TARGET_FOCUS].value.b 
 	    && w && w->screen->root == s->root)
-	    setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height, wasZoomed);
+	{
+	    setZoomArea (w->screen, w->serverX, w->serverY, 
+			 w->width, w->height, wasZoomed);
+	}
 	else
 	{
 	    x = getIntOptionNamed (option, nOption, "x", 0);
@@ -629,7 +632,8 @@ zoomSpecific1 (CompDisplay     *d,
 	int		nOption)
 {
     ZOOM_DISPLAY (d);
-    return zoomSpecific (d, action, state, option, nOption, zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_1].value.f);
+    return zoomSpecific (d, action, state, option, nOption, 
+			 zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_1].value.f);
 }
 
 static Bool
@@ -640,7 +644,8 @@ zoomSpecific2 (CompDisplay     *d,
 	int		nOption)
 {
     ZOOM_DISPLAY (d);
-    return zoomSpecific (d, action, state, option, nOption, zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_2].value.f);
+    return zoomSpecific (d, action, state, option, nOption, 
+			 zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_2].value.f);
 }
 
 static Bool
@@ -651,7 +656,8 @@ zoomSpecific3 (CompDisplay     *d,
 	int		nOption)
 {
     ZOOM_DISPLAY (d);
-    return zoomSpecific (d, action, state, option, nOption, zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_3].value.f);
+    return zoomSpecific (d, action, state, option, nOption, 
+			 zd->opt[ZOOM_DISPLAY_OPTION_SPECIFIC_LEVEL_3].value.f);
 }
 
 
@@ -947,13 +953,9 @@ zoomFiniDisplay (CompPlugin  *p,
 		 CompDisplay *d)
 {
     ZOOM_DISPLAY (d);
-
     freeScreenPrivateIndex (d, zd->screenPrivateIndex);
-
     UNWRAP (zd, d, handleEvent);
-
     compFiniDisplayOptions (d, zd->opt, ZOOM_DISPLAY_OPTION_NUM);
-
     free (zd);
 }
 
@@ -1069,9 +1071,7 @@ zoomInit (CompPlugin *p)
 	compFiniMetadata (&zoomMetadata);
 	return FALSE;
     }
-
     compAddMetadataFromFile (&zoomMetadata, p->vTable->name);
-
     return TRUE;
 }
 
