@@ -140,6 +140,38 @@
 		    <key>&lt;Super&gt;3</key>
 		</default>
 	    </option>
+	    <option type="action" name="pan_left">
+		<short>Pan Zoom Left</short>
+		<long>Pan (move) the zoom area left</long>
+		<allowed key="true" button="true"/>
+		<default>
+		    <key>&lt;Super&gt;q</key>
+		</default>
+	    </option>
+	    <option type="action" name="pan_right">
+		<short>Pan Zoom Right</short>
+		<long>Pan (move) the zoom area right</long>
+		<allowed key="true" button="true"/>
+		<default>
+		    <key>&lt;Super&gt;e</key>
+		</default>
+	    </option>
+	    <option type="action" name="pan_up">
+		<short>Pan Zoom Up</short>
+		<long>Pan (move) the zoom area up</long>
+		<allowed key="true" button="true"/>
+		<default>
+		    <key>&lt;Super&gt;w</key>
+		</default>
+	    </option>
+	    <option type="action" name="pan_down">
+		<short>Pan Zoom Down</short>
+		<long>Pan (move) the zoom area down</long>
+		<allowed key="true" button="true"/>
+		<default>
+		    <key>&lt;Super&gt;s</key>
+		</default>
+	    </option>
 	    <option type="action" name="zoom_out">
 		<short>Zoom Out</short>
 		<short xml:lang="ca">Allunya el zoom</short>
@@ -211,6 +243,14 @@
 	    </option>
 	</display>
 	<screen>
+	    <option type="float" name="pan_factor">
+		<short>Pan Factor</short>
+		<long>How much to move the zoom area for each pan-trigger</long>
+		<default>0.1</default>
+		<min>0.001</min>
+		<max>1.0</max>
+		<precision>0.001</precision>
+	    </option>
 	    <option type="bool" name="follow_focus">
 		<short>Follow focus</short>
 		<long>Move the zoom area when focus changes</long>

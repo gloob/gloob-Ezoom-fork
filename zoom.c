@@ -52,6 +52,10 @@ typedef enum _ZsOpt
     DOPT_SPECIFIC_LEVEL_2,
     DOPT_SPECIFIC_LEVEL_3,
     DOPT_SPECIFIC_TARGET_FOCUS,
+    DOPT_PAN_LEFT,
+    DOPT_PAN_RIGHT,
+    DOPT_PAN_UP,
+    DOPT_PAN_DOWN,
     DOPT_NUM
 } ZoomDisplayOptions;
 
@@ -74,17 +78,9 @@ typedef enum _ZdOpt
     SOPT_SYNC_MOUSE,
     SOPT_POLL_INTERVAL,
     SOPT_FOCUS_DELAY,
+    SOPT_PAN_FACTOR,
     SOPT_NUM
 } ZoomScreenOptions;
-
-/* Defines the state and behavior of focus tracking */
-typedef struct _FocusTracking
-{
-    Bool enabled;
-    Bool screenGrab; // Set if we detected a screen grab
-		     // We need this for move and resize, as we get
-		     // focus change events when the grab is released.
-} FocusTracking;
 
 typedef struct _ZoomScreen {
     PreparePaintScreenProc	 preparePaintScreen;
@@ -124,8 +120,6 @@ typedef struct _ZoomScreen {
     float maxTranslate;
 
     int zoomOutput;
-
-    FocusTracking focusTracking;
 
     time_t lastChange;
 } ZoomScreen;
@@ -458,6 +452,21 @@ setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
     }
 }
 
+/* Pans the zoomed area vertically/horisontaly by
+ * value * zs->panFactor
+ * Used both by key bindings and future mouse-based
+ * panning.
+ */
+static void
+panZoom (CompScreen *s, int xvalue, int yvalue)
+{
+    ZOOM_SCREEN (s);
+    zs->xTranslate += zs->opt[SOPT_PAN_FACTOR].value.f * xvalue;
+    zs->yTranslate += zs->opt[SOPT_PAN_FACTOR].value.f * yvalue;
+    zs->moving = TRUE;
+    constrainZoomTranslate (s);
+}
+
 /* Sets the zoom (or scale) level.
  */
 static void
@@ -692,6 +701,79 @@ zoomSpecific3 (CompDisplay     *d,
 			 zd->opt[DOPT_SPECIFIC_LEVEL_3].value.f);
 }
 
+static Bool
+zoomPanLeft (CompDisplay     *d,
+	CompAction      *action,
+	CompActionState state,
+	CompOption      *option,
+	int		nOption)
+{
+    CompScreen *s;
+    Window xid;
+    xid = getIntOptionNamed (option, nOption, "root", 0);
+    s = findScreenAtDisplay (d, xid);
+    if (!s)
+	return TRUE;
+    ZOOM_DISPLAY (d);
+    zd->grabbed = TRUE;
+    panZoom (s, -1, 0);
+    return TRUE;
+}
+static Bool
+zoomPanRight (CompDisplay     *d,
+	CompAction      *action,
+	CompActionState state,
+	CompOption      *option,
+	int		nOption)
+{
+    CompScreen *s;
+    Window xid;
+    xid = getIntOptionNamed (option, nOption, "root", 0);
+    s = findScreenAtDisplay (d, xid);
+    if (!s)
+	return TRUE;
+    ZOOM_DISPLAY (d);
+    zd->grabbed = TRUE;
+    panZoom (s, 1, 0);
+    return TRUE;
+}
+static Bool
+zoomPanUp (CompDisplay     *d,
+	CompAction      *action,
+	CompActionState state,
+	CompOption      *option,
+	int		nOption)
+{
+    CompScreen *s;
+    Window xid;
+    xid = getIntOptionNamed (option, nOption, "root", 0);
+    s = findScreenAtDisplay (d, xid);
+    if (!s)
+	return TRUE;
+    ZOOM_DISPLAY (d);
+    zd->grabbed = TRUE;
+    panZoom (s, 0, -1);
+    return TRUE;
+}
+static Bool
+zoomPanDown (CompDisplay     *d,
+	CompAction      *action,
+	CompActionState state,
+	CompOption      *option,
+	int		nOption)
+{
+    CompScreen *s;
+    Window xid;
+    xid = getIntOptionNamed (option, nOption, "root", 0);
+    s = findScreenAtDisplay (d, xid);
+    if (!s)
+	return TRUE;
+    ZOOM_DISPLAY (d);
+    zd->grabbed = TRUE;
+    panZoom (s, 0, 1);
+    return TRUE;
+}
+
 
 static Bool
 zoomInitiate (CompDisplay     *d,
@@ -781,28 +863,20 @@ zoomHandleEvent (CompDisplay *d,
 		zd->grabbed = FALSE;
 		break;
 	    }
-
 	    w = findWindowAtDisplay(d, event->xfocus.window);
 	    if (w == NULL) 
 		break;
 
+	    if (w->id == d->activeWindow)
+		break;
 	    ZOOM_SCREEN (w->screen);
-	    if (otherScreenGrabExist (w->screen, 0)) 
-	    {
-		zs->focusTracking.screenGrab = TRUE;
-		break;
-	    }
-	    
-	    if (zs->focusTracking.screenGrab)
-	    {
-		zs->focusTracking.screenGrab = FALSE;
-		break;
-	    }
 	    
 	    if (time(NULL) - zs->lastChange < 
 		zs->opt[SOPT_FOCUS_DELAY].value.i)
 		break;
 	    if (!zs->opt[SOPT_FOLLOW_FOCUS].value.b)
+		break;
+	    if (event->xfocus.mode != NotifyNormal)
 		break;
 	    setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height, FALSE);
 
@@ -915,7 +989,11 @@ static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
     { "zoom_spec1", "float", "<min>0.1</min><max>1.0</max><default>1.0</default>", 0, 0 },
     { "zoom_spec2", "float", "<min>0.1</min><max>1.0</max><default>0.5</default>", 0, 0 },
     { "zoom_spec3", "float", "<min>0.1</min><max>1.0</max><default>0.2</default>", 0, 0 },
-    { "spec_target_focus", "bool", "<default>true</default>", 0, 0 }
+    { "spec_target_focus", "bool", "<default>true</default>", 0, 0 },
+    { "pan_left", "action", 0, zoomPanLeft, 0 },
+    { "pan_right", "action", 0, zoomPanRight, 0 },
+    { "pan_up", "action", 0, zoomPanUp, 0 },
+    { "pan_down", "action", 0, zoomPanDown, 0 }
 };
 
 static Bool
@@ -994,7 +1072,8 @@ static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
     { "filter_linear", "bool", 0, 0, 0 },
     { "sync_mouse", "bool", 0, 0, 0 },
     { "mouse_poll_interval", "int", "<min>1</min>", 0, 0 },
-    { "follow_focus_delay", "int", "<min>0</min>", 0, 0 }
+    { "follow_focus_delay", "int", "<min>0</min>", 0, 0 }, 
+    { "pan_factor", "float", "<min>0.001</min><default>0.1</default>", 0, 0 }
 };
 
 static Bool
@@ -1032,8 +1111,6 @@ zoomInitScreen (CompPlugin *p,
     zs->mouseX = -1;
     zs->mouseY = -1;
     zs->moving = FALSE;
-    zs->focusTracking.enabled = zs->opt[SOPT_FOLLOW_FOCUS].value.b;
-    zs->focusTracking.screenGrab = FALSE;
     zs->pointerSensitivity =
 	zs->opt[SOPT_POINTER_SENSITIVITY].value.f *
 	ZOOM_POINTER_SENSITIVITY_FACTOR;
