@@ -451,7 +451,7 @@ updateMousePosition (CompScreen *s)
     ZOOM_SCREEN(s);
     if ((rootX != zs->mouseX || rootY != zs->mouseY))
     {
-	if (rootX > s->width || rootY > s->height)
+	if (rootX > s->width || rootY > s->height || s->root != root_return)
 	    return;
 	zs->mouseX = rootX;
 	zs->mouseY = rootY;
