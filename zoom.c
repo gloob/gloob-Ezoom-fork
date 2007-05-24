@@ -1002,15 +1002,7 @@ zoomSetDisplayOption (CompPlugin      *plugin,
     if (!o)
 	return FALSE;
 
-    switch (index) {
-	case DOPT_OUT:
-	    if (compSetActionOption (o, value))
-		return TRUE;
-	    break;
-	default:
-	    return compSetDisplayOption (display, o, value);
-    }
-    return FALSE;
+    return compSetDisplayOption (display, o, value);
 }
 
 
