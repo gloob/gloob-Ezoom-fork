@@ -128,6 +128,8 @@ static void
 updateMousePosition (CompScreen *s);
 static void
 syncCenterToMouse (CompScreen *s);
+static Bool 
+updateMouseInterval (void *vs);
 
 #define GET_ZOOM_DISPLAY(d)				      \
     ((ZoomDisplay *) (d)->privates[displayPrivateIndex].ptr)
@@ -143,6 +145,8 @@ syncCenterToMouse (CompScreen *s);
 
 #define NUM_OPTIONS(s) (sizeof ((s)->opt) / sizeof (CompOption))
 
+/* Adjust the velocity in the z-direction. 
+ */
 static int
 adjustZoomVelocity (ZoomScreen *zs)
 {
@@ -200,6 +204,9 @@ static Bool adjustXYVelocity (ZoomScreen *zs)
     return FALSE;
 }
 
+/* Calculates the real translation to be applied in PaintScreen().
+ * Needs cleaning...
+ */
 static void
 zoomPreparePaintScreen (CompScreen *s,
 			int	   msSinceLastPaint)
@@ -277,193 +284,8 @@ zoomPreparePaintScreen (CompScreen *s,
     WRAP (zs, s, preparePaintScreen, zoomPreparePaintScreen);
 }
 
-/* Syncs the center, based on translations, back to the mouse. 
- * This should be called when doing non-IR zooming and moving the zoom
- * area based on events other than mouse movement.
+/* Damage screen if we're still moving.
  */
-static void
-syncCenterToMouse (CompScreen *s)
-{
-    ZOOM_SCREEN(s);
-    CompOutput *o = &s->outputDev[zs->zoomOutput];
-
-    float x = (float) ((zs->realXTranslate * s->width) + (o->width / 2) + o->region.extents.x1);
-    float y = (float) ((zs->realYTranslate * s->height) + (o->height / 2) + o->region.extents.y1);
-
-    if (((int)x != zs->mouseX || (int)y != zs->mouseY) && zs->grabbed && zs->newZoom != 1.0f)
-    {
-	warpPointer (s, x - pointerX , y - pointerY );
-	zs->mouseX = x;
-	zs->mouseY = y;
-    } 
-}
-
-/* Sets the center of the zoom area to X,Y.
- * We have to be able to warp the pointer here: If we are moved by
- * anything except mouse movement, we have to sync the
- * mouse pointer. This is to allow input, and is NOT necesarry
- * when input redirection is available to us.
- * The center is not the center of the screen. This is the target-center.
- */
-static void
-setCenter (CompScreen *s, int x, int y, Bool instant)
-{
-    ZOOM_SCREEN(s);
-    CompOutput *o = &s->outputDev[zs->zoomOutput];
-
-    zs->xTranslate = (float) 
-	((x - o->region.extents.x1) - o->width  / 2) / (s->width);
-    zs->yTranslate = (float) 
-	((y - o->region.extents.y1) - o->height / 2) / (s->height);
-    
-    if (instant)
-    {
-	zs->realXTranslate = zs->xTranslate;
-	zs->realYTranslate = zs->yTranslate;
-	zs->yVelocity = 0.0f;
-	zs->xVelocity = 0.0f;
-        zs->moving = FALSE;
-    } 
-}
-
-/* Makes sure we're not attempting to translate too far.
- * We are restricted to 0.5 because 
- * */
-static inline void
-constrainZoomTranslate (CompScreen *s)
-{
-    ZOOM_SCREEN (s);
-    if (zs->xTranslate > 0.5f)
-	zs->xTranslate = 0.5f;
-    else if (zs->xTranslate < -0.5f)
-	zs->xTranslate = -0.5f;
-
-    if (zs->yTranslate > 0.5f)
-	zs->yTranslate = 0.5f;
-    else if (zs->yTranslate < -0.5f)
-	zs->yTranslate = -0.5f;
-
-    if (zs->xTranslate < -zs->maxTranslate)
-	zs->xTranslate = -zs->maxTranslate;
-    else if (zs->xTranslate > zs->maxTranslate)
-	zs->xTranslate = zs->maxTranslate;
-
-    if (zs->yTranslate < -zs->maxTranslate)
-	zs->yTranslate = -zs->maxTranslate;
-    else if (zs->yTranslate > zs->maxTranslate)
-	zs->yTranslate = zs->maxTranslate;
-}
-
-/* 
- * Zooms the area described. 
- * FIXME: The math here is simply wrong. It's accurate for newZoom == 0.5f,
- * but then it's off. (TODO).
- */
-static void
-setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
-{
-    ZOOM_SCREEN (s);
-    zs->xTranslate = (float) 
-	(1.0f + 2.0f*zs->newZoom) * (float) ((x + width/2) - (s->width/2))
-	/ (s->width); 
-    zs->yTranslate = (float) 
-	(1.0f + 2.0f*zs->newZoom) * (float) ((y + height/2) - (s->height/2)) 
-	/ (s->height);
-    zs->moving = TRUE;
-
-    constrainZoomTranslate (s);
-
-    if (instant)
-    {
-	zs->realXTranslate = zs->xTranslate;
-	zs->realYTranslate = zs->yTranslate;
-    }
-}
-
-/* Timeout handler to poll the mouse. Returns false (and thereby does not get
- * re-added to the queue) when zoom is not active.
- */
-static Bool 
-updateMouseInterval (void *vs)
-{
-    CompScreen *s = vs;
-    ZOOM_SCREEN (s);
-
-    if (!zs->grabbed)
-    {
-	zs->mouseIntervalTimeoutHandle = FALSE;
-	return FALSE;
-    }
-    updateMousePosition(s);
-    return TRUE;
-}
-
-/* Sets the zoom (or scale) level.
- */
-static void
-setScale(CompScreen *s, float x, float y)
-{
-    float value = x > y ? y : x;
-    ZOOM_SCREEN(s);
-    zs->moving = TRUE;
-    if (value >= 1.0f) // DEFAULT_Z_CAMERA - (DEFAULT_Z_CAMERA / 10.0f))
-    {
-	value = 1.0f;
-    } 
-    else 
-    {
-	if (value * DEFAULT_Z_CAMERA < 0.1f)
-	    value = zs->newZoom; 
-
-	if (!zs->grabbed)
-	{
-	    zs->zoomOutput = outputDeviceForPoint (s, pointerX, pointerY);
-	    zs->mouseIntervalTimeoutHandle = compAddTimeout(zs->opt[ZOOM_SCREEN_OPTION_POLL_INTERVAL].value.i, updateMouseInterval, s);
-	}
-	zs->grabbed = TRUE;
-    }
-    if (value == 1.0f)
-    {
-	zs->xTranslate = 0.0f;
-	zs->yTranslate = 0.0f;
-    }
-    zs->newZoom = value;
-    damageScreen(s);
-}
-
-/* Update the mouse position.
- * Based on the zoom engine in use, we will have to move the zoom area.
- * This might have to be added to a timer. 
- */
-static void
-updateMousePosition (CompScreen *s)
-{
-    Window root_return;
-    Window child_return;
-    int rootX, rootY;
-    int winX, winY;
-    unsigned int maskReturn;
-    XQueryPointer (s->display->display, s->root,
-		  &root_return, &child_return,
-		  &rootX, &rootY, &winX, &winY, &maskReturn);
-
-
-    ZOOM_SCREEN(s);
-    if ((rootX != zs->mouseX || rootY != zs->mouseY))
-    {
-	if (rootX > s->width || rootY > s->height || s->root != root_return)
-	    return;
-	zs->mouseX = rootX;
-	zs->mouseY = rootY;
-	if (zs->opt[ZOOM_SCREEN_OPTION_SYNC_MOUSE].value.b && !zs->moving)
-	{
-	    zs->lastChange = time(NULL);
-	    setCenter (s, rootX, rootY, TRUE);
-	    damageScreen (s);
-	}
-    }
-}
-
 static void
 zoomDonePaintScreen (CompScreen *s)
 {
@@ -481,6 +303,9 @@ zoomDonePaintScreen (CompScreen *s)
     WRAP (zs, s, donePaintScreen, zoomDonePaintScreen);
 }
 
+/* Apply the zoom if we are grabbed. 
+ * Make sure to use the correct filter.
+ */
 static Bool
 zoomPaintScreen (CompScreen		 *s,
 		 const ScreenPaintAttrib *sAttrib,
@@ -539,6 +364,207 @@ zoomPaintScreen (CompScreen		 *s,
     return status;
 }
 
+/* Makes sure we're not attempting to translate too far.
+ * We are restricted to 0.5 because 
+ * */
+static inline void
+constrainZoomTranslate (CompScreen *s)
+{
+    ZOOM_SCREEN (s);
+    if (zs->xTranslate > 0.5f)
+	zs->xTranslate = 0.5f;
+    else if (zs->xTranslate < -0.5f)
+	zs->xTranslate = -0.5f;
+
+    if (zs->yTranslate > 0.5f)
+	zs->yTranslate = 0.5f;
+    else if (zs->yTranslate < -0.5f)
+	zs->yTranslate = -0.5f;
+
+    if (zs->xTranslate < -zs->maxTranslate)
+	zs->xTranslate = -zs->maxTranslate;
+    else if (zs->xTranslate > zs->maxTranslate)
+	zs->xTranslate = zs->maxTranslate;
+
+    if (zs->yTranslate < -zs->maxTranslate)
+	zs->yTranslate = -zs->maxTranslate;
+    else if (zs->yTranslate > zs->maxTranslate)
+	zs->yTranslate = zs->maxTranslate;
+}
+
+/* Functions for adjusting the zoomed area.
+ * These are the core of the zoom plugin; Anything wanting
+ * to adjust the zoomed area must use setCenter or setZoomArea
+ * and setScale. 
+ */
+
+/* Sets the center of the zoom area to X,Y.
+ * We have to be able to warp the pointer here: If we are moved by
+ * anything except mouse movement, we have to sync the
+ * mouse pointer. This is to allow input, and is NOT necesarry
+ * when input redirection is available to us.
+ * The center is not the center of the screen. This is the target-center.
+ */
+static void
+setCenter (CompScreen *s, int x, int y, Bool instant)
+{
+    ZOOM_SCREEN(s);
+    CompOutput *o = &s->outputDev[zs->zoomOutput];
+
+    zs->xTranslate = (float) 
+	((x - o->region.extents.x1) - o->width  / 2) / (s->width);
+    zs->yTranslate = (float) 
+	((y - o->region.extents.y1) - o->height / 2) / (s->height);
+    
+    if (instant)
+    {
+	zs->realXTranslate = zs->xTranslate;
+	zs->realYTranslate = zs->yTranslate;
+	zs->yVelocity = 0.0f;
+	zs->xVelocity = 0.0f;
+        zs->moving = FALSE;
+    } 
+}
+
+/* 
+ * Zooms the area described. 
+ * FIXME: The math here is simply wrong. It's accurate for newZoom == 0.5f,
+ * but then it's off. (TODO).
+ */
+static void
+setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
+{
+    ZOOM_SCREEN (s);
+    zs->xTranslate = (float) 
+	(1.0f + 2.0f*zs->newZoom) * (float) ((x + width/2) - (s->width/2))
+	/ (s->width); 
+    zs->yTranslate = (float) 
+	(1.0f + 2.0f*zs->newZoom) * (float) ((y + height/2) - (s->height/2)) 
+	/ (s->height);
+    zs->moving = TRUE;
+
+    constrainZoomTranslate (s);
+
+    if (instant)
+    {
+	zs->realXTranslate = zs->xTranslate;
+	zs->realYTranslate = zs->yTranslate;
+    }
+}
+
+/* Sets the zoom (or scale) level.
+ */
+static void
+setScale(CompScreen *s, float x, float y)
+{
+    float value = x > y ? y : x;
+    ZOOM_SCREEN(s);
+    zs->moving = TRUE;
+    if (value >= 1.0f) // DEFAULT_Z_CAMERA - (DEFAULT_Z_CAMERA / 10.0f))
+    {
+	value = 1.0f;
+    } 
+    else 
+    {
+	if (value * DEFAULT_Z_CAMERA < 0.1f)
+	    value = zs->newZoom; 
+
+	if (!zs->grabbed)
+	{
+	    zs->zoomOutput = outputDeviceForPoint (s, pointerX, pointerY);
+	    zs->mouseIntervalTimeoutHandle = compAddTimeout(zs->opt[ZOOM_SCREEN_OPTION_POLL_INTERVAL].value.i, updateMouseInterval, s);
+	}
+	zs->grabbed = TRUE;
+    }
+    if (value == 1.0f)
+    {
+	zs->xTranslate = 0.0f;
+	zs->yTranslate = 0.0f;
+    }
+    zs->newZoom = value;
+    damageScreen(s);
+}
+
+/* Mouse code...
+ * This takes care of keeping the mouse in sync with the zoomed area and
+ * vice versa. This is necesarry since we don't have input redirection (yet).
+ * They are easily disabled.
+ */
+
+/* Syncs the center, based on translations, back to the mouse. 
+ * This should be called when doing non-IR zooming and moving the zoom
+ * area based on events other than mouse movement.
+ */
+static void
+syncCenterToMouse (CompScreen *s)
+{
+    ZOOM_SCREEN(s);
+    CompOutput *o = &s->outputDev[zs->zoomOutput];
+
+    float x = (float) ((zs->realXTranslate * s->width) + (o->width / 2) + o->region.extents.x1);
+    float y = (float) ((zs->realYTranslate * s->height) + (o->height / 2) + o->region.extents.y1);
+
+    if (((int)x != zs->mouseX || (int)y != zs->mouseY) && zs->grabbed && zs->newZoom != 1.0f)
+    {
+	warpPointer (s, x - pointerX , y - pointerY );
+	zs->mouseX = x;
+	zs->mouseY = y;
+    } 
+}
+
+/* Update the mouse position.
+ * Based on the zoom engine in use, we will have to move the zoom area.
+ * This might have to be added to a timer. 
+ */
+static void
+updateMousePosition (CompScreen *s)
+{
+    Window root_return;
+    Window child_return;
+    int rootX, rootY;
+    int winX, winY;
+    unsigned int maskReturn;
+    XQueryPointer (s->display->display, s->root,
+		  &root_return, &child_return,
+		  &rootX, &rootY, &winX, &winY, &maskReturn);
+
+
+    ZOOM_SCREEN(s);
+    if ((rootX != zs->mouseX || rootY != zs->mouseY))
+    {
+	if (rootX > s->width || rootY > s->height || s->root != root_return)
+	    return;
+	zs->mouseX = rootX;
+	zs->mouseY = rootY;
+	if (zs->opt[ZOOM_SCREEN_OPTION_SYNC_MOUSE].value.b && !zs->moving)
+	{
+	    zs->lastChange = time(NULL);
+	    setCenter (s, rootX, rootY, TRUE);
+	    damageScreen (s);
+	}
+    }
+}
+
+/* Timeout handler to poll the mouse. Returns false (and thereby does not get
+ * re-added to the queue) when zoom is not active.
+ */
+static Bool 
+updateMouseInterval (void *vs)
+{
+    CompScreen *s = vs;
+    ZOOM_SCREEN (s);
+
+    if (!zs->grabbed)
+    {
+	zs->mouseIntervalTimeoutHandle = FALSE;
+	return FALSE;
+    }
+    updateMousePosition(s);
+    return TRUE;
+}
+
+/* Zoom in to the area pointed to by the mouse.
+ */
 static Bool
 zoomIn (CompDisplay     *d,
 	CompAction      *action,
@@ -732,7 +758,10 @@ zoomTerminate (CompDisplay     *d,
     return FALSE;
 }
 
-/* Fetches focus changes and adjusts the zoom area */
+/* Fetches focus changes and adjusts the zoom area. 
+ * The focus handeling should be moved into a separate function
+ * before a release.
+ */
 static void
 zoomHandleEvent (CompDisplay *d,
 		 XEvent      *event)
