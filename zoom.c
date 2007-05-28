@@ -432,9 +432,11 @@ static void
 setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
 {
     ZOOM_SCREEN (s);
+    if (zs->newZoom == 1.0f)  // Remove for divid-by-zero fun.
+	return;
     zs->xTranslate = 
 	 (float) -((s->width/2) - (x + (width/2)))
-	/ (s->width); 
+	/ (s->width);
     zs->xTranslate /= (1.0f - zs->newZoom);
     zs->yTranslate = 
 	(float) -((s->height/2) - (y + (height/2))) 
