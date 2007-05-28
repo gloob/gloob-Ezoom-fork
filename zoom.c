@@ -426,21 +426,21 @@ setCenter (CompScreen *s, int x, int y, Bool instant)
 
 /* 
  * Zooms the area described. 
- * FIXME: The math here is simply wrong. It's accurate for newZoom == 0.5f,
- * but then it's off. (TODO).
+ * The math could probably be cleaned up, but should be correct now.
  */
 static void
 setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
 {
     ZOOM_SCREEN (s);
-    zs->xTranslate = (float) 
-	(1.0f + 2.0f*zs->newZoom) * (float) ((x + width/2) - (s->width/2))
+    zs->xTranslate = 
+	 (float) -((s->width/2) - (x + (width/2)))
 	/ (s->width); 
-    zs->yTranslate = (float) 
-	(1.0f + 2.0f*zs->newZoom) * (float) ((y + height/2) - (s->height/2)) 
+    zs->xTranslate /= (1.0f - zs->newZoom);
+    zs->yTranslate = 
+	(float) -((s->height/2) - (y + (height/2))) 
 	/ (s->height);
+    zs->yTranslate /= (1.0f - zs->newZoom);
     zs->moving = TRUE;
-
     constrainZoomTranslate (s);
 
     if (instant)
