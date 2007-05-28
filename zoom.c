@@ -469,7 +469,7 @@ panZoom (CompScreen *s, int xvalue, int yvalue)
 static void
 setScale(CompScreen *s, float x, float y)
 {
-    float value = x > y ? y : x;
+    float value = x > y ? x : y;
     ZOOM_SCREEN(s);
     zs->moving = TRUE;
     if (value >= 1.0f) // DEFAULT_Z_CAMERA - (DEFAULT_Z_CAMERA / 10.0f))
@@ -797,7 +797,7 @@ zoomOut (CompDisplay     *d,
     if (s)
     {
 	ZOOM_SCREEN (s);
-	setScale (s, zs->newZoom * zs->opt[SOPT_ZOOM_FACTOR].value.f, 2.0f);
+	setScale (s, zs->newZoom * zs->opt[SOPT_ZOOM_FACTOR].value.f, -1.0f);
     }
 
     return TRUE;
