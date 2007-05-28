@@ -67,6 +67,7 @@ typedef enum _ZdOpt
     DOPT_PAN_RIGHT,
     DOPT_PAN_UP,
     DOPT_PAN_DOWN,
+    DOPT_FIT_TO_WINDOW,
     DOPT_NUM
 } ZoomDisplayOptions;
 
@@ -449,6 +450,18 @@ setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
     }
 }
 
+/* Moves the zoom area to the window specified
+ */
+static void
+zoomAreaToWindow (CompScreen *s, CompWindow *w)
+{
+    int left = w->serverX - w->input.left;
+    int width = w->width + w->input.left + w->input.right; 
+    int top = w->serverY - w->input.top;
+    int height = w->height + w->input.top + w->input.bottom;
+    setZoomArea (w->screen, left, top, width, height, FALSE);
+}
+
 /* Pans the zoomed area vertically/horisontaly by
  * value * zs->panFactor
  * Used both by key bindings and future mouse-based
@@ -648,8 +661,7 @@ zoomSpecific (CompDisplay     *d,
 	if (zd->opt[DOPT_SPECIFIC_TARGET_FOCUS].value.b 
 	    && w && w->screen->root == s->root)
 	{
-	    setZoomArea (w->screen, w->serverX, w->serverY, 
-			 w->width, w->height, wasZoomed);
+	    zoomAreaToWindow (s, w);
 	}
 	else
 	{
@@ -695,6 +707,33 @@ zoomSpecific3 (CompDisplay     *d,
     ZOOM_DISPLAY (d);
     return zoomSpecific (d, action, state, option, nOption, 
 			 zd->opt[DOPT_SPECIFIC_LEVEL_3].value.f);
+}
+
+/* Zooms to fit the active window to the screen without cutting
+ * it off and targets it.
+ */
+static Bool
+zoomToWindow (CompDisplay     *d,
+	CompAction      *action,
+	CompActionState state,
+	CompOption      *option,
+	int		nOption)
+{
+    CompScreen *s;
+    Window xid;
+    xid = getIntOptionNamed (option, nOption, "root", 0);
+    s = findScreenAtDisplay (d, xid);
+    if (!s)
+	return TRUE;
+    CompWindow *w;
+    w = findWindowAtDisplay (d, d->activeWindow);
+    if (!w || w->screen->root != s->root)
+	return TRUE;
+    int width = w->width + w->input.left + w->input.right; 
+    int height = w->height + w->input.top + w->input.bottom;
+    setScale (s, (float) width/s->width, (float)  height/s->height);
+    zoomAreaToWindow (s, w);
+    return TRUE;
 }
 
 static Bool
@@ -895,7 +934,8 @@ static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
     { "pan_left", "action", 0, zoomPanLeft, 0 },
     { "pan_right", "action", 0, zoomPanRight, 0 },
     { "pan_up", "action", 0, zoomPanUp, 0 },
-    { "pan_down", "action", 0, zoomPanDown, 0 }
+    { "pan_down", "action", 0, zoomPanDown, 0 },
+    { "fit_to_window", "action", 0, zoomToWindow, 0 }
 };
 
 static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {

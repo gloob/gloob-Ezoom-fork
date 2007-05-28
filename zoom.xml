@@ -140,6 +140,14 @@
 		    <key>&lt;Super&gt;3</key>
 		</default>
 	    </option>
+	    <option type="action" name="fit_to_window">
+		<short>Fit zoomed area to window</short>
+		<long>Zooms in/out so the focused window is zoomed to the maximum while still being fully visible.</long>
+		<allowed key="true" button="true"/>
+		<default>
+		    <key>&lt;Super&gt;r</key>
+		</default>
+	    </option>
 	    <option type="action" name="pan_left">
 		<short>Pan Zoom Left</short>
 		<long>Pan (move) the zoom area left</long>
