@@ -453,7 +453,7 @@ setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
 /* Moves the zoom area to the window specified
  */
 static void
-zoomAreaToWindow (CompScreen *s, CompWindow *w)
+zoomAreaToWindow (CompWindow *w)
 {
     int left = w->serverX - w->input.left;
     int width = w->width + w->input.left + w->input.right; 
@@ -661,7 +661,7 @@ zoomSpecific (CompDisplay     *d,
 	if (zd->opt[DOPT_SPECIFIC_TARGET_FOCUS].value.b 
 	    && w && w->screen->root == s->root)
 	{
-	    zoomAreaToWindow (s, w);
+	    zoomAreaToWindow (w);
 	}
 	else
 	{
@@ -732,7 +732,7 @@ zoomToWindow (CompDisplay     *d,
     int width = w->width + w->input.left + w->input.right; 
     int height = w->height + w->input.top + w->input.bottom;
     setScale (s, (float) width/s->width, (float)  height/s->height);
-    zoomAreaToWindow (s, w);
+    zoomAreaToWindow (w);
     return TRUE;
 }
 
@@ -907,7 +907,7 @@ zoomHandleEvent (CompDisplay *d,
 		break;
 	    if (!zs->opt[SOPT_FOLLOW_FOCUS].value.b)
 		break;
-	    setZoomArea (w->screen, w->serverX, w->serverY, w->width, w->height, FALSE);
+	    zoomAreaToWindow (w);
 	    break;
 	case MapNotify:
 	    lastMapped = event->xmap.window;
