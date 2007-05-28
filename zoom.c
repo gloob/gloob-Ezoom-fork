@@ -40,7 +40,7 @@ static CompMetadata zoomMetadata;
 
 static int displayPrivateIndex;
 
-typedef enum _ZsOpt
+typedef enum _ZdOpt
 {
     DOPT_INITIATE = 0,
     DOPT_IN,
@@ -59,14 +59,7 @@ typedef enum _ZsOpt
     DOPT_NUM
 } ZoomDisplayOptions;
 
-typedef struct _ZoomDisplay {
-    int		    screenPrivateIndex;
-    HandleEventProc handleEvent;
-
-    CompOption opt[DOPT_NUM];
-} ZoomDisplay;
-
-typedef enum _ZdOpt
+typedef enum _ZsOpt
 {
     SOPT_FOLLOW_FOCUS = 0,
     SOPT_POINTER_SENSITIVITY,
@@ -81,54 +74,45 @@ typedef enum _ZdOpt
     SOPT_NUM
 } ZoomScreenOptions;
 
+typedef struct _ZoomDisplay {
+    int		    screenPrivateIndex;
+    HandleEventProc handleEvent;
+    CompOption opt[DOPT_NUM];
+} ZoomDisplay;
+
 typedef struct _ZoomScreen {
     PreparePaintScreenProc	 preparePaintScreen;
     DonePaintScreenProc		 donePaintScreen;
     PaintScreenProc		 paintScreen;
     SetScreenOptionForPluginProc setScreenOptionForPlugin;
-
     CompOption opt[SOPT_NUM];
-
     CompTimeoutHandle mouseIntervalTimeoutHandle;
-
     float pointerSensitivity;
-
     GLfloat currentZoom;
     GLfloat newZoom;
-
     GLfloat xVelocity;
     GLfloat yVelocity;
     GLfloat zVelocity;
-
     GLfloat xTranslate; // Target (Modify this for fluent movement)
     GLfloat yTranslate;
-
     GLfloat realXTranslate; // Real, unadjusted (Modify this too for instant)
     GLfloat realYTranslate;
-    
     GLfloat xtrans; // Real, adjusted (Don't modify these.)
     GLfloat ytrans;
     GLfloat ztrans;
     Bool moving; 
     int mouseX;
     int mouseY;
-
     XPoint savedPointer;
     Bool   grabbed;
-
     float maxTranslate;
-
     int zoomOutput;
-
     time_t lastChange;
 } ZoomScreen;
 
-static void
-updateMousePosition (CompScreen *s);
-static void
-syncCenterToMouse (CompScreen *s);
-static Bool 
-updateMouseInterval (void *vs);
+static void updateMousePosition (CompScreen *s);
+static void syncCenterToMouse (CompScreen *s);
+static Bool updateMouseInterval (void *vs);
 
 #define GET_ZOOM_DISPLAY(d)				      \
     ((ZoomDisplay *) (d)->privates[displayPrivateIndex].ptr)
@@ -884,6 +868,36 @@ zoomHandleEvent (CompDisplay *d,
 
 
 /* Settings etc, boring stuff */
+static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
+    { "initiate", "action", 0, zoomInitiate, zoomTerminate },
+    { "zoom_in", "action", 0, zoomIn, 0 },
+    { "zoom_out", "action", 0, zoomOut, 0 },
+    { "zoom_specific_1", "action", 0, zoomSpecific1, 0 },
+    { "zoom_specific_2", "action", 0, zoomSpecific2, 0 },
+    { "zoom_specific_3", "action", 0, zoomSpecific3, 0 },
+    { "zoom_spec1", "float", "<min>0.1</min><max>1.0</max><default>1.0</default>", 0, 0 },
+    { "zoom_spec2", "float", "<min>0.1</min><max>1.0</max><default>0.5</default>", 0, 0 },
+    { "zoom_spec3", "float", "<min>0.1</min><max>1.0</max><default>0.2</default>", 0, 0 },
+    { "spec_target_focus", "bool", "<default>true</default>", 0, 0 },
+    { "pan_left", "action", 0, zoomPanLeft, 0 },
+    { "pan_right", "action", 0, zoomPanRight, 0 },
+    { "pan_up", "action", 0, zoomPanUp, 0 },
+    { "pan_down", "action", 0, zoomPanDown, 0 }
+};
+
+static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
+    { "follow_focus", "bool", 0, 0, 0 },
+    { "sensitivity", "float", "<min>0.01</min>", 0, 0 },
+    { "speed", "float", "<min>0.01</min>", 0, 0 },
+    { "timestep", "float", "<min>0.1</min>", 0, 0 },
+    { "zoom_factor", "float", "<min>1.01</min>", 0, 0 },
+    { "filter_linear", "bool", 0, 0, 0 },
+    { "sync_mouse", "bool", 0, 0, 0 },
+    { "mouse_poll_interval", "int", "<min>1</min>", 0, 0 },
+    { "follow_focus_delay", "int", "<min>0</min>", 0, 0 }, 
+    { "pan_factor", "float", "<min>0.001</min><default>0.1</default>", 0, 0 }
+};
+
 static void
 zoomUpdateCubeOptions (CompScreen *s)
 {
@@ -973,23 +987,6 @@ zoomGetDisplayOptions (CompPlugin  *plugin,
     return zd->opt;
 }
 
-static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
-    { "initiate", "action", 0, zoomInitiate, zoomTerminate },
-    { "zoom_in", "action", 0, zoomIn, 0 },
-    { "zoom_out", "action", 0, zoomOut, 0 },
-    { "zoom_specific_1", "action", 0, zoomSpecific1, 0 },
-    { "zoom_specific_2", "action", 0, zoomSpecific2, 0 },
-    { "zoom_specific_3", "action", 0, zoomSpecific3, 0 },
-    { "zoom_spec1", "float", "<min>0.1</min><max>1.0</max><default>1.0</default>", 0, 0 },
-    { "zoom_spec2", "float", "<min>0.1</min><max>1.0</max><default>0.5</default>", 0, 0 },
-    { "zoom_spec3", "float", "<min>0.1</min><max>1.0</max><default>0.2</default>", 0, 0 },
-    { "spec_target_focus", "bool", "<default>true</default>", 0, 0 },
-    { "pan_left", "action", 0, zoomPanLeft, 0 },
-    { "pan_right", "action", 0, zoomPanRight, 0 },
-    { "pan_up", "action", 0, zoomPanUp, 0 },
-    { "pan_down", "action", 0, zoomPanDown, 0 }
-};
-
 static Bool
 zoomSetDisplayOption (CompPlugin      *plugin,
 		      CompDisplay     *display,
@@ -1048,19 +1045,6 @@ zoomFiniDisplay (CompPlugin  *p,
     compFiniDisplayOptions (d, zd->opt, DOPT_NUM);
     free (zd);
 }
-
-static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
-    { "follow_focus", "bool", 0, 0, 0 },
-    { "sensitivity", "float", "<min>0.01</min>", 0, 0 },
-    { "speed", "float", "<min>0.01</min>", 0, 0 },
-    { "timestep", "float", "<min>0.1</min>", 0, 0 },
-    { "zoom_factor", "float", "<min>1.01</min>", 0, 0 },
-    { "filter_linear", "bool", 0, 0, 0 },
-    { "sync_mouse", "bool", 0, 0, 0 },
-    { "mouse_poll_interval", "int", "<min>1</min>", 0, 0 },
-    { "follow_focus_delay", "int", "<min>0</min>", 0, 0 }, 
-    { "pan_factor", "float", "<min>0.001</min><default>0.1</default>", 0, 0 }
-};
 
 static Bool
 zoomInitScreen (CompPlugin *p,
