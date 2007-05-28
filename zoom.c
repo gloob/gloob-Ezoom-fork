@@ -83,6 +83,7 @@ typedef enum _ZsOpt
     SOPT_POLL_INTERVAL,
     SOPT_FOCUS_DELAY,
     SOPT_PAN_FACTOR,
+    SOPT_FOCUS_FIT_WINDOW,
     SOPT_NUM
 } ZoomScreenOptions;
 
@@ -909,6 +910,14 @@ zoomHandleEvent (CompDisplay *d,
 		break;
 	    if (!zs->opt[SOPT_FOLLOW_FOCUS].value.b)
 		break;
+	    if (!zs->grabbed)
+		break;
+	    if (zs->opt[SOPT_FOCUS_FIT_WINDOW].value.b)
+	    {
+		int width = w->width + w->input.left + w->input.right; 
+		int height = w->height + w->input.top + w->input.bottom;
+		setScale (w->screen, (float) width/w->screen->width, (float)  height/w->screen->height);
+	    }
 	    zoomAreaToWindow (w);
 	    break;
 	case MapNotify:
@@ -950,7 +959,8 @@ static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
     { "sync_mouse", "bool", 0, 0, 0 },
     { "mouse_poll_interval", "int", "<min>1</min>", 0, 0 },
     { "follow_focus_delay", "int", "<min>0</min>", 0, 0 }, 
-    { "pan_factor", "float", "<min>0.001</min><default>0.1</default>", 0, 0 }
+    { "pan_factor", "float", "<min>0.001</min><default>0.1</default>", 0, 0 },
+    { "focus_fit_window", "bool", "<default>false</default>", 0, 0 }
 };
 
 static void

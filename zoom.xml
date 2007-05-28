@@ -264,6 +264,11 @@
 		<long>Move the zoom area when focus changes</long>
 		<default>true</default>
 	    </option>
+	    <option type="bool" name="focus_fit_window">
+		<short>Fit to window on focus track</short>
+		<long>Fit the zoomed area to the window when the zoomed area moves as a result of focus tracking. Currently only triggers when some zoom is active. </long>
+		<default>false</default>
+	    </option>
 	    <option type="bool" name="sync_mouse">
 		<short>Sync Mouse</short>
 		<long>Allways keep the mouse in the correct place. This is needed for input enabled zoom without input redirection.</long>
