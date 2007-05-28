@@ -20,9 +20,20 @@
  * NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
  * WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Author: David Reveman <davidr@novell.com>
- * Heavily modified by: Kristian Lyngstol <kristian@bohemians.org>
- *			(Input enabled, focus tracking, and more)
+ *
+ * Authors: 
+ *	- Original zoom plugin; David Reveman <davidr@novell.com>
+ *	- Most features beyond basic zoom; 
+ *	  Kristian Lyngstol <kristian@bohemians.org>
+ *
+ * This plugin offers basic zoom, and does not require input to be disabled
+ * while zooming. Key features of the new version is a hopefully more generic
+ * interface to the basic zoom features, allowing advanced control of the 
+ * plugin based on events such as focus changes, cursor movement, manual
+ * panning and similar. This plugin has also been inspired by the inputzoom.c
+ * plugin written for the Beryl project and copyrighted to Dennis Kasprzyk and
+ * Quinn Storm.
+ *
  */
 
 #include <stdio.h>
@@ -110,6 +121,9 @@ typedef struct _ZoomScreen {
     time_t lastChange;
 } ZoomScreen;
 
+/* These prototypes must be pre-defined since they cross-refference eachother
+ * and thus makes it impossible to order them in a fashion that avoids this.
+ */
 static void updateMousePosition (CompScreen *s);
 static void syncCenterToMouse (CompScreen *s);
 static Bool updateMouseInterval (void *vs);
@@ -865,7 +879,6 @@ zoomHandleEvent (CompDisplay *d,
     (*d->handleEvent) (d, event);
     WRAP (zd, d, handleEvent, zoomHandleEvent);
 }
-
 
 /* Settings etc, boring stuff */
 static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
