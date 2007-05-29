@@ -610,8 +610,6 @@ zoomIn (CompDisplay     *d,
     if (s)
     {
 	ZOOM_SCREEN (s);
-	if (otherScreenGrabExist (s, "zoom", "scale", 0))
-	    return FALSE;
 
 	float zoomFactor = zs->opt[SOPT_ZOOM_FACTOR].value.f;
 	int   x, y;
@@ -648,9 +646,6 @@ zoomSpecific (CompDisplay     *d,
 
     if (s)
     {
-	if (otherScreenGrabExist (s, "zoom", "scale", 0))
-	    return FALSE;
-
 	int   x, y;
 	Bool wasZoomed;
 
