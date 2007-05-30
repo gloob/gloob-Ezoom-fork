@@ -1113,9 +1113,7 @@ zoomHandleEvent (CompDisplay *d,
 	default:
 	    if (event->type == zd->fixesEventBase + XFixesCursorNotify)
 	    {
-		printf("Xfixes cursor changed...\n");
 		XFixesCursorNotifyEvent *cev = (XFixesCursorNotifyEvent *) event;
-
 		s = findScreenAtDisplay(d, cev->window);
 		if (s)
 		{
