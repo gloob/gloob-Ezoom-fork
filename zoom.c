@@ -812,15 +812,7 @@ zoomIn (CompDisplay     *d,
     if (s)
     {
 	ZOOM_SCREEN (s);
-
-	float zoomFactor = zs->opt[SOPT_ZOOM_FACTOR].value.f;
-	int   x, y;
-
-	x = getIntOptionNamed (option, nOption, "x", 0);
-	y = getIntOptionNamed (option, nOption, "y", 0);
-
-	setScale (s, zs->newZoom/zoomFactor, zs->newZoom/zoomFactor);
-	setCenter (s, x, y, TRUE);
+	setScale (s, zs->newZoom/zs->opt[SOPT_ZOOM_FACTOR].value.f, -1.0f);
     }
     return TRUE;
 }
@@ -1030,9 +1022,7 @@ zoomOut (CompDisplay     *d,
 {
     CompScreen *s;
     Window     xid;
-
     xid = getIntOptionNamed (option, nOption, "root", 0);
-
     s = findScreenAtDisplay (d, xid);
     if (s)
     {
