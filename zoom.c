@@ -85,12 +85,29 @@ typedef enum _ZsOpt
     SOPT_PAN_FACTOR,
     SOPT_FOCUS_FIT_WINDOW,
     SOPT_ALLWAYS_FOCUS_FIT_WINDOW,
+    SOPT_SCALE_MOUSE,
+    SOPT_HIDE_ORIGINAL_MOUSE,
     SOPT_NUM
 } ZoomScreenOptions;
+
+typedef struct _CursorTexture
+{
+    Bool isSet;
+    GLuint texture;
+    CompScreen *screen;
+    int width;
+    int height;
+    int hotX;
+    int hotY;
+} CursorTexture;
 
 typedef struct _ZoomDisplay {
     int		    screenPrivateIndex;
     HandleEventProc handleEvent;
+    Bool fixesSupported;
+    int fixesEventBase;
+    int fixesErrorBase;
+    Bool canHideCursor;
     CompOption opt[DOPT_NUM];
 } ZoomDisplay;
 
@@ -122,6 +139,11 @@ typedef struct _ZoomScreen {
     float maxTranslate;
     int zoomOutput;
     time_t lastChange;
+    CursorTexture cursor;
+    Bool cursorInfoSelected;
+    Bool showScaled;
+    Bool cursorHidden;
+    Bool hideNormal;
 } ZoomScreen;
 
 /* These prototypes must be pre-defined since they cross-refference eachother
@@ -130,6 +152,9 @@ typedef struct _ZoomScreen {
 static void updateMousePosition (CompScreen *s);
 static void syncCenterToMouse (CompScreen *s);
 static Bool updateMouseInterval (void *vs);
+static void cursorZoomActive (CompScreen *s);
+static void cursorZoomInactive (CompScreen *s);
+static void drawCursor (CompScreen *s, int output, const CompTransform *transform);
 
 #define GET_ZOOM_DISPLAY(d)				      \
     ((ZoomDisplay *) (d)->privates[displayPrivateIndex].ptr)
@@ -350,6 +375,7 @@ zoomPaintScreen (CompScreen		 *s,
 	UNWRAP (zs, s, paintScreen);
 	status = (*s->paintScreen) (s, &sa, transform, region, output, mask);
 	WRAP (zs, s, paintScreen, zoomPaintScreen);
+	drawCursor (s, output, transform);
 
 	s->filter[SCREEN_TRANS_FILTER] = saveFilter;
     }
@@ -504,11 +530,13 @@ setScale(CompScreen *s, float x, float y)
 	    zs->mouseIntervalTimeoutHandle = compAddTimeout(zs->opt[SOPT_POLL_INTERVAL].value.i, updateMouseInterval, s);
 	}
 	zs->grabbed = TRUE;
+	cursorZoomActive (s);
     }
     if (value == 1.0f)
     {
 	zs->xTranslate = 0.0f;
 	zs->yTranslate = 0.0f;
+	cursorZoomInactive (s);
     }
     zs->newZoom = value;
     damageScreen(s);
@@ -590,6 +618,168 @@ updateMouseInterval (void *vs)
     }
     updateMousePosition(s);
     return TRUE;
+}
+
+/* Free a cursor
+ */
+static void freeCursor(CursorTexture * cursor)
+{
+    if (!cursor->isSet)
+	return;
+	
+    makeScreenCurrent (cursor->screen);
+    cursor->isSet = FALSE;
+    glDeleteTextures(1, &cursor->texture);
+    cursor->texture = 0;
+}
+
+/* Draws the actual cursor. 
+ */
+static void drawCursor (CompScreen *s, int output, const CompTransform *transform)
+{
+    ZOOM_SCREEN (s);
+    if (zs->cursor.isSet)
+    {
+	CompTransform     sTransform = *transform;
+	transformToScreenSpace (s, output, -DEFAULT_Z_CAMERA, &sTransform);
+
+        glPushMatrix ();
+	glLoadMatrixf (sTransform.m);
+	glTranslatef(zs->mouseX, zs->mouseY, 0.0);
+	glScalef(1.0f / zs->currentZoom, 1.0f / zs->currentZoom, 1.0f);
+	int x = -zs->cursor.hotX;
+	int y = -zs->cursor.hotY;
+
+	glEnable(GL_BLEND);
+	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, zs->cursor.texture);
+	glEnable(GL_TEXTURE_RECTANGLE_ARB);
+
+	glBegin(GL_QUADS);
+	glTexCoord2d(0, 0);
+	glVertex2f(x, y);
+	glTexCoord2d(0, zs->cursor.height);
+	glVertex2f(x, y + zs->cursor.height);
+	glTexCoord2d(zs->cursor.width, zs->cursor.height);
+	glVertex2f(x + zs->cursor.width, y + zs->cursor.height);
+	glTexCoord2d(zs->cursor.width, 0);
+	glVertex2f(x + zs->cursor.width, y);
+	glEnd();
+
+	glDisable(GL_BLEND);
+
+	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
+	glDisable(GL_TEXTURE_RECTANGLE_ARB);
+	glPopMatrix();
+    }
+}
+
+/* The cursor needs an update */
+static void zoomUpdateCursor(CompScreen * s, CursorTexture * cursor)
+{
+    makeScreenCurrent (s);
+    Display * dpy = s->display->display;
+
+    glEnable(GL_TEXTURE_RECTANGLE_ARB);
+    if (!cursor->isSet)
+    {
+	cursor->isSet = TRUE;
+	cursor->screen = s;
+	glGenTextures(1, &cursor->texture);
+	glBindTexture(GL_TEXTURE_RECTANGLE_ARB, cursor->texture);
+	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+		GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+		GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+		GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_RECTANGLE_ARB,
+		GL_TEXTURE_WRAP_T, GL_CLAMP);
+    }
+
+    XFixesCursorImage *ci = XFixesGetCursorImage(dpy);
+
+    cursor->width = ci->width;
+    cursor->height = ci->height;
+    cursor->hotX = ci->xhot;
+    cursor->hotY = ci->yhot;
+
+    unsigned char *pixels = malloc(ci->width * ci->height * 4);
+    int i;
+
+    for (i = 0; i < ci->width * ci->height; i++)
+    {
+	unsigned long pix = ci->pixels[i];
+
+	pixels[i * 4] = pix & 0xff;
+	pixels[(i * 4) + 1] = (pix >> 8) & 0xff;
+	pixels[(i * 4) + 2] = (pix >> 16) & 0xff;
+	pixels[(i * 4) + 3] = (pix >> 24) & 0xff;
+    }
+
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, cursor->texture);
+    glTexImage2D(GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, cursor->width,
+	    cursor->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+    glBindTexture(GL_TEXTURE_RECTANGLE_ARB, 0);
+    glDisable(GL_TEXTURE_RECTANGLE_ARB);
+    XFree(ci);
+    free(pixels);
+}
+
+/* We are no longer zooming the cursor, so display it.
+ */
+static void
+cursorZoomInactive (CompScreen *s)
+{
+    ZOOM_DISPLAY (s->display);
+    if (!zd->fixesSupported)
+	return;
+    ZOOM_SCREEN (s);
+
+    if (zs->cursorInfoSelected)
+    {
+	zs->cursorInfoSelected = FALSE;
+	XFixesSelectCursorInput(s->display->display, s->root, 0);
+    }
+
+    if (zs->cursor.isSet)
+    {
+	freeCursor (&zs->cursor);
+    }
+
+    if (zs->cursorHidden)
+    {
+	zs->cursorHidden = FALSE;
+	XFixesShowCursor(s->display->display, s->root);
+    }
+}
+
+/* Cursor zoom is active: We need to hide the original, 
+ * register for Cursor notifies and display the new one.
+ * This can be called multiple times, not just on initial
+ * activation.
+ */
+static void
+cursorZoomActive (CompScreen *s)
+{
+    ZOOM_DISPLAY (s->display);
+    if (!zd->fixesSupported)
+	return;
+    ZOOM_SCREEN (s);
+    if (!zs->opt[SOPT_SCALE_MOUSE].value.b)
+	return;
+
+    if (!zs->cursorInfoSelected)
+    { 
+	zs->cursorInfoSelected = TRUE;
+        XFixesSelectCursorInput(s->display->display, s->root, 
+				XFixesDisplayCursorNotifyMask);
+	zoomUpdateCursor (s, &zs->cursor);
+    }
+    if (zd->canHideCursor && !zs->cursorHidden && zs->opt[SOPT_HIDE_ORIGINAL_MOUSE].value.b)
+    {
+	zs->cursorHidden = TRUE;
+	XFixesHideCursor (s->display->display, s->root);
+    }
 }
 
 /* Zoom in to the area pointed to by the mouse.
@@ -887,6 +1077,7 @@ zoomHandleEvent (CompDisplay *d,
 {
     ZOOM_DISPLAY(d);
     CompWindow *w;
+    CompScreen *s;
     static Window lastMapped = 0;
     switch (event->type) {
 	case FocusIn:
@@ -918,7 +1109,21 @@ zoomHandleEvent (CompDisplay *d,
 	    break;
 	case MapNotify:
 	    lastMapped = event->xmap.window;
+	    break;
 	default:
+	    if (event->type == zd->fixesEventBase + XFixesCursorNotify)
+	    {
+		printf("Xfixes cursor changed...\n");
+		XFixesCursorNotifyEvent *cev = (XFixesCursorNotifyEvent *) event;
+
+		s = findScreenAtDisplay(d, cev->window);
+		if (s)
+		{
+		    ZOOM_SCREEN(s);
+		    if (zs->cursor.isSet)
+			zoomUpdateCursor(s, &zs->cursor);
+		}
+	    }
 	    break;
     }
     UNWRAP (zd, d, handleEvent);
@@ -957,7 +1162,9 @@ static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
     { "follow_focus_delay", "int", "<min>0</min>", 0, 0 }, 
     { "pan_factor", "float", "<min>0.001</min><default>0.1</default>", 0, 0 },
     { "focus_fit_window", "bool", "<default>false</default>", 0, 0 },
-    { "allways_focus_fit_window", "bool", "<default>false</default>", 0, 0 }
+    { "allways_focus_fit_window", "bool", "<default>false</default>", 0, 0 },
+    { "scale_mouse", "bool", "<default>false</default>", 0, 0 },
+    { "hide_original_mouse", "bool", "<default>false</default>", 0, 0 }
 };
 
 static void
@@ -1092,6 +1299,15 @@ zoomInitDisplay (CompPlugin  *p,
 	return FALSE;
     }
 
+    zd->fixesSupported = XFixesQueryExtension(d->display, &zd->fixesEventBase,
+			 &zd->fixesErrorBase);
+    int minor, major;
+    XFixesQueryVersion(d->display, &major, &minor);
+    if (major >= 4)
+	zd->canHideCursor = TRUE;
+    else
+	zd->canHideCursor = FALSE;
+
     WRAP (zd, d, handleEvent, zoomHandleEvent);
     d->privates[displayPrivateIndex].ptr = zd;
     return TRUE;
@@ -1143,6 +1359,11 @@ zoomInitScreen (CompPlugin *p,
     zs->mouseX = -1;
     zs->mouseY = -1;
     zs->moving = FALSE;
+    zs->hideNormal = FALSE;
+    zs->showScaled = TRUE;
+    zs->cursorInfoSelected = FALSE;
+    zs->cursor.isSet = FALSE;
+    zs->cursorHidden = FALSE;
     zs->pointerSensitivity =
 	zs->opt[SOPT_POINTER_SENSITIVITY].value.f *
 	ZOOM_POINTER_SENSITIVITY_FACTOR;

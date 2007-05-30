@@ -279,6 +279,16 @@
 		<long>Allways keep the mouse in the correct place. This is needed for input enabled zoom without input redirection.</long>
 		<default>true</default>
 	    </option>
+	    <option type="bool" name="scale_mouse">
+		<short>Scale the mouse pointer</short>
+		<long>Enable this to get a gradually larger mouse pointer as you zoom in</long>
+		<default>false</default>
+	    </option>
+	    <option type="bool" name="hide_original_mouse">
+		<short>Hide original mouse pointer</short>
+		<long>Hides the original mouse pointer when zoomed in and scaling the mouse</long>
+		<default>false</default>
+	    </option>
 	    <option type="int" name="follow_focus_delay">
 		<short>Follow Focus Delay</short>
 		<long>Only attempt to center newly focused windows if the mouse hasn't moved in this amount of seconds. Use this to avoid jumping when using sloppy focus.</long>
