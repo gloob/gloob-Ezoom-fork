@@ -597,8 +597,8 @@ updateMousePosition (CompScreen *s)
 	{
 	    zs->lastChange = time(NULL);
 	    setCenter (s, rootX, rootY, TRUE);
-	    damageScreen (s);
 	}
+	damageScreen (s);
     }
 }
 
@@ -634,6 +634,7 @@ static void freeCursor(CursorTexture * cursor)
 }
 
 /* Draws the actual cursor. 
+ * FIXME: Clean up the math.
  */
 static void drawCursor (CompScreen *s, int output, const CompTransform *transform)
 {
@@ -645,7 +646,18 @@ static void drawCursor (CompScreen *s, int output, const CompTransform *transfor
 
         glPushMatrix ();
 	glLoadMatrixf (sTransform.m);
-	glTranslatef(zs->mouseX, zs->mouseY, 0.0);
+	glTranslatef(zs->realXTranslate * s->width + s->width/2, 
+		     zs->realYTranslate * s->height + s->height/2, 
+		     0.0f);
+
+	if (zs->currentZoom != 1.0f)
+	{
+	    float mx = (zs->mouseX ) - (zs->realXTranslate * s->width + s->width/2);
+	    float my = (zs->mouseY ) - (zs->realYTranslate * s->height + s->height/2);
+	    mx /= zs->currentZoom;
+	    my /= zs->currentZoom;
+	    glTranslatef ( mx, my, 0.0f);
+	}
 	glScalef(1.0f / zs->currentZoom, 1.0f / zs->currentZoom, 1.0f);
 	int x = -zs->cursor.hotX;
 	int y = -zs->cursor.hotY;
