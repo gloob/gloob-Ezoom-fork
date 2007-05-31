@@ -499,8 +499,8 @@ static void
 panZoom (CompScreen *s, int xvalue, int yvalue)
 {
     ZOOM_SCREEN (s);
-    zs->xTranslate += zs->opt[SOPT_PAN_FACTOR].value.f * xvalue;
-    zs->yTranslate += zs->opt[SOPT_PAN_FACTOR].value.f * yvalue;
+    zs->xTranslate += zs->opt[SOPT_PAN_FACTOR].value.f * xvalue * zs->currentZoom;
+    zs->yTranslate += zs->opt[SOPT_PAN_FACTOR].value.f * yvalue * zs->currentZoom;
     zs->moving = TRUE;
     constrainZoomTranslate (s);
 }
