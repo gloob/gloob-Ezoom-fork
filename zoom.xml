@@ -276,7 +276,7 @@
 	    </option>
 	    <option type="bool" name="sync_mouse">
 		<short>Sync Mouse</short>
-		<long>Allways keep the mouse in the correct place. This is needed for input enabled zoom without input redirection.</long>
+		<long>Allways keep the mouse in the correct place. This is how traditional input zoom was achieved, this can be disabeld if you draw a scaled mouse pointer. The scaled pointer is adjusted for the zoom level, and thus doesn't require the mouse to be synced with the zoom area.</long>
 		<default>true</default>
 	    </option>
 	    <option type="bool" name="scale_mouse">
