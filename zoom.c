@@ -45,8 +45,6 @@
 
 #include <compiz.h>
 
-#define ZOOM_POINTER_SENSITIVITY_FACTOR 0.001f
-
 static CompMetadata zoomMetadata;
 
 static int displayPrivateIndex;
@@ -74,7 +72,6 @@ typedef enum _ZdOpt
 typedef enum _ZsOpt
 {
     SOPT_FOLLOW_FOCUS = 0,
-    SOPT_POINTER_SENSITIVITY,
     SOPT_SPEED,
     SOPT_TIMESTEP,
     SOPT_ZOOM_FACTOR,
@@ -1152,7 +1149,6 @@ static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
 
 static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
     { "follow_focus", "bool", 0, 0, 0 },
-    { "sensitivity", "float", "<min>0.01</min>", 0, 0 },
     { "speed", "float", "<min>0.01</min>", 0, 0 },
     { "timestep", "float", "<min>0.1</min>", 0, 0 },
     { "zoom_factor", "float", "<min>1.01</min>", 0, 0 },
@@ -1211,20 +1207,7 @@ zoomSetScreenOption (CompPlugin      *plugin,
     if (!o)
 	return FALSE;
 
-    switch (index) {
-	case SOPT_POINTER_SENSITIVITY:
-	    if (compSetFloatOption (o, value))
-	    {
-		zs->pointerSensitivity = o->value.f *
-		    ZOOM_POINTER_SENSITIVITY_FACTOR;
-		return TRUE;
-	    }
-	    break;
-	default:
-	    return compSetScreenOption (screen, o, value);
-    }
-
-    return FALSE;
+    return compSetScreenOption (screen, o, value);
 }
 
 static Bool
@@ -1364,9 +1347,6 @@ zoomInitScreen (CompPlugin *p,
     zs->cursorInfoSelected = FALSE;
     zs->cursor.isSet = FALSE;
     zs->cursorHidden = FALSE;
-    zs->pointerSensitivity =
-	zs->opt[SOPT_POINTER_SENSITIVITY].value.f *
-	ZOOM_POINTER_SENSITIVITY_FACTOR;
 
     WRAP (zs, s, preparePaintScreen, zoomPreparePaintScreen);
     WRAP (zs, s, donePaintScreen, zoomDonePaintScreen);

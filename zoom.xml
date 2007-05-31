@@ -303,45 +303,6 @@
 		<min>1</min>
 		<max>500</max>
 	    </option>
-	    <option type="float" name="sensitivity">
-		<short>Pointer Sensitivity</short>
-		<short xml:lang="ca">Sensibilitat del punter</short>
-		<short xml:lang="cs">Citlivost ukazatele</short>
-		<short xml:lang="da">Markørfølsomhed</short>
-		<short xml:lang="de">Zeigerempfindlichkeit</short>
-		<short xml:lang="es">Sensibilidad del puntero</short>
-		<short xml:lang="fi">Osoittimen herkkyys</short>
-		<short xml:lang="fr">Sensibilité du pointeur</short>
-		<short xml:lang="hu">Mutató érzékenysége</short>
-		<short xml:lang="it">Sensibilità puntatore</short>
-		<short xml:lang="ja">ポインタ感度</short>
-		<short xml:lang="pl">Czułość wskaźnika</short>
-		<short xml:lang="pt">Sensibilidade do Ponteiro</short>
-		<short xml:lang="pt_BR">Sensibilidade do Ponteiro</short>
-		<short xml:lang="ru">Чувствительность курсора</short>
-		<short xml:lang="zh_CN">指针灵敏度</short>
-		<short xml:lang="zh_TW">指標靈敏度</short>
-		<long>Sensitivity of pointer movement</long>
-		<long xml:lang="ca">Sensibilitat del moviment del punter</long>
-		<long xml:lang="cs">Citlivost pohybu ukazatele</long>
-		<long xml:lang="da">Det følsomhedsniveau, der skal anvendes til markørbevægelserne</long>
-		<long xml:lang="de">Empfindlichkeit bei Zeigerbewegung</long>
-		<long xml:lang="es">Sensibilidad de movimiento del puntero</long>
-		<long xml:lang="fi">Osoitinliikkeen herkkyys</long>
-		<long xml:lang="fr">Sensibilité du mouvement du pointeur</long>
-		<long xml:lang="hu">Mutatómozgatás érzékenysége</long>
-		<long xml:lang="it">Sensibilità spostamento puntatore</long>
-		<long xml:lang="ja">ポインタの移動感度</long>
-		<long xml:lang="pl">Czułość ruchu wskaźnika</long>
-		<long xml:lang="pt_BR">Sensibilidade de movimento do ponteiro</long>
-		<long xml:lang="ru">Чувствительность к перемещениям курсора</long>
-		<long xml:lang="zh_CN">指针移动灵敏度</long>
-		<long xml:lang="zh_TW">指標移動靈敏度</long>
-		<default>1</default>
-		<min>0.01</min>
-		<max>100</max>
-		<precision>0.01</precision>
-	    </option>
 	    <option type="float" name="speed">
 		<short>Speed</short>
 		<short xml:lang="ca">Velocitat</short>
