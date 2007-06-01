@@ -148,6 +148,14 @@
 		    <key>&lt;Super&gt;r</key>
 		</default>
 	    </option>
+	    <option type="action" name="center_mouse">
+		<short>Center the mouse</short>
+		<long>Puts the mouse in the middle of the screen (Regardless of zoom level)</long>
+		<allowed key="true" button="true"/>
+		<default>
+		    <key>&lt;Super&gt;c</key>
+		</default>
+	    </option>
 	    <option type="action" name="pan_left">
 		<short>Pan Zoom Left</short>
 		<long>Pan (move) the zoom area left</long>

@@ -66,6 +66,7 @@ typedef enum _ZdOpt
     DOPT_PAN_UP,
     DOPT_PAN_DOWN,
     DOPT_FIT_TO_WINDOW,
+    DOPT_CENTER_MOUSE,
     DOPT_NUM
 } ZoomDisplayOptions;
 
@@ -972,6 +973,7 @@ zoomPanUp (CompDisplay     *d,
     panZoom (s, 0, -1);
     return TRUE;
 }
+
 static Bool
 zoomPanDown (CompDisplay     *d,
 	CompAction      *action,
@@ -986,6 +988,29 @@ zoomPanDown (CompDisplay     *d,
     if (!s)
 	return TRUE;
     panZoom (s, 0, 1);
+    return TRUE;
+}
+
+/* Centers the mouse based on zoom level and translation.
+ */
+static Bool
+zoomCenterMouse (CompDisplay     *d,
+	CompAction      *action,
+	CompActionState state,
+	CompOption      *option,
+	int		nOption)
+{
+    CompScreen *s;
+    Window xid;
+    xid = getIntOptionNamed (option, nOption, "root", 0);
+    s = findScreenAtDisplay (d, xid);
+    if (!s)
+	return TRUE;
+    ZOOM_SCREEN (s);
+    warpPointer (s, 
+		 (int) (s->width/2 - pointerX) + ((float)s->width * -zs->xtrans), 
+		 (int) (s->height/2 - pointerY) + ((float)s->height * zs->ytrans));
+
     return TRUE;
 }
 
@@ -1140,7 +1165,8 @@ static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
     { "pan_right", "action", 0, zoomPanRight, 0 },
     { "pan_up", "action", 0, zoomPanUp, 0 },
     { "pan_down", "action", 0, zoomPanDown, 0 },
-    { "fit_to_window", "action", 0, zoomToWindow, 0 }
+    { "fit_to_window", "action", 0, zoomToWindow, 0 },
+    { "center_mouse", "action", 0, zoomCenterMouse, 0 }
 };
 
 static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
