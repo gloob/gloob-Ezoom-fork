@@ -111,7 +111,7 @@ typedef struct _ZoomDisplay {
 typedef struct _ZoomScreen {
     PreparePaintScreenProc	 preparePaintScreen;
     DonePaintScreenProc		 donePaintScreen;
-    PaintScreenProc		 paintScreen;
+    PaintOutputProc		 paintOutput;
     SetScreenOptionForPluginProc setScreenOptionForPlugin;
     CompOption opt[SOPT_NUM];
     CompTimeoutHandle mouseIntervalTimeoutHandle;
@@ -151,7 +151,7 @@ static void syncCenterToMouse (CompScreen *s);
 static Bool updateMouseInterval (void *vs);
 static void cursorZoomActive (CompScreen *s);
 static void cursorZoomInactive (CompScreen *s);
-static void drawCursor (CompScreen *s, int output, const CompTransform *transform);
+static void drawCursor (CompScreen *s, CompOutput *output, const CompTransform *transform);
 
 #define GET_ZOOM_DISPLAY(d)				      \
     ((ZoomDisplay *) (d)->privates[displayPrivateIndex].ptr)
@@ -330,11 +330,11 @@ zoomDonePaintScreen (CompScreen *s)
  * Make sure to use the correct filter.
  */
 static Bool
-zoomPaintScreen (CompScreen		 *s,
+zoomPaintOutput (CompScreen		 *s,
 		 const ScreenPaintAttrib *sAttrib,
 		 const CompTransform	 *transform,
 		 Region		         region,
-		 int			 output,
+		 CompOutput		 *output,
 		 unsigned int		 mask)
 {
     Bool status;
@@ -347,7 +347,7 @@ zoomPaintScreen (CompScreen		 *s,
 	mask |= PAINT_SCREEN_CLEAR_MASK;
     }
 
-    if (zs->grabbed && zs->zoomOutput == output)
+    if (zs->grabbed && zs->zoomOutput == output->id)
     {
 	ScreenPaintAttrib sa = *sAttrib;
 	int		  saveFilter;
@@ -370,19 +370,19 @@ zoomPaintScreen (CompScreen		 *s,
 	else
 	    s->filter[SCREEN_TRANS_FILTER] = COMP_TEXTURE_FILTER_FAST;
 
-	UNWRAP (zs, s, paintScreen);
-	status = (*s->paintScreen) (s, &sa, transform, region, output, mask);
-	WRAP (zs, s, paintScreen, zoomPaintScreen);
+	UNWRAP (zs, s, paintOutput);
+	status = (*s->paintOutput) (s, &sa, transform, region, output, mask);
+	WRAP (zs, s, paintOutput, zoomPaintOutput);
 	drawCursor (s, output, transform);
 
 	s->filter[SCREEN_TRANS_FILTER] = saveFilter;
     }
     else
     {
-	UNWRAP (zs, s, paintScreen);
-	status = (*s->paintScreen) (s, sAttrib, transform, region, output,
+	UNWRAP (zs, s, paintOutput);
+	status = (*s->paintOutput) (s, sAttrib, transform, region, output,
 				    mask);
-	WRAP (zs, s, paintScreen, zoomPaintScreen);
+	WRAP (zs, s, paintOutput, zoomPaintOutput);
     }
 
     return status;
@@ -636,7 +636,7 @@ freeCursor (CursorTexture * cursor)
  * FIXME: Clean up the math.
  */
 static void
-drawCursor (CompScreen *s, int output, const CompTransform *transform)
+drawCursor (CompScreen *s, CompOutput *output, const CompTransform *transform)
 {
     ZOOM_SCREEN (s);
     if (zs->cursor.isSet)
@@ -1346,7 +1346,7 @@ zoomInitScreen (CompPlugin *p,
 
     WRAP (zs, s, preparePaintScreen, zoomPreparePaintScreen);
     WRAP (zs, s, donePaintScreen, zoomDonePaintScreen);
-    WRAP (zs, s, paintScreen, zoomPaintScreen);
+    WRAP (zs, s, paintOutput, zoomPaintOutput);
     WRAP (zs, s, setScreenOptionForPlugin, zoomSetScreenOptionForPlugin);
 
     s->privates[zd->screenPrivateIndex].ptr = zs;
@@ -1364,7 +1364,7 @@ zoomFiniScreen (CompPlugin *p,
 
     UNWRAP (zs, s, preparePaintScreen);
     UNWRAP (zs, s, donePaintScreen);
-    UNWRAP (zs, s, paintScreen);
+    UNWRAP (zs, s, paintOutput);
     UNWRAP (zs, s, setScreenOptionForPlugin);
 
     compFiniScreenOptions (s, zs->opt, SOPT_NUM);
