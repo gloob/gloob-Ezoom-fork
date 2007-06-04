@@ -172,9 +172,10 @@ static void drawCursor (CompScreen *s, CompOutput *output, const CompTransform *
 /* Adjust the velocity in the z-direction. 
  */
 static int
-adjustZoomVelocity (ZoomScreen *zs)
+adjustZoomVelocity (CompScreen *s, float chunk)
 {
     float d, adjust, amount;
+    ZOOM_SCREEN (s);
 
     d = (zs->newZoom - zs->currentZoom) * 75.0f;
 
@@ -187,14 +188,26 @@ adjustZoomVelocity (ZoomScreen *zs)
 
     zs->zVelocity = (amount * zs->zVelocity + adjust) / (amount + 1.0f);
 
-    return (fabs (d) < 0.1f && fabs (zs->zVelocity) < 0.005f);
+    if (fabs (d) < 0.1f && fabs (zs->zVelocity) < 0.005f)
+    {
+	zs->currentZoom = zs->newZoom;
+	zs->zVelocity = 0.0f;
+	return TRUE;
+    }
+    else
+    {
+	zs->currentZoom += (zs->zVelocity * chunk) /
+	    s->redrawTime;
+	return FALSE;
+    }
 }
 
 /* Adjust the X/Y velocity based on target translation and real translation.
  */
 static Bool
-adjustXYVelocity (ZoomScreen *zs)
+adjustXYVelocity (CompScreen *s, float chunk)
 {
+    ZOOM_SCREEN (s);
     if (zs->realXTranslate == zs->xTranslate && zs->realYTranslate == zs->yTranslate)
 	return TRUE;
 
@@ -202,30 +215,34 @@ adjustXYVelocity (ZoomScreen *zs)
     float xadjust, yadjust;
     float xamount, yamount;
 
+    zs->xVelocity /= 1.25f;
+    zs->yVelocity /= 1.25f;
     xdiff = (zs->xTranslate - zs->realXTranslate) * 75.0f;
-    xadjust = xdiff * 0.002f;
-    xamount = fabs (xdiff); 
-
-    if (xamount < 1.0f)
-	xamount = 1.0f;
-    else if (xamount > 5.0)
-	xamount = 5.0f;
-
     ydiff = (zs->yTranslate - zs->realYTranslate) * 75.0f;
+    xadjust = xdiff * 0.002f;
     yadjust = ydiff * 0.002f;
+    xamount = fabs (xdiff); 
     yamount = fabs (ydiff); 
-    if (yamount < 1.0f)
-	yamount = 1.0f;
-    else if (yamount > 5.0)
-	yamount = 5.0f;
+
+    if (xamount < 1.0f) xamount = 1.0f;
+    else if (xamount > 5.0) xamount = 5.0f;
+    if (yamount < 1.0f) yamount = 1.0f;
+    else if (yamount > 5.0) yamount = 5.0f;
     
     zs->xVelocity = (xamount * zs->xVelocity + xadjust) / (xamount + 1.0f);
     zs->yVelocity = (yamount * zs->yVelocity + yadjust) / (yamount + 1.0f);
     
     if ((fabs(xdiff) < 0.1f && fabs (zs->xVelocity) < 0.005f) && 
 	(fabs(ydiff) < 0.1f && fabs (zs->yVelocity) < 0.005f))
+    {
+	zs->realXTranslate = zs->xTranslate;
+	zs->realYTranslate = zs->yTranslate;
+	zs->xVelocity = 0.0f;
+	zs->yVelocity = 0.0f;
 	return TRUE;
-
+    }
+    zs->realXTranslate += (zs->xVelocity * chunk) / s->redrawTime;
+    zs->realYTranslate += (zs->yVelocity * chunk) / s->redrawTime;
     return FALSE;
 }
 
@@ -250,29 +267,8 @@ zoomPreparePaintScreen (CompScreen *s,
 	chunk  = amount / (float) steps;
 	while (steps--)
 	{
-	    zs->xVelocity /= 1.25f;
-	    zs->yVelocity /= 1.25f;
-	    if (adjustXYVelocity (zs))
-	    {
-		zs->realXTranslate = zs->xTranslate;
-		zs->xVelocity = 0.0f;
-		zs->realYTranslate = zs->yTranslate;
-		zs->yVelocity = 0.0f;
-	    } else {
-		zs->realXTranslate += (zs->xVelocity * chunk) / s->redrawTime;
-		zs->realYTranslate += (zs->yVelocity * chunk) / s->redrawTime;
-	    }
-
-	    if (adjustZoomVelocity (zs))
-	    {
-		zs->currentZoom = zs->newZoom;
-		zs->zVelocity = 0.0f;
-	    }
-	    else
-	    {
-		zs->currentZoom += (zs->zVelocity * chunk) /
-		    s->redrawTime;
-	    }
+	    adjustXYVelocity (s, chunk);
+	    adjustZoomVelocity (s, chunk);
 
 	    zs->ztrans = DEFAULT_Z_CAMERA * zs->currentZoom;
 	    if (zs->ztrans <= 0.1f)
