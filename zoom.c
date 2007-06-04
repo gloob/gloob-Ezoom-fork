@@ -67,6 +67,7 @@ typedef enum _ZdOpt
     DOPT_PAN_DOWN,
     DOPT_FIT_TO_WINDOW,
     DOPT_CENTER_MOUSE,
+    DOPT_FIT_TO_ZOOM,
     DOPT_NUM
 } ZoomDisplayOptions;
 
@@ -1014,6 +1015,34 @@ zoomCenterMouse (CompDisplay     *d,
     return TRUE;
 }
 
+/* Resize a window to fit the zoomed area.
+ * This could probably do with some moving-stuff too.
+ * IE: Move the zoom area afterwards. And ensure
+ * the window isn't resized off-screen.
+ */
+static Bool
+zoomFitWindowToZoom (CompDisplay     *d,
+	CompAction      *action,
+	CompActionState state,
+	CompOption      *option,
+	int		nOption)
+{
+    CompScreen *s;
+    XWindowChanges xwc; 
+    CompWindow * w;
+    w = findWindowAtDisplay (d, d->activeWindow);
+    if (!w)
+	return TRUE;
+    s = w->screen;
+    ZOOM_SCREEN (s);
+    xwc.x = w->serverX;
+    xwc.y = w->serverY;
+    xwc.width = (int) (s->width * zs->currentZoom - (int) ((w->input.left + w->input.right)));
+    xwc.height = (int) (s->height * zs->currentZoom) - (int) ((w->input.top + w->input.bottom));
+    sendSyncRequest (w);
+    configureXWindow (w, (unsigned int) CWWidth | CWHeight, &xwc);
+    return TRUE;
+}
 
 static Bool
 zoomInitiate (CompDisplay     *d,
@@ -1166,7 +1195,8 @@ static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
     { "pan_up", "action", 0, zoomPanUp, 0 },
     { "pan_down", "action", 0, zoomPanDown, 0 },
     { "fit_to_window", "action", 0, zoomToWindow, 0 },
-    { "center_mouse", "action", 0, zoomCenterMouse, 0 }
+    { "center_mouse", "action", 0, zoomCenterMouse, 0 },
+    { "fit_to_zoom", "action", 0, zoomFitWindowToZoom, 0 }
 };
 
 static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
