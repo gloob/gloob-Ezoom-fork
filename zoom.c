@@ -861,6 +861,8 @@ zoomSpecific (CompDisplay     *d,
 	ZOOM_SCREEN (s);
 	if (target == 1.0f && zs->newZoom == 1.0f)
 	    return FALSE;
+	if (otherScreenGrabExist (s, 0))
+	    return FALSE;
 
 	setScale (s, target, target);
 
