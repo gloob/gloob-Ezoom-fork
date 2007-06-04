@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <compiz>
     <plugin name="zoom">
+	<deps>
+	    <relation type="after">
+		<plugin>expo</plugin>
+	    </relation>
+	</deps>
 	<short>Zoom Desktop</short>
 	<short xml:lang="ca">Fes zoom a l'escriptori</short>
 	<short xml:lang="cs">Přiblížit plochu</short>

@@ -856,12 +856,12 @@ zoomSpecific (CompDisplay     *d,
     if (s)
     {
 	int   x, y;
-	Bool wasZoomed;
 
 	ZOOM_DISPLAY (d);
 	ZOOM_SCREEN (s);
+	if (target == 1.0f && zs->newZoom == 1.0f)
+	    return FALSE;
 
-	wasZoomed = zs->newZoom == 1.0f;
 	setScale (s, target, target);
 
 	CompWindow *w;
@@ -1488,6 +1488,10 @@ zoomGetMetadata (CompPlugin *plugin)
     return &zoomMetadata;
 }
 
+CompPluginDep zoomDeps[] = {
+    { CompPluginRuleAfter, "expo" }
+};
+
 CompPluginVTable zoomVTable = {
     "zoom",
     zoomGetVersion,
@@ -1504,8 +1508,8 @@ CompPluginVTable zoomVTable = {
     zoomSetDisplayOption,
     zoomGetScreenOptions,
     zoomSetScreenOption,
-    0, /* Deps */
-    0, /* nDeps */
+    zoomDeps,
+    sizeof(zoomDeps) / sizeof(zoomDeps[0]),
     0, /* Features */
     0  /* nFeatures */
 };
