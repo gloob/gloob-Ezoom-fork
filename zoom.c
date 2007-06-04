@@ -114,6 +114,7 @@ typedef struct _ZoomScreen {
     PreparePaintScreenProc	 preparePaintScreen;
     DonePaintScreenProc		 donePaintScreen;
     PaintOutputProc		 paintOutput;
+    PaintScreenProc		 paintScreen;
     SetScreenOptionForPluginProc setScreenOptionForPlugin;
     CompOption opt[SOPT_NUM];
     CompTimeoutHandle mouseIntervalTimeoutHandle;
@@ -246,6 +247,27 @@ adjustXYVelocity (CompScreen *s, float chunk)
     return FALSE;
 }
 
+static void
+zoomPaintScreen (CompScreen *s,
+		 CompOutput *outputs,
+		 int nOutputs,
+		 unsigned int mask)
+{
+    ZOOM_SCREEN (s);
+    if (zs->grabbed)
+    {
+	UNWRAP (zs, s, paintScreen);
+	(*s->paintScreen) (s, &s->fullscreenOutput, 1, mask); 
+	WRAP (zs, s, paintScreen, zoomPaintScreen);
+    }
+    else
+    {
+	UNWRAP (zs, s, paintScreen);
+	(*s->paintScreen) (s, outputs, nOutputs, mask); 
+	WRAP (zs, s, paintScreen, zoomPaintScreen);
+    }
+}
+
 /* Calculates the real translation to be applied in PaintScreen().
  * Needs cleaning...
  */
@@ -345,7 +367,7 @@ zoomPaintOutput (CompScreen		 *s,
 	mask |= PAINT_SCREEN_CLEAR_MASK;
     }
 
-    if (zs->grabbed && zs->zoomOutput == output->id)
+    if (zs->grabbed) //  && zs->zoomOutput == output->id)
     {
 	ScreenPaintAttrib sa = *sAttrib;
 	int		  saveFilter;
@@ -1400,6 +1422,7 @@ zoomInitScreen (CompPlugin *p,
     WRAP (zs, s, donePaintScreen, zoomDonePaintScreen);
     WRAP (zs, s, paintOutput, zoomPaintOutput);
     WRAP (zs, s, setScreenOptionForPlugin, zoomSetScreenOptionForPlugin);
+    WRAP (zs, s, paintScreen, zoomPaintScreen);
 
     s->privates[zd->screenPrivateIndex].ptr = zs;
     zoomUpdateCubeOptions (s);
@@ -1418,6 +1441,7 @@ zoomFiniScreen (CompPlugin *p,
     UNWRAP (zs, s, donePaintScreen);
     UNWRAP (zs, s, paintOutput);
     UNWRAP (zs, s, setScreenOptionForPlugin);
+    UNWRAP (zs, s, paintScreen);
 
     compFiniScreenOptions (s, zs->opt, SOPT_NUM);
     free (zs);
