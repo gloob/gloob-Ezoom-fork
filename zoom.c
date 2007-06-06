@@ -459,9 +459,9 @@ setCenter (CompScreen *s, int x, int y, Bool instant)
     CompOutput *o = &s->outputDev[out];
 
     zs->zooms[out].xTranslate = (float) 
-	((x - o->region.extents.x1) - o->width  / 2) / (s->width);
+	((x - o->region.extents.x1) - o->width  / 2) / (o->width);
     zs->zooms[out].yTranslate = (float) 
-	((y - o->region.extents.y1) - o->height / 2) / (s->height);
+	((y - o->region.extents.y1) - o->height / 2) / (o->height);
     
     if (instant)
     {
