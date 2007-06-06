@@ -361,7 +361,7 @@ zoomPaintOutput (CompScreen		 *s,
     Bool status;
     int out = output->id;
     ZOOM_SCREEN (s);
-    if (zs->grabbed && out > 0 && out < zs->nZooms && zs->zooms[out].currentZoom != 1.0f) 
+    if (zs->grabbed && out >= 0 && out < zs->nZooms && zs->zooms[out].currentZoom != 1.0f) 
     {
 	ScreenPaintAttrib sa = *sAttrib;
 	int		  saveFilter;
@@ -481,7 +481,7 @@ static void
 setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
 {
     ZOOM_SCREEN (s);
-    int out = outputDeviceForPoint (s, x, y);
+    int out = outputDeviceForGeometry (s, x, y, width, height, 0);
     CompOutput *o = &s->outputDev[out];
     if (zs->zooms[out].newZoom == 1.0f)  
 	return;
@@ -958,7 +958,7 @@ zoomToWindow (CompDisplay     *d,
 	return TRUE;
     int width = w->width + w->input.left + w->input.right; 
     int height = w->height + w->input.top + w->input.bottom;
-    int out = outputDeviceForPoint (s, w->serverX, w->serverY);
+    int out = outputDeviceForWindow (w);
     CompOutput *o = &s->outputDev[out];
     setScale (s, out, (float) width/o->width, (float)  height/o->height);
     zoomAreaToWindow (w);
@@ -1079,12 +1079,12 @@ zoomFitWindowToZoom (CompDisplay     *d,
     if (!w)
 	return TRUE;
     s = w->screen;
-    int out = outputDeviceForPoint (s, w->serverX, w->serverY);
+    int out = outputDeviceForWindow (w);
     ZOOM_SCREEN (s);
     xwc.x = w->serverX;
     xwc.y = w->serverY;
-    xwc.width = (int) (s->width * zs->zooms[out].currentZoom - (int) ((w->input.left + w->input.right)));
-    xwc.height = (int) (s->height * zs->zooms[out].currentZoom) - (int) ((w->input.top + w->input.bottom));
+    xwc.width = (int) (s->outputDev[out].width * zs->zooms[out].currentZoom - (int) ((w->input.left + w->input.right)));
+    xwc.height = (int) (s->outputDev[out].height * zs->zooms[out].currentZoom) - (int) ((w->input.top + w->input.bottom));
     sendSyncRequest (w);
     configureXWindow (w, (unsigned int) CWWidth | CWHeight, &xwc);
     return TRUE;
