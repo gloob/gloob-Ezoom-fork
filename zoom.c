@@ -675,19 +675,20 @@ drawCursor (CompScreen *s, CompOutput *output, const CompTransform *transform)
     int out = output->id;
     if (zs->cursor.isSet)
     {
+	CompOutput *o = &s->outputDev[out];
 	CompTransform sTransform = *transform;
 	transformToScreenSpace (s, output, -DEFAULT_Z_CAMERA, &sTransform);
 
         glPushMatrix ();
 	glLoadMatrixf (sTransform.m);
-	glTranslatef (zs->zooms[out].realXTranslate * s->width + s->width/2, 
-		      zs->zooms[out].realYTranslate * s->height + s->height/2, 
+	glTranslatef (zs->zooms[out].realXTranslate * o->width + o->width/2 + o->region.extents.x1, 
+		      zs->zooms[out].realYTranslate * o->height + o->height/2 + o->region.extents.y1, 
 		      0.0f);
 
 	if (zs->zooms[out].currentZoom != 1.0f)
 	{
-	    float mx = (zs->mouseX ) - (zs->zooms[out].realXTranslate * s->width + s->width/2);
-	    float my = (zs->mouseY ) - (zs->zooms[out].realYTranslate * s->height + s->height/2);
+	    float mx = (zs->mouseX - o->region.extents.x1) - (zs->zooms[out].realXTranslate * o->width + o->width/2 );
+	    float my = (zs->mouseY - o->region.extents.y1 ) - (zs->zooms[out].realYTranslate * o->height + o->height/2);
 	    mx /= zs->zooms[out].currentZoom;
 	    my /= zs->zooms[out].currentZoom;
 	    glTranslatef (mx, my, 0.0f);
