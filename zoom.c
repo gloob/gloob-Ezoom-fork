@@ -361,7 +361,7 @@ zoomPaintOutput (CompScreen		 *s,
     Bool status;
     int out = output->id;
     ZOOM_SCREEN (s);
-    if (zs->grabbed && zs->zooms[out].currentZoom != 1.0f) 
+    if (zs->grabbed && out > 0 && out < zs->nZooms && zs->zooms[out].currentZoom != 1.0f) 
     {
 	ScreenPaintAttrib sa = *sAttrib;
 	int		  saveFilter;
