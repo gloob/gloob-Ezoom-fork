@@ -135,7 +135,6 @@ typedef struct _ZoomScreen {
     PreparePaintScreenProc	 preparePaintScreen;
     DonePaintScreenProc		 donePaintScreen;
     PaintOutputProc		 paintOutput;
-    SetScreenOptionForPluginProc setScreenOptionForPlugin;
     CompOption opt[SOPT_NUM];
     CompTimeoutHandle mouseIntervalTimeoutHandle;
     float pointerSensitivity;
@@ -1268,24 +1267,6 @@ static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
     { "hide_original_mouse", "bool", "<default>false</default>", 0, 0 }
 };
 
-static void
-zoomUpdateCubeOptions (CompScreen *s)
-{
-    CompPlugin *p;
-    ZOOM_SCREEN (s);
-    p = findActivePlugin ("cube");
-    if (p && p->vTable->getScreenOptions)
-    {
-	CompOption *options, *option;
-	int	   nOptions;
-
-	options = (*p->vTable->getScreenOptions) (p, s, &nOptions);
-	option = compFindOption (options, nOptions, "in", 0);
-	if (option)
-	    zs->maxTranslate = option->value.b ? 0.85f : 1.5f;
-    }
-}
-
 static CompOption *
 zoomGetScreenOptions (CompPlugin *plugin,
 		      CompScreen *screen,
@@ -1313,25 +1294,6 @@ zoomSetScreenOption (CompPlugin      *plugin,
 	return FALSE;
 
     return compSetScreenOption (screen, o, value);
-}
-
-static Bool
-zoomSetScreenOptionForPlugin (CompScreen      *s,
-			      char	      *plugin,
-			      char	      *name,
-			      CompOptionValue *value)
-{
-    Bool status;
-    ZOOM_SCREEN (s);
-
-    UNWRAP (zs, s, setScreenOptionForPlugin);
-    status = (*s->setScreenOptionForPlugin) (s, plugin, name, value);
-    WRAP (zs, s, setScreenOptionForPlugin, zoomSetScreenOptionForPlugin);
-
-    if (status && strcmp (plugin, "cube") == 0)
-	zoomUpdateCubeOptions (s);
-
-    return status;
 }
 
 static CompOption *
@@ -1460,10 +1422,8 @@ zoomInitScreen (CompPlugin *p,
     WRAP (zs, s, preparePaintScreen, zoomPreparePaintScreen);
     WRAP (zs, s, donePaintScreen, zoomDonePaintScreen);
     WRAP (zs, s, paintOutput, zoomPaintOutput);
-    WRAP (zs, s, setScreenOptionForPlugin, zoomSetScreenOptionForPlugin);
 
     s->privates[zd->screenPrivateIndex].ptr = zs;
-    zoomUpdateCubeOptions (s);
     return TRUE;
 }
 
@@ -1478,7 +1438,6 @@ zoomFiniScreen (CompPlugin *p,
     UNWRAP (zs, s, preparePaintScreen);
     UNWRAP (zs, s, donePaintScreen);
     UNWRAP (zs, s, paintOutput);
-    UNWRAP (zs, s, setScreenOptionForPlugin);
 
     compFiniScreenOptions (s, zs->opt, SOPT_NUM);
     free (zs);
