@@ -1049,9 +1049,14 @@ zoomCenterMouse (CompDisplay     *d,
     ZOOM_SCREEN (s);
     int out = outputDeviceForPoint (s, pointerX, pointerY);
     warpPointer (s, 
-		 (int) (s->width/2 - pointerX) + ((float)s->width * -zs->zooms[out].xtrans), 
-		 (int) (s->height/2 - pointerY) + ((float)s->height * zs->zooms[out].ytrans));
-
+		 (int) (s->outputDev[out].width/2 + 
+			s->outputDev[out].region.extents.x1 - pointerX)
+		 + ((float) s->outputDev[out].width * 
+			-zs->zooms[out].xtrans), 
+		 (int) (s->outputDev[out].height/2 + 
+			s->outputDev[out].region.extents.y1 - pointerY) 
+		 + ((float) s->outputDev[out].height * 
+			zs->zooms[out].ytrans));
     return TRUE;
 }
 
