@@ -86,6 +86,8 @@ typedef enum _ZsOpt
     SOPT_ALLWAYS_FOCUS_FIT_WINDOW,
     SOPT_SCALE_MOUSE,
     SOPT_HIDE_ORIGINAL_MOUSE,
+    SOPT_RESTRAIN_MOUSE,
+    SOPT_RESTRAIN_MARGIN,
     SOPT_NUM
 } ZoomScreenOptions;
 
@@ -609,6 +611,51 @@ syncCenterToMouse (CompScreen *s)
     } 
 }
 
+/* Convert the point X,Y to where it would be when zoomed.
+ */
+static void 
+convertToZoomed (CompScreen *s, int out, int x, int y, int *resultX, int *resultY)
+{
+    ZOOM_SCREEN (s); 
+    CompOutput *o = &s->outputDev[out];
+    ZoomArea *za = &zs->zooms[out];
+    *resultX = x - (za->realXTranslate * (1.0f - za->currentZoom) * o->width) - o->width/2;
+    *resultX /= za->currentZoom;
+    *resultX += o->width/2;
+    *resultY = y - (za->realYTranslate * (1.0f - za->currentZoom) * o->height) - o->height/2;
+    *resultY /= za->currentZoom;
+    *resultY += o->height/2;
+}
+
+/* Ensures that the cursor is visible on the given head
+ */
+
+static void
+restrainCursor (CompScreen *s, int out)
+{
+    int x,y;
+    int diffX = 0, diffY = 0;
+    CompOutput *o = &s->outputDev[out];
+    ZOOM_SCREEN (s);
+    float z = zs->zooms[out].currentZoom;
+    int margin = zs->opt[SOPT_RESTRAIN_MARGIN].value.i;
+    if (!zs->opt[SOPT_RESTRAIN_MOUSE].value.b)
+	return ;
+    convertToZoomed (s, out, zs->mouseX, zs->mouseY, &x, &y);
+    if (x > o->region.extents.x2 - margin)
+	diffX = x - o->region.extents.x2 + margin;
+    else if (x < o->region.extents.x1 + margin)
+	diffX = x - o->region.extents.x1 - margin;
+    if (y > o->region.extents.y2 - margin)
+	diffY = y - o->region.extents.y2 + margin;
+    else if (y < o->region.extents.y1 + margin)
+	diffY = y - o->region.extents.y1 - margin;
+    if (abs(diffX)*z > 0  || abs(diffY)*z > 0)
+	warpPointer (s, 
+		(int) (zs->mouseX - pointerX) -  (int) ((float)diffX * z), 
+		(int) (zs->mouseY  - pointerY) -  (int) ((float)diffY * z));
+}
+
 /* Check if the cursor is still visible.
  */
 static void 
@@ -618,7 +665,10 @@ cursorMoved (CompScreen *s)
     int out;
     out = outputDeviceForPoint (s, zs->mouseX, zs->mouseY);
     if (isActive (s, out))
+    {
 	cursorZoomActive (s);
+	restrainCursor (s, out);
+    }
     else
 	cursorZoomInactive (s);
 }
@@ -1291,7 +1341,9 @@ static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
     { "focus_fit_window", "bool", "<default>false</default>", 0, 0 },
     { "allways_focus_fit_window", "bool", "<default>false</default>", 0, 0 },
     { "scale_mouse", "bool", "<default>false</default>", 0, 0 },
-    { "hide_original_mouse", "bool", "<default>false</default>", 0, 0 }
+    { "hide_original_mouse", "bool", "<default>false</default>", 0, 0 },
+    { "restrain_mouse", "bool", "<default>false</default>", 0, 0 },
+    { "restrain_margin", "int", "<default>5</default>", 0, 0 }
 };
 
 static CompOption *

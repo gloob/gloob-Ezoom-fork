@@ -310,6 +310,18 @@
 		<long>Hides the original mouse pointer when zoomed in and scaling the mouse</long>
 		<default>false</default>
 	    </option>
+	    <option type="bool" name="restrain_mouse">
+		<short>Restrain the mouse to the zoom area</short>
+		<long>Attempt to keep the zoomed mouse visible by warping it when it is moved otuside the zoom area.</long>
+		<default>false</default>
+	    </option>
+	    <option type="int" name="restrain_margin">
+		<short>Mouse Restrain Margin</short>
+		<long>The size of the margin to add when attempting to restrain the mouse.  </long>
+		<default>5</default>
+		<min>0</min>
+		<max>50</max>
+	    </option>
 	    <option type="int" name="follow_focus_delay">
 		<short>Follow Focus Delay</short>
 		<long>Only attempt to center newly focused windows if the mouse hasn't moved in this amount of seconds. Use this to avoid jumping when using sloppy focus.</long>
