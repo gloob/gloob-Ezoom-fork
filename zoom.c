@@ -609,7 +609,6 @@ updateMousePosition (CompScreen *s)
 		  &root_return, &child_return,
 		  &rootX, &rootY, &winX, &winY, &maskReturn);
 
-
     ZOOM_SCREEN(s);
     if ((rootX != zs->mouseX || rootY != zs->mouseY))
     {
@@ -635,7 +634,6 @@ updateMouseInterval (void *vs)
 {
     CompScreen *s = vs;
     ZOOM_SCREEN (s);
-
     if (!zs->grabbed)
     {
 	zs->mouseIntervalTimeoutHandle = FALSE;
