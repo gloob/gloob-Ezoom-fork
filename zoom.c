@@ -172,6 +172,22 @@ static void drawCursor (CompScreen *s, CompOutput *output, const CompTransform *
 
 #define NUM_OPTIONS(s) (sizeof ((s)->opt) / sizeof (CompOption))
 
+/* Check if zoom is active on the output specified */
+static inline Bool
+isActive (CompScreen *s, int out)
+{
+    ZOOM_SCREEN (s);
+    if (!zs->grabbed)
+	return FALSE;
+    if (out < 0 || out >= zs->nZooms)
+	return FALSE;
+    if (zs->zooms[out].currentZoom == 1.0f &&
+	zs->zooms[out].newZoom == 1.0f &&
+	zs->zooms[out].zVelocity == 0.0f)
+	return FALSE;
+    return TRUE;
+}
+
 /* Adjust the velocity in the z-direction. 
  */
 static void
@@ -179,7 +195,7 @@ adjustZoomVelocity (CompScreen *s, int out, float chunk)
 {
     ZOOM_SCREEN (s);
     float d, adjust, amount;
-    if (zs->zooms[out].currentZoom == 1.0f && zs->zooms[out].newZoom == 1.0f)
+    if (!isActive (s, out))
 	return;
 
     d = (zs->zooms[out].newZoom - zs->zooms[out].currentZoom) * 75.0f;
@@ -213,7 +229,7 @@ adjustXYVelocity (CompScreen *s, int out, float chunk)
     ZOOM_SCREEN (s);
     if (zs->zooms[out].realXTranslate == zs->zooms[out].xTranslate && zs->zooms[out].realYTranslate == zs->zooms[out].yTranslate)
 	return;
-    if (zs->zooms[out].currentZoom == 1.0f && zs->zooms[out].newZoom == 1.0f)
+    if (!isActive (s, out))
 	return;
 
     float xdiff, ydiff;
@@ -355,7 +371,7 @@ zoomPaintOutput (CompScreen		 *s,
     Bool status;
     int out = output->id;
     ZOOM_SCREEN (s);
-    if (zs->grabbed && out >= 0 && out < zs->nZooms && zs->zooms[out].currentZoom != 1.0f) 
+    if (isActive (s, out))
     {
 	ScreenPaintAttrib sa = *sAttrib;
 	int		  saveFilter;
@@ -593,20 +609,6 @@ syncCenterToMouse (CompScreen *s)
     } 
 }
 
-/* Check if zoom is active on the output specified */
-static Bool
-isActive (CompScreen *s, int out)
-{
-    ZOOM_SCREEN (s);
-    if (!zs->grabbed)
-	return FALSE;
-    if (zs->zooms[out].currentZoom == 1.0f &&
-	zs->zooms[out].newZoom == 1.0f &&
-	zs->zooms[out].zVelocity == 0.0f)
-	return FALSE;
-    return TRUE;
-}
-
 /* Check if the cursor is still visible.
  */
 static void 
@@ -614,14 +616,13 @@ cursorMoved (CompScreen *s)
 {
     ZOOM_SCREEN (s);
     int out;
-    if (!zs->grabbed)
-	return ;
     out = outputDeviceForPoint (s, zs->mouseX, zs->mouseY);
     if (isActive (s, out))
 	cursorZoomActive (s);
     else
 	cursorZoomInactive (s);
 }
+
 /* Update the mouse position.
  * Based on the zoom engine in use, we will have to move the zoom area.
  * This might have to be added to a timer. 
