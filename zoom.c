@@ -112,10 +112,6 @@ typedef struct _ZoomDisplay {
 
 typedef struct _ZoomArea {
     int output;
-    int x;
-    int y;
-    int width;
-    int height;
     GLfloat currentZoom;
     GLfloat newZoom;
     GLfloat xVelocity;
