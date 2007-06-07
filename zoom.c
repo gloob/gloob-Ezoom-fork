@@ -714,14 +714,14 @@ drawCursor (CompScreen *s, CompOutput *output, const CompTransform *transform)
 static void
 zoomUpdateCursor(CompScreen * s, CursorTexture * cursor)
 {
-    makeScreenCurrent (s);
     Display * dpy = s->display->display;
 
-    glEnable (GL_TEXTURE_RECTANGLE_ARB);
     if (!cursor->isSet)
     {
 	cursor->isSet = TRUE;
 	cursor->screen = s;
+	makeScreenCurrent (s);
+	glEnable (GL_TEXTURE_RECTANGLE_ARB);
 	glGenTextures (1, &cursor->texture);
 	glBindTexture (GL_TEXTURE_RECTANGLE_ARB, cursor->texture);
 	glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, 
@@ -732,6 +732,9 @@ zoomUpdateCursor(CompScreen * s, CursorTexture * cursor)
 			 GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameteri (GL_TEXTURE_RECTANGLE_ARB,
 			 GL_TEXTURE_WRAP_T, GL_CLAMP);
+    } else {
+	makeScreenCurrent (cursor->screen);
+	glEnable (GL_TEXTURE_RECTANGLE_ARB);
     }
 
     XFixesCursorImage *ci = XFixesGetCursorImage(dpy);
