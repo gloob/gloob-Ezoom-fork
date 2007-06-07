@@ -178,31 +178,31 @@ static void
 adjustZoomVelocity (CompScreen *s, int out, float chunk)
 {
     ZOOM_SCREEN (s);
-	float d, adjust, amount;
-	if (zs->zooms[out].currentZoom == 1.0f && zs->zooms[out].newZoom == 1.0f)
-	    return;
+    float d, adjust, amount;
+    if (zs->zooms[out].currentZoom == 1.0f && zs->zooms[out].newZoom == 1.0f)
+	return;
 
-	d = (zs->zooms[out].newZoom - zs->zooms[out].currentZoom) * 75.0f;
+    d = (zs->zooms[out].newZoom - zs->zooms[out].currentZoom) * 75.0f;
 
-	adjust = d * 0.002f;
-	amount = fabs (d);
-	if (amount < 1.0f)
-	    amount = 1.0f;
-	else if (amount > 5.0f)
-	    amount = 5.0f;
+    adjust = d * 0.002f;
+    amount = fabs (d);
+    if (amount < 1.0f)
+	amount = 1.0f;
+    else if (amount > 5.0f)
+	amount = 5.0f;
 
-	zs->zooms[out].zVelocity = (amount * zs->zooms[out].zVelocity + adjust) / (amount + 1.0f);
+    zs->zooms[out].zVelocity = (amount * zs->zooms[out].zVelocity + adjust) / (amount + 1.0f);
 
-	if (fabs (d) < 0.1f && fabs (zs->zooms[out].zVelocity) < 0.005f)
-	{
-	    zs->zooms[out].currentZoom = zs->zooms[out].newZoom;
-	    zs->zooms[out].zVelocity = 0.0f;
-	}
-	else
-	{
-	    zs->zooms[out].currentZoom += (zs->zooms[out].zVelocity * chunk) /
-		s->redrawTime;
-	}
+    if (fabs (d) < 0.1f && fabs (zs->zooms[out].zVelocity) < 0.005f)
+    {
+	zs->zooms[out].currentZoom = zs->zooms[out].newZoom;
+	zs->zooms[out].zVelocity = 0.0f;
+    }
+    else
+    {
+	zs->zooms[out].currentZoom += (zs->zooms[out].zVelocity * chunk) /
+	    s->redrawTime;
+    }
 }
 
 /* Adjust the X/Y velocity based on target translation and real translation.
@@ -211,43 +211,43 @@ static void
 adjustXYVelocity (CompScreen *s, int out, float chunk)
 {
     ZOOM_SCREEN (s);
-	if (zs->zooms[out].realXTranslate == zs->zooms[out].xTranslate && zs->zooms[out].realYTranslate == zs->zooms[out].yTranslate)
-	    return;
-	if (zs->zooms[out].currentZoom == 1.0f && zs->zooms[out].newZoom == 1.0f)
-	    return;
+    if (zs->zooms[out].realXTranslate == zs->zooms[out].xTranslate && zs->zooms[out].realYTranslate == zs->zooms[out].yTranslate)
+	return;
+    if (zs->zooms[out].currentZoom == 1.0f && zs->zooms[out].newZoom == 1.0f)
+	return;
 
-	float xdiff, ydiff;
-	float xadjust, yadjust;
-	float xamount, yamount;
+    float xdiff, ydiff;
+    float xadjust, yadjust;
+    float xamount, yamount;
 
-	zs->zooms[out].xVelocity /= 1.25f;
-	zs->zooms[out].yVelocity /= 1.25f;
-	xdiff = (zs->zooms[out].xTranslate - zs->zooms[out].realXTranslate) * 75.0f;
-	ydiff = (zs->zooms[out].yTranslate - zs->zooms[out].realYTranslate) * 75.0f;
-	xadjust = xdiff * 0.002f;
-	yadjust = ydiff * 0.002f;
-	xamount = fabs (xdiff); 
-	yamount = fabs (ydiff); 
+    zs->zooms[out].xVelocity /= 1.25f;
+    zs->zooms[out].yVelocity /= 1.25f;
+    xdiff = (zs->zooms[out].xTranslate - zs->zooms[out].realXTranslate) * 75.0f;
+    ydiff = (zs->zooms[out].yTranslate - zs->zooms[out].realYTranslate) * 75.0f;
+    xadjust = xdiff * 0.002f;
+    yadjust = ydiff * 0.002f;
+    xamount = fabs (xdiff); 
+    yamount = fabs (ydiff); 
 
-	if (xamount < 1.0f) xamount = 1.0f;
-	else if (xamount > 5.0) xamount = 5.0f;
-	if (yamount < 1.0f) yamount = 1.0f;
-	else if (yamount > 5.0) yamount = 5.0f;
+    if (xamount < 1.0f) xamount = 1.0f;
+    else if (xamount > 5.0) xamount = 5.0f;
+    if (yamount < 1.0f) yamount = 1.0f;
+    else if (yamount > 5.0) yamount = 5.0f;
 
-	zs->zooms[out].xVelocity = (xamount * zs->zooms[out].xVelocity + xadjust) / (xamount + 1.0f);
-	zs->zooms[out].yVelocity = (yamount * zs->zooms[out].yVelocity + yadjust) / (yamount + 1.0f);
+    zs->zooms[out].xVelocity = (xamount * zs->zooms[out].xVelocity + xadjust) / (xamount + 1.0f);
+    zs->zooms[out].yVelocity = (yamount * zs->zooms[out].yVelocity + yadjust) / (yamount + 1.0f);
 
-	if ((fabs(xdiff) < 0.1f && fabs (zs->zooms[out].xVelocity) < 0.005f) && 
-		(fabs(ydiff) < 0.1f && fabs (zs->zooms[out].yVelocity) < 0.005f))
-	{
-	    zs->zooms[out].realXTranslate = zs->zooms[out].xTranslate;
-	    zs->zooms[out].realYTranslate = zs->zooms[out].yTranslate;
-	    zs->zooms[out].xVelocity = 0.0f;
-	    zs->zooms[out].yVelocity = 0.0f;
-	    return;
-	}
-	zs->zooms[out].realXTranslate += (zs->zooms[out].xVelocity * chunk) / s->redrawTime;
-	zs->zooms[out].realYTranslate += (zs->zooms[out].yVelocity * chunk) / s->redrawTime;
+    if ((fabs(xdiff) < 0.1f && fabs (zs->zooms[out].xVelocity) < 0.005f) && 
+	    (fabs(ydiff) < 0.1f && fabs (zs->zooms[out].yVelocity) < 0.005f))
+    {
+	zs->zooms[out].realXTranslate = zs->zooms[out].xTranslate;
+	zs->zooms[out].realYTranslate = zs->zooms[out].yTranslate;
+	zs->zooms[out].xVelocity = 0.0f;
+	zs->zooms[out].yVelocity = 0.0f;
+	return;
+    }
+    zs->zooms[out].realXTranslate += (zs->zooms[out].xVelocity * chunk) / s->redrawTime;
+    zs->zooms[out].realYTranslate += (zs->zooms[out].yVelocity * chunk) / s->redrawTime;
 }
 
 /* Calculates the real translation to be applied in PaintScreen().
@@ -308,7 +308,7 @@ zoomPreparePaintScreen (CompScreen *s,
 		if (zs->opt[SOPT_SYNC_MOUSE].value.b && zs->zooms[out].moving)
 		    syncCenterToMouse (s);
 
-		loopend: 
+loopend: 
 		if (!zs->zooms[out].xVelocity && !zs->zooms[out].yVelocity && !zs->zooms[out].zVelocity)
 		    zs->zooms[out].moving = FALSE;
 	    }
@@ -336,7 +336,6 @@ zoomDonePaintScreen (CompScreen *s)
 		damageScreen (s);
 	}
     }
-
     UNWRAP (zs, s, donePaintScreen);
     (*s->donePaintScreen) (s);
     WRAP (zs, s, donePaintScreen, zoomDonePaintScreen);
