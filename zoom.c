@@ -349,10 +349,10 @@ zoomPreparePaintScreen (CompScreen *s,
 		    zs->zooms[out].xVelocity = zs->zooms[out].yVelocity = 0.0f;
 		    zs->grabbed &= ~(1 >> zs->zooms[out].output);
 		}
-		if (zs->opt[SOPT_SYNC_MOUSE].value.b && isInMovement (s, out))
-		    syncCenterToMouse (s);
 	    }
 	}
+	if (zs->opt[SOPT_SYNC_MOUSE].value.b)
+	    syncCenterToMouse (s);
     }
     UNWRAP (zs, s, preparePaintScreen);
     (*s->preparePaintScreen) (s, msSinceLastPaint);
@@ -505,6 +505,7 @@ setCenter (CompScreen *s, int x, int y, Bool instant)
 	zs->zooms[out].realYTranslate = zs->zooms[out].yTranslate;
 	zs->zooms[out].yVelocity = 0.0f;
 	zs->zooms[out].xVelocity = 0.0f;
+	updateActualTranslates (&zs->zooms[out]);
     } 
 }
 
@@ -534,6 +535,7 @@ setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
     {
 	zs->zooms[out].realXTranslate = zs->zooms[out].xTranslate;
 	zs->zooms[out].realYTranslate = zs->zooms[out].yTranslate;
+	updateActualTranslates (&zs->zooms[out]);
     }
 }
 
@@ -617,13 +619,16 @@ static void
 syncCenterToMouse (CompScreen *s)
 {
     ZOOM_SCREEN(s);
-    int out = 0;
+    int x, y;
+    int out = outputDeviceForPoint (s, zs->mouseX, zs->mouseY);
     CompOutput *o = &s->outputDev[out];
+    if (!isInMovement (s, out))
+	return;
 
-    float x = (float) ((zs->zooms[out].realXTranslate * s->width) + (o->width / 2) + o->region.extents.x1);
-    float y = (float) ((zs->zooms[out].realYTranslate * s->height) + (o->height / 2) + o->region.extents.y1);
+    x = (int) ((zs->zooms[out].realXTranslate * s->width) + (o->width / 2) + o->region.extents.x1);
+    y = (int) ((zs->zooms[out].realYTranslate * s->height) + (o->height / 2) + o->region.extents.y1);
 
-    if (((int)x != zs->mouseX || (int)y != zs->mouseY) && zs->grabbed && zs->zooms[out].newZoom != 1.0f)
+    if ((x != zs->mouseX || y != zs->mouseY) && zs->grabbed && zs->zooms[out].newZoom != 1.0f)
     {
 	warpPointer (s, x - pointerX , y - pointerY );
 	zs->mouseX = x;
