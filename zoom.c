@@ -140,7 +140,7 @@ typedef struct _ZoomScreen {
     int nZooms;
     int mouseX;
     int mouseY;
-    Bool   grabbed;
+    unsigned long int grabbed;
     float maxTranslate;
     time_t lastChange;
     CursorTexture cursor;
@@ -179,15 +179,11 @@ static inline Bool
 isActive (CompScreen *s, int out)
 {
     ZOOM_SCREEN (s);
-    if (!zs->grabbed)
-	return FALSE;
     if (out < 0 || out >= zs->nZooms)
 	return FALSE;
-    if (zs->zooms[out].currentZoom == 1.0f &&
-	zs->zooms[out].newZoom == 1.0f &&
-	zs->zooms[out].zVelocity == 0.0f)
-	return FALSE;
-    return TRUE;
+    if (zs->grabbed & (1 >> zs->zooms[out].output))
+	return TRUE;
+    return FALSE;
 }
 
 /* Adjust the velocity in the z-direction. 
@@ -309,24 +305,12 @@ zoomPreparePaintScreen (CompScreen *s,
 		    if (zs->zooms[out].currentZoom == 1.0f && zs->zooms[out].zVelocity == 0.0f)
 		    {
 			zs->zooms[out].xVelocity = zs->zooms[out].yVelocity = 0.0f;
-			int myout;
-			Bool flag = FALSE;
-			for (myout = 0; myout < zs->nZooms; myout++)
-			{
-			    if (myout == out)
-				continue;
-			    if (zs->zooms[myout].currentZoom != 1.0f || zs->zooms[myout].zVelocity != 0.0f || zs->zooms[myout].newZoom != 1.0f)
-				flag = TRUE;
-			}
-			zs->grabbed = flag;
+			zs->grabbed &= ~(1 >> zs->zooms[out].output);
 			zs->zooms[out].moving = FALSE;
-			goto loopend;
 		    }
 		}
 		if (zs->opt[SOPT_SYNC_MOUSE].value.b && zs->zooms[out].moving)
 		    syncCenterToMouse (s);
-
-loopend: 
 		if (!zs->zooms[out].xVelocity && !zs->zooms[out].yVelocity && !zs->zooms[out].zVelocity)
 		    zs->zooms[out].moving = FALSE;
 	    }
@@ -336,7 +320,6 @@ loopend:
     (*s->preparePaintScreen) (s, msSinceLastPaint);
     WRAP (zs, s, preparePaintScreen, zoomPreparePaintScreen);
 }
-
 /* Damage screen if we're still moving.
  */
 static void
@@ -569,7 +552,7 @@ setScale(CompScreen *s, int out, float x, float y)
 	{
 	    zs->mouseIntervalTimeoutHandle = compAddTimeout(zs->opt[SOPT_POLL_INTERVAL].value.i, updateMouseInterval, s);
 	}
-	zs->grabbed = TRUE;
+	zs->grabbed |= (1 >> zs->zooms[out].output);
 	cursorZoomActive (s);
     }
     if (value == 1.0f)
@@ -1478,6 +1461,9 @@ zoomInitScreen (CompPlugin *p,
     zs->zooms = malloc (sizeof (ZoomArea) * zs->nZooms);
     for (i = 0; i < zs->nZooms; i ++ )
     {
+	/* zs->grabbed is a mask ... Thus this limit */
+	if (i > sizeof (long int) * 8)
+	    break;
 	zs->zooms[i].output = i;
 	zs->zooms[i].moving = FALSE;
 	zs->zooms[i].currentZoom = 1.0f;
@@ -1488,7 +1474,7 @@ zoomInitScreen (CompPlugin *p,
 	zs->zooms[i].xTranslate = 0.0f;
 	zs->zooms[i].yTranslate = 0.0f;
     }
-    zs->grabbed = FALSE;
+    zs->grabbed = 0;
     zs->maxTranslate = 0.85f;
     zs->mouseX = -1;
     zs->mouseY = -1;
