@@ -173,14 +173,41 @@ static void drawCursor (CompScreen *s, CompOutput *output, const CompTransform *
 
 #define NUM_OPTIONS(s) (sizeof ((s)->opt) / sizeof (CompOption))
 
+/* Check if the output is valid 
+ */
+static inline Bool
+outputIsZoomArea (CompScreen *s, int out)
+{
+    ZOOM_SCREEN (s);
+    if (out < 0 || out >= zs->nZooms)
+	return FALSE;
+    return TRUE;
+}
+
 /* Check if zoom is active on the output specified */
 static inline Bool
 isActive (CompScreen *s, int out)
 {
     ZOOM_SCREEN (s);
-    if (out < 0 || out >= zs->nZooms)
+    if (!outputIsZoomArea (s, out))
 	return FALSE;
     if (zs->grabbed & (1 >> zs->zooms[out].output))
+	return TRUE;
+    return FALSE;
+}
+
+/* Check if we are zoomed out and not going anywhere
+ * (similar to isActive but based on actual zoom, not grab)
+ */
+static inline Bool
+isZoomed (CompScreen *s, int out)
+{
+    ZOOM_SCREEN (s);
+    if (!outputIsZoomArea (s, out))
+	return FALSE;
+    if (zs->zooms[out].currentZoom != 1.0f || zs->zooms[out].newZoom != 1.0f)
+	return TRUE;
+    if (zs->zooms[out].zVelocity != 0.0f)
 	return TRUE;
     return FALSE;
 }
@@ -317,13 +344,10 @@ zoomPreparePaintScreen (CompScreen *s,
 		adjustXYVelocity (s, out, chunk);
 		adjustZoomVelocity (s, out, chunk);
 		updateActualTranslates (&zs->zooms[out]);
-		if (zs->zooms[out].newZoom == 1.0f)
+		if (!isZoomed (s, out))
 		{
-		    if (zs->zooms[out].currentZoom == 1.0f && zs->zooms[out].zVelocity == 0.0f)
-		    {
-			zs->zooms[out].xVelocity = zs->zooms[out].yVelocity = 0.0f;
-			zs->grabbed &= ~(1 >> zs->zooms[out].output);
-		    }
+		    zs->zooms[out].xVelocity = zs->zooms[out].yVelocity = 0.0f;
+		    zs->grabbed &= ~(1 >> zs->zooms[out].output);
 		}
 		if (zs->opt[SOPT_SYNC_MOUSE].value.b && isInMovement (s, out))
 		    syncCenterToMouse (s);
