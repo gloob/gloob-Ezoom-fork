@@ -651,10 +651,55 @@ convertToZoomed (CompScreen *s, int out, int x, int y, int *resultX, int *result
     *resultY /= za->currentZoom;
     *resultY += o->height/2;
 }
+/* Same but use targeted translation, not real */
+static void 
+convertToZoomedTarget (CompScreen *s, int out, int x, int y, int *resultX, int *resultY)
+{
+    ZOOM_SCREEN (s); 
+    CompOutput *o = &s->outputDev[out];
+    ZoomArea *za = &zs->zooms[out];
+    *resultX = x - (za->xTranslate * (1.0f - za->currentZoom) * o->width) - o->width/2;
+    *resultX /= za->currentZoom;
+    *resultX += o->width/2;
+    *resultY = y - (za->yTranslate * (1.0f - za->currentZoom) * o->height) - o->height/2;
+    *resultY /= za->currentZoom;
+    *resultY += o->height/2;
+}
 
+/* Make sure the given point + margin is visible;
+ * Translate to make it visible if necesarry.
+ * Returns false if the point isn't on a actively zoomed head.
+ */
+static Bool
+ensureVisibility (CompScreen *s, int x, int y, int margin)
+{
+    int zoomX, zoomY;
+    int out;
+    CompOutput *o;
+    ZOOM_SCREEN (s);
+    out = outputDeviceForPoint (s, x, y);
+    if (!isActive (s, out))
+	return FALSE;
+    o = &s->outputDev[out];
+    convertToZoomedTarget (s, out, x, y, &zoomX, &zoomY);
+    ZoomArea *za = &zs->zooms[out];
+    if (zoomX + margin > o->region.extents.x2)
+	za->xTranslate += 
+	    (za->currentZoom * (zoomX+margin - o->region.extents.x2))/o->width;
+    else if (zoomX - margin < o->region.extents.x1)
+	za->xTranslate += 
+	    (za->currentZoom * (zoomX-margin + o->region.extents.x1))/o->width;
+    if (zoomY + margin > o->region.extents.y2)
+	za->yTranslate += 
+	    (za->currentZoom * (zoomY+margin - o->region.extents.y2))/o->height;
+    else if (zoomY - margin < o->region.extents.y1)
+	za->yTranslate += 
+	    (za->currentZoom * (zoomY-margin + o->region.extents.y1))/o->height;
+    constrainZoomTranslate (s);
+    return TRUE;
+}
 /* Ensures that the cursor is visible on the given head
  */
-
 static void
 restrainCursor (CompScreen *s, int out)
 {
@@ -665,7 +710,10 @@ restrainCursor (CompScreen *s, int out)
     float z = zs->zooms[out].currentZoom;
     int margin = zs->opt[SOPT_RESTRAIN_MARGIN].value.i;
     if (!zs->opt[SOPT_RESTRAIN_MOUSE].value.b)
+    {
+	ensureVisibility (s, zs->mouseX, zs->mouseY, margin);
 	return ;
+    }
     convertToZoomed (s, out, zs->mouseX, zs->mouseY, &x, &y);
     if (x > o->region.extents.x2 - margin)
 	diffX = x - o->region.extents.x2 + margin;
