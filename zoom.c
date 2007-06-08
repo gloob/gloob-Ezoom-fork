@@ -247,7 +247,8 @@ adjustZoomVelocity (CompScreen *s, int out, float chunk)
     else if (amount > 5.0f)
 	amount = 5.0f;
 
-    zs->zooms[out].zVelocity = (amount * zs->zooms[out].zVelocity + adjust) / (amount + 1.0f);
+    zs->zooms[out].zVelocity = 
+	(amount * zs->zooms[out].zVelocity + adjust) / (amount + 1.0f);
 
     if (fabs (d) < 0.1f && fabs (zs->zooms[out].zVelocity) < 0.005f)
     {
@@ -285,11 +286,13 @@ adjustXYVelocity (CompScreen *s, int out, float chunk)
     if (yamount < 1.0f) yamount = 1.0f;
     else if (yamount > 5.0) yamount = 5.0f;
 
-    zs->zooms[out].xVelocity = (xamount * zs->zooms[out].xVelocity + xadjust) / (xamount + 1.0f);
-    zs->zooms[out].yVelocity = (yamount * zs->zooms[out].yVelocity + yadjust) / (yamount + 1.0f);
+    zs->zooms[out].xVelocity = 
+	(xamount * zs->zooms[out].xVelocity + xadjust) / (xamount + 1.0f);
+    zs->zooms[out].yVelocity = 
+	(yamount * zs->zooms[out].yVelocity + yadjust) / (yamount + 1.0f);
 
     if ((fabs(xdiff) < 0.1f && fabs (zs->zooms[out].xVelocity) < 0.005f) && 
-	    (fabs(ydiff) < 0.1f && fabs (zs->zooms[out].yVelocity) < 0.005f))
+	(fabs(ydiff) < 0.1f && fabs (zs->zooms[out].yVelocity) < 0.005f))
     {
 	zs->zooms[out].realXTranslate = zs->zooms[out].xTranslate;
 	zs->zooms[out].realYTranslate = zs->zooms[out].yTranslate;
@@ -297,8 +300,10 @@ adjustXYVelocity (CompScreen *s, int out, float chunk)
 	zs->zooms[out].yVelocity = 0.0f;
 	return;
     }
-    zs->zooms[out].realXTranslate += (zs->zooms[out].xVelocity * chunk) / s->redrawTime;
-    zs->zooms[out].realYTranslate += (zs->zooms[out].yVelocity * chunk) / s->redrawTime;
+    zs->zooms[out].realXTranslate += 
+	(zs->zooms[out].xVelocity * chunk) / s->redrawTime;
+    zs->zooms[out].realYTranslate += 
+	(zs->zooms[out].yVelocity * chunk) / s->redrawTime;
 }
 
 /* Update/set translations based on zoom level.
@@ -570,8 +575,10 @@ panZoom (CompScreen *s, int xvalue, int yvalue)
     int out;
     for (out = 0; out < zs->nZooms; out++)
     {
-	zs->zooms[out].xTranslate += zs->opt[SOPT_PAN_FACTOR].value.f * xvalue * zs->zooms[out].currentZoom;
-	zs->zooms[out].yTranslate += zs->opt[SOPT_PAN_FACTOR].value.f * yvalue * zs->zooms[out].currentZoom;
+	zs->zooms[out].xTranslate += 
+	    zs->opt[SOPT_PAN_FACTOR].value.f * xvalue * zs->zooms[out].currentZoom;
+	zs->zooms[out].yTranslate += 
+	    zs->opt[SOPT_PAN_FACTOR].value.f * yvalue * zs->zooms[out].currentZoom;
     }
     constrainZoomTranslate (s);
 }
@@ -668,7 +675,12 @@ convertToZoomed (CompScreen *s, int out, int x, int y, int *resultX, int *result
 }
 /* Same but use targeted translation, not real */
 static void 
-convertToZoomedTarget (CompScreen *s, int out, int x, int y, int *resultX, int *resultY)
+convertToZoomedTarget (CompScreen *s, 
+		       int out, 
+		       int x, 
+		       int y, 
+		       int *resultX, 
+		       int *resultY)
 {
     ZOOM_SCREEN (s); 
     CompOutput *o = &s->outputDev[out];
