@@ -272,6 +272,22 @@ adjustXYVelocity (CompScreen *s, int out, float chunk)
     zs->zooms[out].realYTranslate += (zs->zooms[out].yVelocity * chunk) / s->redrawTime;
 }
 
+/* Update/set translations based on zoom level.
+ */
+static void
+updateActualTranslates (ZoomArea *za)
+{
+    za->ztrans = DEFAULT_Z_CAMERA * za->currentZoom;
+    if (za->ztrans <= 0.1f)
+    {
+	za->zVelocity = 0.0f;
+	za->ztrans = 0.1f;
+    }
+
+    za->xtrans = -za->realXTranslate * (1.0f - za->currentZoom);
+    za->ytrans = za->realYTranslate * (1.0f - za->currentZoom);
+}
+
 /* Calculates the real translation to be applied in PaintScreen().
  * Needs cleaning...
  */
@@ -300,16 +316,7 @@ zoomPreparePaintScreen (CompScreen *s,
 		    continue;
 		adjustXYVelocity (s, out, chunk);
 		adjustZoomVelocity (s, out, chunk);
-		zs->zooms[out].ztrans = DEFAULT_Z_CAMERA * zs->zooms[out].currentZoom;
-		if (zs->zooms[out].ztrans <= 0.1f)
-		{
-		    zs->zooms[out].zVelocity = 0.0f;
-		    zs->zooms[out].ztrans = 0.1f;
-		}
-
-		zs->zooms[out].xtrans = -zs->zooms[out].realXTranslate * (1.0f - zs->zooms[out].currentZoom);
-		zs->zooms[out].ytrans = zs->zooms[out].realYTranslate * (1.0f - zs->zooms[out].currentZoom);
-
+		updateActualTranslates (&zs->zooms[out]);
 		if (zs->zooms[out].newZoom == 1.0f)
 		{
 		    if (zs->zooms[out].currentZoom == 1.0f && zs->zooms[out].zVelocity == 0.0f)
