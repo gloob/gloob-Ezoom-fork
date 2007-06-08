@@ -159,6 +159,7 @@ static Bool updateMouseInterval (void *vs);
 static void cursorZoomActive (CompScreen *s);
 static void cursorZoomInactive (CompScreen *s);
 static void drawCursor (CompScreen *s, CompOutput *output, const CompTransform *transform);
+static void restrainCursor (CompScreen *s, int out);
 
 #define GET_ZOOM_DISPLAY(d)				      \
     ((ZoomDisplay *) (d)->privates[displayPrivateIndex].ptr)
@@ -508,6 +509,8 @@ setCenter (CompScreen *s, int x, int y, Bool instant)
 	zs->zooms[out].xVelocity = 0.0f;
 	updateActualTranslates (&zs->zooms[out]);
     } 
+    if (zs->opt[SOPT_MOUSE_PAN].value.b)
+	restrainCursor (s, out);
 }
 
 /* 
@@ -538,6 +541,8 @@ setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
 	zs->zooms[out].realYTranslate = zs->zooms[out].yTranslate;
 	updateActualTranslates (&zs->zooms[out]);
     }
+    if (zs->opt[SOPT_MOUSE_PAN].value.b)
+	restrainCursor (s, out);
 }
 
 /* Moves the zoom area to the window specified
@@ -603,6 +608,8 @@ setScale(CompScreen *s, int out, float x, float y)
     }
     zs->zooms[out].newZoom = value;
     damageScreen(s);
+    if (zs->opt[SOPT_MOUSE_PAN].value.b)
+	restrainCursor (s, out);
 }
 
 /* Mouse code...
@@ -710,7 +717,7 @@ restrainCursor (CompScreen *s, int out)
     ZOOM_SCREEN (s);
     float z = zs->zooms[out].currentZoom;
     int margin = zs->opt[SOPT_RESTRAIN_MARGIN].value.i;
-    convertToZoomed (s, out, zs->mouseX, zs->mouseY, &x, &y);
+    convertToZoomedTarget (s, out, zs->mouseX, zs->mouseY, &x, &y);
     if (x > o->region.extents.x2 - margin)
 	diffX = x - o->region.extents.x2 + margin;
     else if (x < o->region.extents.x1 + margin)
