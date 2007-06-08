@@ -595,7 +595,9 @@ setScale(CompScreen *s, int out, float x, float y)
 
 	if (!zs->grabbed)
 	{
-	    zs->mouseIntervalTimeoutHandle = compAddTimeout(zs->opt[SOPT_POLL_INTERVAL].value.i, updateMouseInterval, s);
+	    zs->mouseIntervalTimeoutHandle = 
+		compAddTimeout(zs->opt[SOPT_POLL_INTERVAL].value.i, 
+			       updateMouseInterval, s);
 	}
 	zs->grabbed |= (1 >> zs->zooms[out].output);
 	cursorZoomActive (s);
@@ -633,10 +635,13 @@ syncCenterToMouse (CompScreen *s)
     if (!isInMovement (s, out))
 	return;
 
-    x = (int) ((zs->zooms[out].realXTranslate * s->width) + (o->width / 2) + o->region.extents.x1);
-    y = (int) ((zs->zooms[out].realYTranslate * s->height) + (o->height / 2) + o->region.extents.y1);
+    x = (int) ((zs->zooms[out].realXTranslate * s->width) + 
+	       (o->width / 2) + o->region.extents.x1);
+    y = (int) ((zs->zooms[out].realYTranslate * s->height) + 
+	       (o->height / 2) + o->region.extents.y1);
 
-    if ((x != zs->mouseX || y != zs->mouseY) && zs->grabbed && zs->zooms[out].newZoom != 1.0f)
+    if ((x != zs->mouseX || y != zs->mouseY) 
+	&& zs->grabbed && zs->zooms[out].newZoom != 1.0f)
     {
 	warpPointer (s, x - pointerX , y - pointerY );
 	zs->mouseX = x;
@@ -652,10 +657,12 @@ convertToZoomed (CompScreen *s, int out, int x, int y, int *resultX, int *result
     ZOOM_SCREEN (s); 
     CompOutput *o = &s->outputDev[out];
     ZoomArea *za = &zs->zooms[out];
-    *resultX = x - (za->realXTranslate * (1.0f - za->currentZoom) * o->width) - o->width/2;
+    *resultX = x - (za->realXTranslate * 
+		    (1.0f - za->currentZoom) * o->width) - o->width/2;
     *resultX /= za->currentZoom;
     *resultX += o->width/2;
-    *resultY = y - (za->realYTranslate * (1.0f - za->currentZoom) * o->height) - o->height/2;
+    *resultY = y - (za->realYTranslate * 
+		    (1.0f - za->currentZoom) * o->height) - o->height/2;
     *resultY /= za->currentZoom;
     *resultY += o->height/2;
 }
@@ -666,10 +673,12 @@ convertToZoomedTarget (CompScreen *s, int out, int x, int y, int *resultX, int *
     ZOOM_SCREEN (s); 
     CompOutput *o = &s->outputDev[out];
     ZoomArea *za = &zs->zooms[out];
-    *resultX = x - (za->xTranslate * (1.0f - za->currentZoom) * o->width) - o->width/2;
+    *resultX = x - (za->xTranslate * 
+		    (1.0f - za->currentZoom) * o->width) - o->width/2;
     *resultX /= za->currentZoom;
     *resultX += o->width/2;
-    *resultY = y - (za->yTranslate * (1.0f - za->currentZoom) * o->height) - o->height/2;
+    *resultY = y - (za->yTranslate * 
+		    (1.0f - za->currentZoom) * o->height) - o->height/2;
     *resultY /= za->currentZoom;
     *resultY += o->height/2;
 }
@@ -966,7 +975,8 @@ cursorZoomActive (CompScreen *s)
 				 XFixesDisplayCursorNotifyMask);
 	zoomUpdateCursor (s, &zs->cursor);
     }
-    if (zd->canHideCursor && !zs->cursorHidden && zs->opt[SOPT_HIDE_ORIGINAL_MOUSE].value.b)
+    if (zd->canHideCursor && !zs->cursorHidden && 
+	zs->opt[SOPT_HIDE_ORIGINAL_MOUSE].value.b)
     {
 	zs->cursorHidden = TRUE;
 	XFixesHideCursor (s->display->display, s->root);
@@ -992,7 +1002,9 @@ zoomIn (CompDisplay     *d,
     {
 	ZOOM_SCREEN (s);
 	int out = outputDeviceForPoint (s, pointerX, pointerY);
-	setScale (s, out,  zs->zooms[out].newZoom/zs->opt[SOPT_ZOOM_FACTOR].value.f, -1.0f);
+	setScale (s, out,  
+		  zs->zooms[out].newZoom/zs->opt[SOPT_ZOOM_FACTOR].value.f, 
+		  -1.0f);
     }
     return TRUE;
 }
@@ -1232,8 +1244,12 @@ zoomFitWindowToZoom (CompDisplay     *d,
     ZOOM_SCREEN (s);
     xwc.x = w->serverX;
     xwc.y = w->serverY;
-    xwc.width = (int) (s->outputDev[out].width * zs->zooms[out].currentZoom - (int) ((w->input.left + w->input.right)));
-    xwc.height = (int) (s->outputDev[out].height * zs->zooms[out].currentZoom) - (int) ((w->input.top + w->input.bottom));
+    xwc.width = (int) (s->outputDev[out].width * 
+		       zs->zooms[out].currentZoom - 
+		       (int) ((w->input.left + w->input.right)));
+    xwc.height = (int) (s->outputDev[out].height * 
+			zs->zooms[out].currentZoom -
+			(int) ((w->input.top + w->input.bottom)));
     sendSyncRequest (w);
     configureXWindow (w, (unsigned int) CWWidth | CWHeight, &xwc);
     return TRUE;
@@ -1272,7 +1288,10 @@ zoomOut (CompDisplay     *d,
     {
 	ZOOM_SCREEN (s);
 	int out = outputDeviceForPoint (s, pointerX, pointerY);
-	setScale (s, out, zs->zooms[out].newZoom * zs->opt[SOPT_ZOOM_FACTOR].value.f, -1.0f);
+	setScale (s, out, 
+		  zs->zooms[out].newZoom * 
+		  zs->opt[SOPT_ZOOM_FACTOR].value.f, 
+		  -1.0f);
     }
 
     return TRUE;
@@ -1328,7 +1347,8 @@ zoomHandleEvent (CompDisplay *d,
     static Window lastMapped = 0;
     switch (event->type) {
 	case FocusIn:
-	    if ((event->xfocus.mode != NotifyNormal) && (lastMapped != event->xfocus.window))
+	    if ((event->xfocus.mode != NotifyNormal) 
+		&& (lastMapped != event->xfocus.window))
 		break;
 	    lastMapped = 0;
 	    w = findWindowAtDisplay(d, event->xfocus.window);
@@ -1344,7 +1364,8 @@ zoomHandleEvent (CompDisplay *d,
 		break;
 	    if (!zs->opt[SOPT_FOLLOW_FOCUS].value.b)
 		break;
-	    if (!zs->grabbed && !zs->opt[SOPT_ALLWAYS_FOCUS_FIT_WINDOW].value.b)
+	    if (!zs->grabbed && 
+		!zs->opt[SOPT_ALLWAYS_FOCUS_FIT_WINDOW].value.b)
 		break;
 	    if (zs->opt[SOPT_FOCUS_FIT_WINDOW].value.b)
 	    {
