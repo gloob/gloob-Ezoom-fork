@@ -194,6 +194,9 @@ isInMovement (CompScreen *s, int out)
     if (zs->zooms[out].currentZoom != zs->zooms[out].newZoom ||
 	zs->zooms[out].xVelocity || zs->zooms[out].yVelocity || zs->zooms[out].zVelocity)
 	return TRUE;
+    if (zs->zooms[out].xTranslate != zs->zooms[out].realXTranslate ||
+	zs->zooms[out].yTranslate != zs->zooms[out].realYTranslate)
+	return TRUE;
     return FALSE;
 }
 
@@ -205,8 +208,6 @@ adjustZoomVelocity (CompScreen *s, int out, float chunk)
 {
     ZOOM_SCREEN (s);
     float d, adjust, amount;
-    if (!isActive (s, out))
-	return;
 
     d = (zs->zooms[out].newZoom - zs->zooms[out].currentZoom) * 75.0f;
 
@@ -237,11 +238,6 @@ static void
 adjustXYVelocity (CompScreen *s, int out, float chunk)
 {
     ZOOM_SCREEN (s);
-    if (zs->zooms[out].realXTranslate == zs->zooms[out].xTranslate && zs->zooms[out].realYTranslate == zs->zooms[out].yTranslate)
-	return;
-    if (!isActive (s, out))
-	return;
-
     float xdiff, ydiff;
     float xadjust, yadjust;
     float xamount, yamount;
@@ -300,6 +296,8 @@ zoomPreparePaintScreen (CompScreen *s,
 	    int out;
 	    for (out = 0; out < zs->nZooms; out++) 
 	    {
+		if (!isInMovement (s, out) || !isActive (s, out))
+		    continue;
 		adjustXYVelocity (s, out, chunk);
 		adjustZoomVelocity (s, out, chunk);
 		zs->zooms[out].ztrans = DEFAULT_Z_CAMERA * zs->zooms[out].currentZoom;
