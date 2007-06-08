@@ -320,6 +320,19 @@ zoomPreparePaintScreen (CompScreen *s,
     (*s->preparePaintScreen) (s, msSinceLastPaint);
     WRAP (zs, s, preparePaintScreen, zoomPreparePaintScreen);
 }
+
+/* Returns true if the head in question is currently moving.
+ */
+static Bool
+isInMovement (CompScreen *s, int out)
+{
+    ZOOM_SCREEN (s);
+    if (zs->zooms[out].currentZoom != zs->zooms[out].newZoom ||
+	zs->zooms[out].xVelocity || zs->zooms[out].yVelocity || zs->zooms[out].zVelocity)
+	return TRUE;
+    return FALSE;
+}
+
 /* Damage screen if we're still moving.
  */
 static void
@@ -332,9 +345,11 @@ zoomDonePaintScreen (CompScreen *s)
 	int out;
 	for (out = 0; out < zs->nZooms; out++)
 	{
-	    if (zs->zooms[out].currentZoom != zs->zooms[out].newZoom ||
-		    zs->zooms[out].xVelocity || zs->zooms[out].yVelocity || zs->zooms[out].zVelocity)
+	    if (isInMovement (s, out))
+	    {
 		damageScreen (s);
+		break;
+	    }
 	}
     }
     UNWRAP (zs, s, donePaintScreen);
