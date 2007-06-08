@@ -126,7 +126,6 @@ typedef struct _ZoomArea {
     GLfloat xtrans; // Real, adjusted (Don't modify these.)
     GLfloat ytrans;
     GLfloat ztrans;
-    Bool moving; 
 } ZoomArea;
 
 typedef struct _ZoomScreen {
@@ -185,6 +184,19 @@ isActive (CompScreen *s, int out)
 	return TRUE;
     return FALSE;
 }
+
+/* Returns true if the head in question is currently moving.
+ */
+static Bool
+isInMovement (CompScreen *s, int out)
+{
+    ZOOM_SCREEN (s);
+    if (zs->zooms[out].currentZoom != zs->zooms[out].newZoom ||
+	zs->zooms[out].xVelocity || zs->zooms[out].yVelocity || zs->zooms[out].zVelocity)
+	return TRUE;
+    return FALSE;
+}
+
 
 /* Adjust the velocity in the z-direction. 
  */
@@ -306,31 +318,16 @@ zoomPreparePaintScreen (CompScreen *s,
 		    {
 			zs->zooms[out].xVelocity = zs->zooms[out].yVelocity = 0.0f;
 			zs->grabbed &= ~(1 >> zs->zooms[out].output);
-			zs->zooms[out].moving = FALSE;
 		    }
 		}
-		if (zs->opt[SOPT_SYNC_MOUSE].value.b && zs->zooms[out].moving)
+		if (zs->opt[SOPT_SYNC_MOUSE].value.b && isInMovement (s, out))
 		    syncCenterToMouse (s);
-		if (!zs->zooms[out].xVelocity && !zs->zooms[out].yVelocity && !zs->zooms[out].zVelocity)
-		    zs->zooms[out].moving = FALSE;
 	    }
 	}
     }
     UNWRAP (zs, s, preparePaintScreen);
     (*s->preparePaintScreen) (s, msSinceLastPaint);
     WRAP (zs, s, preparePaintScreen, zoomPreparePaintScreen);
-}
-
-/* Returns true if the head in question is currently moving.
- */
-static Bool
-isInMovement (CompScreen *s, int out)
-{
-    ZOOM_SCREEN (s);
-    if (zs->zooms[out].currentZoom != zs->zooms[out].newZoom ||
-	zs->zooms[out].xVelocity || zs->zooms[out].yVelocity || zs->zooms[out].zVelocity)
-	return TRUE;
-    return FALSE;
 }
 
 /* Damage screen if we're still moving.
@@ -479,7 +476,6 @@ setCenter (CompScreen *s, int x, int y, Bool instant)
 	zs->zooms[out].realYTranslate = zs->zooms[out].yTranslate;
 	zs->zooms[out].yVelocity = 0.0f;
 	zs->zooms[out].xVelocity = 0.0f;
-        zs->zooms[out].moving = FALSE;
     } 
 }
 
@@ -503,7 +499,6 @@ setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
 	(float) -((o->height/2) - (y + (height/2) - o->region.extents.y1)) 
 	/ (o->height);
     zs->zooms[out].yTranslate /= (1.0f - zs->zooms[out].newZoom);
-    zs->zooms[out].moving = TRUE;
     constrainZoomTranslate (s);
 
     if (instant)
@@ -540,7 +535,6 @@ panZoom (CompScreen *s, int xvalue, int yvalue)
     {
 	zs->zooms[out].xTranslate += zs->opt[SOPT_PAN_FACTOR].value.f * xvalue * zs->zooms[out].currentZoom;
 	zs->zooms[out].yTranslate += zs->opt[SOPT_PAN_FACTOR].value.f * yvalue * zs->zooms[out].currentZoom;
-	zs->zooms[out].moving = TRUE;
     }
     constrainZoomTranslate (s);
 }
@@ -553,7 +547,6 @@ setScale(CompScreen *s, int out, float x, float y)
 {
     float value = x > y ? x : y;
     ZOOM_SCREEN(s);
-    zs->zooms[out].moving = TRUE;
     if (value >= 1.0f) 
     {
 	value = 1.0f;
@@ -695,7 +688,7 @@ updateMousePosition (CompScreen *s)
 	zs->mouseX = rootX;
 	zs->mouseY = rootY;
 	int out = outputDeviceForPoint (s, rootX, rootY);
-	if (zs->opt[SOPT_SYNC_MOUSE].value.b && !zs->zooms[out].moving)
+	if (zs->opt[SOPT_SYNC_MOUSE].value.b && !isInMovement (s, out))
 	{
 	    zs->lastChange = time(NULL);
 	    setCenter (s, rootX, rootY, TRUE);
@@ -1480,7 +1473,6 @@ zoomInitScreen (CompPlugin *p,
 	if (i > sizeof (long int) * 8)
 	    break;
 	zs->zooms[i].output = i;
-	zs->zooms[i].moving = FALSE;
 	zs->zooms[i].currentZoom = 1.0f;
 	zs->zooms[i].newZoom = 1.0f;
 	zs->zooms[i].xVelocity = 0.0f;
