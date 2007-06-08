@@ -773,27 +773,18 @@ drawCursor (CompScreen *s, CompOutput *output, const CompTransform *transform)
     int out = output->id;
     if (zs->cursor.isSet)
     {
-	CompOutput *o = &s->outputDev[out];
 	CompTransform sTransform = *transform;
+	int ax, ay, x, y;
 	transformToScreenSpace (s, output, -DEFAULT_Z_CAMERA, &sTransform);
-
+	convertToZoomed (s, out, zs->mouseX, zs->mouseY, &ax, &ay);
         glPushMatrix ();
 	glLoadMatrixf (sTransform.m);
-	glTranslatef (zs->zooms[out].realXTranslate * o->width + o->width/2 + o->region.extents.x1, 
-		      zs->zooms[out].realYTranslate * o->height + o->height/2 + o->region.extents.y1, 
-		      0.0f);
-
-	if (zs->zooms[out].currentZoom != 1.0f)
-	{
-	    float mx = (zs->mouseX - o->region.extents.x1) - (zs->zooms[out].realXTranslate * o->width + o->width/2 );
-	    float my = (zs->mouseY - o->region.extents.y1 ) - (zs->zooms[out].realYTranslate * o->height + o->height/2);
-	    mx /= zs->zooms[out].currentZoom;
-	    my /= zs->zooms[out].currentZoom;
-	    glTranslatef (mx, my, 0.0f);
-	}
-	glScalef (1.0f / zs->zooms[out].currentZoom, 1.0f / zs->zooms[out].currentZoom, 1.0f);
-	int x = -zs->cursor.hotX;
-	int y = -zs->cursor.hotY;
+	glTranslatef ((float) ax, (float) ay, 0.0f);
+	glScalef (1.0f / zs->zooms[out].currentZoom, 
+		  1.0f / zs->zooms[out].currentZoom, 
+		  1.0f);
+	x = -zs->cursor.hotX;
+	y = -zs->cursor.hotY;
 
 	glEnable (GL_BLEND);
 	glBindTexture (GL_TEXTURE_RECTANGLE_ARB, zs->cursor.texture);
