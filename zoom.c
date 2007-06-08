@@ -158,7 +158,8 @@ static void syncCenterToMouse (CompScreen *s);
 static Bool updateMouseInterval (void *vs);
 static void cursorZoomActive (CompScreen *s);
 static void cursorZoomInactive (CompScreen *s);
-static void drawCursor (CompScreen *s, CompOutput *output, const CompTransform *transform);
+static void drawCursor (CompScreen *s, CompOutput *output, const CompTransform
+			*transform);
 static void restrainCursor (CompScreen *s, int out);
 
 #define GET_ZOOM_DISPLAY(d)				      \
@@ -221,7 +222,8 @@ isInMovement (CompScreen *s, int out)
 {
     ZOOM_SCREEN (s);
     if (zs->zooms[out].currentZoom != zs->zooms[out].newZoom ||
-	zs->zooms[out].xVelocity || zs->zooms[out].yVelocity || zs->zooms[out].zVelocity)
+	zs->zooms[out].xVelocity || zs->zooms[out].yVelocity ||
+	zs->zooms[out].zVelocity)
 	return TRUE;
     if (zs->zooms[out].xTranslate != zs->zooms[out].realXTranslate ||
 	zs->zooms[out].yTranslate != zs->zooms[out].realYTranslate)
@@ -274,8 +276,10 @@ adjustXYVelocity (CompScreen *s, int out, float chunk)
 
     zs->zooms[out].xVelocity /= 1.25f;
     zs->zooms[out].yVelocity /= 1.25f;
-    xdiff = (zs->zooms[out].xTranslate - zs->zooms[out].realXTranslate) * 75.0f;
-    ydiff = (zs->zooms[out].yTranslate - zs->zooms[out].realYTranslate) * 75.0f;
+    xdiff = 
+	(zs->zooms[out].xTranslate - zs->zooms[out].realXTranslate) * 75.0f;
+    ydiff = 
+	(zs->zooms[out].yTranslate - zs->zooms[out].realYTranslate) * 75.0f;
     xadjust = xdiff * 0.002f;
     yadjust = ydiff * 0.002f;
     xamount = fabs (xdiff); 
@@ -336,8 +340,7 @@ zoomPreparePaintScreen (CompScreen *s,
 	int   steps;
 	float amount, chunk;
 
-	amount = msSinceLastPaint * 0.05f *
-	    zs->opt[SOPT_SPEED].value.f;
+	amount = msSinceLastPaint * 0.05f * zs->opt[SOPT_SPEED].value.f;
 	steps  = amount / (0.5f * zs->opt[SOPT_TIMESTEP].value.f);
 	if (!steps) steps = 1;
 	chunk  = amount / (float) steps;
@@ -576,9 +579,11 @@ panZoom (CompScreen *s, int xvalue, int yvalue)
     for (out = 0; out < zs->nZooms; out++)
     {
 	zs->zooms[out].xTranslate += 
-	    zs->opt[SOPT_PAN_FACTOR].value.f * xvalue * zs->zooms[out].currentZoom;
+	    zs->opt[SOPT_PAN_FACTOR].value.f * xvalue * 
+	    zs->zooms[out].currentZoom;
 	zs->zooms[out].yTranslate += 
-	    zs->opt[SOPT_PAN_FACTOR].value.f * yvalue * zs->zooms[out].currentZoom;
+	    zs->opt[SOPT_PAN_FACTOR].value.f * yvalue *
+	    zs->zooms[out].currentZoom;
     }
     constrainZoomTranslate (s);
 }
@@ -587,7 +592,7 @@ panZoom (CompScreen *s, int xvalue, int yvalue)
  * FIXME: Output.
  */
 static void
-setScale(CompScreen *s, int out, float x, float y)
+setScale (CompScreen *s, int out, float x, float y)
 {
     float value = x > y ? x : y;
     ZOOM_SCREEN(s);
@@ -603,8 +608,8 @@ setScale(CompScreen *s, int out, float x, float y)
 	if (!zs->grabbed)
 	{
 	    zs->mouseIntervalTimeoutHandle = 
-		compAddTimeout(zs->opt[SOPT_POLL_INTERVAL].value.i, 
-			       updateMouseInterval, s);
+		compAddTimeout (zs->opt[SOPT_POLL_INTERVAL].value.i, 
+				updateMouseInterval, s);
 	}
 	zs->grabbed |= (1 >> zs->zooms[out].output);
 	cursorZoomActive (s);
@@ -676,11 +681,11 @@ convertToZoomed (CompScreen *s, int out, int x, int y, int *resultX, int *result
 /* Same but use targeted translation, not real */
 static void 
 convertToZoomedTarget (CompScreen *s, 
-		       int out, 
-		       int x, 
-		       int y, 
-		       int *resultX, 
-		       int *resultY)
+		       int	  out, 
+		       int	  x, 
+		       int	  y, 
+		       int	  *resultX, 
+		       int	  *resultY)
 {
     ZOOM_SCREEN (s); 
     CompOutput *o = &s->outputDev[out];
@@ -786,8 +791,8 @@ updateMousePosition (CompScreen *s)
     int winX, winY;
     unsigned int maskReturn;
     XQueryPointer (s->display->display, s->root,
-		  &root_return, &child_return,
-		  &rootX, &rootY, &winX, &winY, &maskReturn);
+		   &root_return, &child_return,
+		   &rootX, &rootY, &winX, &winY, &maskReturn);
 
     ZOOM_SCREEN(s);
     if ((rootX != zs->mouseX || rootY != zs->mouseY))
@@ -884,7 +889,7 @@ drawCursor (CompScreen *s, CompOutput *output, const CompTransform *transform)
 
 /* The cursor needs an update */
 static void
-zoomUpdateCursor(CompScreen * s, CursorTexture * cursor)
+zoomUpdateCursor (CompScreen * s, CursorTexture * cursor)
 {
     Display * dpy = s->display->display;
 
@@ -1027,11 +1032,11 @@ zoomIn (CompDisplay     *d,
  */
 static Bool
 zoomSpecific (CompDisplay     *d,
-	CompAction      *action,
-	CompActionState state,
-	CompOption      *option,
-	int		nOption,
-	float		target)
+	      CompAction      *action,
+	      CompActionState state,
+	      CompOption      *option,
+	      int	      nOption,
+	      float	      target)
 {
     CompScreen *s;
     Window     xid;
@@ -1072,10 +1077,10 @@ zoomSpecific (CompDisplay     *d,
 
 static Bool
 zoomSpecific1 (CompDisplay     *d,
-	CompAction      *action,
-	CompActionState state,
-	CompOption      *option,
-	int		nOption)
+	       CompAction      *action,
+	       CompActionState state,
+	       CompOption      *option,
+	       int		nOption)
 {
     ZOOM_DISPLAY (d);
     return zoomSpecific (d, action, state, option, nOption, 
@@ -1084,10 +1089,10 @@ zoomSpecific1 (CompDisplay     *d,
 
 static Bool
 zoomSpecific2 (CompDisplay     *d,
-	CompAction      *action,
-	CompActionState state,
-	CompOption      *option,
-	int		nOption)
+	       CompAction      *action,
+	       CompActionState state,
+	       CompOption      *option,
+	       int		nOption)
 {
     ZOOM_DISPLAY (d);
     return zoomSpecific (d, action, state, option, nOption, 
@@ -1096,10 +1101,10 @@ zoomSpecific2 (CompDisplay     *d,
 
 static Bool
 zoomSpecific3 (CompDisplay     *d,
-	CompAction      *action,
-	CompActionState state,
-	CompOption      *option,
-	int		nOption)
+	       CompAction      *action,
+	       CompActionState state,
+	       CompOption      *option,
+	       int		nOption)
 {
     ZOOM_DISPLAY (d);
     return zoomSpecific (d, action, state, option, nOption, 
@@ -1111,10 +1116,10 @@ zoomSpecific3 (CompDisplay     *d,
  */
 static Bool
 zoomToWindow (CompDisplay     *d,
-	CompAction      *action,
-	CompActionState state,
-	CompOption      *option,
-	int		nOption)
+	      CompAction      *action,
+	      CompActionState state,
+	      CompOption      *option,
+	      int	      nOption)
 {
     CompScreen *s;
     Window xid;
@@ -1137,10 +1142,10 @@ zoomToWindow (CompDisplay     *d,
 
 static Bool
 zoomPanLeft (CompDisplay     *d,
-	CompAction      *action,
-	CompActionState state,
-	CompOption      *option,
-	int		nOption)
+	     CompAction      *action,
+	     CompActionState state,
+	     CompOption      *option,
+	     int	     nOption)
 {
     CompScreen *s;
     Window xid;
@@ -1153,10 +1158,10 @@ zoomPanLeft (CompDisplay     *d,
 }
 static Bool
 zoomPanRight (CompDisplay     *d,
-	CompAction      *action,
-	CompActionState state,
-	CompOption      *option,
-	int		nOption)
+	      CompAction      *action,
+	      CompActionState state,
+	      CompOption      *option,
+	      int	      nOption)
 {
     CompScreen *s;
     Window xid;
@@ -1169,10 +1174,10 @@ zoomPanRight (CompDisplay     *d,
 }
 static Bool
 zoomPanUp (CompDisplay     *d,
-	CompAction      *action,
-	CompActionState state,
-	CompOption      *option,
-	int		nOption)
+	   CompAction      *action,
+	   CompActionState state,
+	   CompOption      *option,
+	   int		   nOption)
 {
     CompScreen *s;
     Window xid;
@@ -1186,10 +1191,10 @@ zoomPanUp (CompDisplay     *d,
 
 static Bool
 zoomPanDown (CompDisplay     *d,
-	CompAction      *action,
-	CompActionState state,
-	CompOption      *option,
-	int		nOption)
+	     CompAction      *action,
+	     CompActionState state,
+	     CompOption      *option,
+	     int	     nOption)
 {
     CompScreen *s;
     Window xid;
@@ -1205,10 +1210,10 @@ zoomPanDown (CompDisplay     *d,
  */
 static Bool
 zoomCenterMouse (CompDisplay     *d,
-	CompAction      *action,
-	CompActionState state,
-	CompOption      *option,
-	int		nOption)
+		 CompAction      *action,
+		 CompActionState state,
+		 CompOption      *option,
+		 int		 nOption)
 {
     CompScreen *s;
     Window xid;
@@ -1237,10 +1242,10 @@ zoomCenterMouse (CompDisplay     *d,
  */
 static Bool
 zoomFitWindowToZoom (CompDisplay     *d,
-	CompAction      *action,
-	CompActionState state,
-	CompOption      *option,
-	int		nOption)
+		     CompAction      *action,
+		     CompActionState state,
+		     CompOption      *option,
+		     int	     nOption)
 {
     CompScreen *s;
     XWindowChanges xwc; 
@@ -1394,7 +1399,8 @@ zoomHandleEvent (CompDisplay *d,
 	default:
 	    if (event->type == zd->fixesEventBase + XFixesCursorNotify)
 	    {
-		XFixesCursorNotifyEvent *cev = (XFixesCursorNotifyEvent *) event;
+		XFixesCursorNotifyEvent *cev = (XFixesCursorNotifyEvent *)
+		    event;
 		s = findScreenAtDisplay (d, cev->window);
 		if (s)
 		{
