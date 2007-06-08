@@ -763,7 +763,6 @@ cursorMoved (CompScreen *s)
     out = outputDeviceForPoint (s, zs->mouseX, zs->mouseY);
     if (isActive (s, out))
     {
-	cursorZoomActive (s);
 	if (zs->opt[SOPT_RESTRAIN_MOUSE].value.b)
 	    restrainCursor (s, out);
 	if (zs->opt[SOPT_MOUSE_PAN].value.b)
@@ -772,8 +771,6 @@ cursorMoved (CompScreen *s)
 			      zs->mouseY, 
 			      zs->opt[SOPT_RESTRAIN_MARGIN].value.i);
     }
-    else
-	cursorZoomInactive (s);
 }
 
 /* Update the mouse position.
