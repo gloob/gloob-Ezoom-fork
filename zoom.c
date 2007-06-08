@@ -88,6 +88,7 @@ typedef enum _ZsOpt
     SOPT_HIDE_ORIGINAL_MOUSE,
     SOPT_RESTRAIN_MOUSE,
     SOPT_RESTRAIN_MARGIN,
+    SOPT_MOUSE_PAN,
     SOPT_NUM
 } ZoomScreenOptions;
 
@@ -709,11 +710,6 @@ restrainCursor (CompScreen *s, int out)
     ZOOM_SCREEN (s);
     float z = zs->zooms[out].currentZoom;
     int margin = zs->opt[SOPT_RESTRAIN_MARGIN].value.i;
-    if (!zs->opt[SOPT_RESTRAIN_MOUSE].value.b)
-    {
-	ensureVisibility (s, zs->mouseX, zs->mouseY, margin);
-	return ;
-    }
     convertToZoomed (s, out, zs->mouseX, zs->mouseY, &x, &y);
     if (x > o->region.extents.x2 - margin)
 	diffX = x - o->region.extents.x2 + margin;
@@ -740,7 +736,13 @@ cursorMoved (CompScreen *s)
     if (isActive (s, out))
     {
 	cursorZoomActive (s);
-	restrainCursor (s, out);
+	if (zs->opt[SOPT_RESTRAIN_MOUSE].value.b)
+	    restrainCursor (s, out);
+	if (zs->opt[SOPT_MOUSE_PAN].value.b)
+	    ensureVisibility (s, 
+			      zs->mouseX, 
+			      zs->mouseY, 
+			      zs->opt[SOPT_RESTRAIN_MARGIN].value.i);
     }
     else
 	cursorZoomInactive (s);
@@ -1407,7 +1409,8 @@ static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
     { "scale_mouse", "bool", "<default>false</default>", 0, 0 },
     { "hide_original_mouse", "bool", "<default>false</default>", 0, 0 },
     { "restrain_mouse", "bool", "<default>false</default>", 0, 0 },
-    { "restrain_margin", "int", "<default>5</default>", 0, 0 }
+    { "restrain_margin", "int", "<default>5</default>", 0, 0 }, 
+    { "mouse_pan", "bool", "<default>false</default>", 0, 0 }
 };
 
 static CompOption *

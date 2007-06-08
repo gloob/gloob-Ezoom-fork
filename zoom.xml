@@ -315,6 +315,11 @@
 		<long>Attempt to keep the zoomed mouse visible by warping it when it is moved otuside the zoom area.</long>
 		<default>false</default>
 	    </option>
+	    <option type="bool" name="mouse_pan">
+		<short>Mouse panning</short>
+		<long>Pan the zoom area when the mouse cursor moves outside the visible area.</long>
+		<default>false</default>
+	    </option>
 	    <option type="int" name="restrain_margin">
 		<short>Mouse Restrain Margin</short>
 		<long>The size of the margin to add when attempting to restrain the mouse.  </long>
