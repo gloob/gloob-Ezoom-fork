@@ -676,14 +676,18 @@ convertToZoomed (CompScreen *s, int out, int x, int y, int *resultX, int *result
     ZOOM_SCREEN (s); 
     CompOutput *o = &s->outputDev[out];
     ZoomArea *za = &zs->zooms[out];
+    x -= o->region.extents.x1;
+    y -= o->region.extents.y1;
     *resultX = x - (za->realXTranslate * 
 		    (1.0f - za->currentZoom) * o->width) - o->width/2;
     *resultX /= za->currentZoom;
     *resultX += o->width/2;
+    *resultX += o->region.extents.x1;
     *resultY = y - (za->realYTranslate * 
 		    (1.0f - za->currentZoom) * o->height) - o->height/2;
     *resultY /= za->currentZoom;
     *resultY += o->height/2;
+    *resultY += o->region.extents.y1;
 }
 /* Same but use targeted translation, not real */
 static void 
@@ -697,14 +701,18 @@ convertToZoomedTarget (CompScreen *s,
     ZOOM_SCREEN (s); 
     CompOutput *o = &s->outputDev[out];
     ZoomArea *za = &zs->zooms[out];
+    x -= o->region.extents.x1;
+    y -= o->region.extents.y1;
     *resultX = x - (za->xTranslate * 
 		    (1.0f - za->newZoom) * o->width) - o->width/2;
     *resultX /= za->newZoom;
     *resultX += o->width/2;
+    *resultX += o->region.extents.x1;
     *resultY = y - (za->yTranslate * 
 		    (1.0f - za->newZoom) * o->height) - o->height/2;
     *resultY /= za->newZoom;
     *resultY += o->height/2;
+    *resultY += o->region.extents.y1;
 }
 
 /* Make sure the given point + margin is visible;
@@ -729,13 +737,13 @@ ensureVisibility (CompScreen *s, int x, int y, int margin)
 	    (za->newZoom * (zoomX+margin - o->region.extents.x2))/o->width;
     else if (zoomX - margin < o->region.extents.x1)
 	za->xTranslate += 
-	    (za->newZoom * (zoomX-margin + o->region.extents.x1))/o->width;
+	    (za->newZoom * (zoomX-margin - o->region.extents.x1))/o->width;
     if (zoomY + margin > o->region.extents.y2)
 	za->yTranslate += 
 	    (za->newZoom * (zoomY+margin - o->region.extents.y2))/o->height;
     else if (zoomY - margin < o->region.extents.y1)
 	za->yTranslate += 
-	    (za->newZoom * (zoomY-margin + o->region.extents.y1))/o->height;
+	    (za->newZoom * (zoomY-margin - o->region.extents.y1))/o->height;
     constrainZoomTranslate (s);
     return TRUE;
 }
