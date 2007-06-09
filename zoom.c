@@ -145,7 +145,6 @@ typedef struct _ZoomScreen {
     time_t lastChange;
     CursorTexture cursor;
     Bool cursorInfoSelected;
-    Bool showScaled;
     Bool cursorHidden;
     Bool hideNormal;
 } ZoomScreen;
@@ -1626,7 +1625,6 @@ zoomInitScreen (CompPlugin *p,
     zs->mouseX = -1;
     zs->mouseY = -1;
     zs->hideNormal = FALSE;
-    zs->showScaled = TRUE;
     zs->cursorInfoSelected = FALSE;
     zs->cursor.isSet = FALSE;
     zs->cursorHidden = FALSE;
