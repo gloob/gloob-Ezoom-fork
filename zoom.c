@@ -381,7 +381,7 @@ zoomDonePaintScreen (CompScreen *s)
 	int out;
 	for (out = 0; out < zs->nZooms; out++)
 	{
-	    if (isInMovement (s, out))
+	    if (isInMovement (s, out) && isActive (s,out))
 	    {
 		damageScreen (s);
 		break;
@@ -775,6 +775,11 @@ cursorMoved (CompScreen *s)
 			      zs->mouseX, 
 			      zs->mouseY, 
 			      zs->opt[SOPT_RESTRAIN_MARGIN].value.i);
+	cursorZoomActive (s);
+    }
+    else 
+    { 
+	cursorZoomInactive (s);
     }
 }
 
@@ -820,12 +825,13 @@ updateMouseInterval (void *vs)
 {
     CompScreen *s = vs;
     ZOOM_SCREEN (s);
+    updateMousePosition(s);
     if (!zs->grabbed)
     {
 	zs->mouseIntervalTimeoutHandle = FALSE;
+	cursorMoved (s);
 	return FALSE;
     }
-    updateMousePosition(s);
     return TRUE;
 }
 
