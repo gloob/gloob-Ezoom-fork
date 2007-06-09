@@ -140,7 +140,6 @@ typedef struct _ZoomScreen {
     int mouseX;
     int mouseY;
     unsigned long int grabbed;
-    float maxTranslate;
     time_t lastChange;
     CursorTexture cursor;
     Bool cursorInfoSelected;
@@ -474,16 +473,6 @@ constrainZoomTranslate (CompScreen *s)
 	    zs->zooms[out].yTranslate = 0.5f;
 	else if (zs->zooms[out].yTranslate < -0.5f)
 	    zs->zooms[out].yTranslate = -0.5f;
-
-	if (zs->zooms[out].xTranslate < -zs->maxTranslate)
-	    zs->zooms[out].xTranslate = -zs->maxTranslate;
-	else if (zs->zooms[out].xTranslate > zs->maxTranslate)
-	    zs->zooms[out].xTranslate = zs->maxTranslate;
-
-	if (zs->zooms[out].yTranslate < -zs->maxTranslate)
-	    zs->zooms[out].yTranslate = -zs->maxTranslate;
-	else if (zs->zooms[out].yTranslate > zs->maxTranslate)
-	    zs->zooms[out].yTranslate = zs->maxTranslate;
     }
 }
 
@@ -1619,7 +1608,6 @@ zoomInitScreen (CompPlugin *p,
 	zs->zooms[i].yTranslate = 0.0f;
     }
     zs->grabbed = 0;
-    zs->maxTranslate = 0.85f;
     zs->mouseX = -1;
     zs->mouseY = -1;
     zs->cursorInfoSelected = FALSE;
