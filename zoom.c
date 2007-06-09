@@ -216,11 +216,18 @@ isZoomed (CompScreen *s, int out)
 }
 
 /* Returns true if the head in question is currently moving.
+ * Since we don't allways bother resetting everything when
+ * canceling zoom, we check for the condition of being completly
+ * zoomed out and not zooming in/out first.
  */
 static Bool
 isInMovement (CompScreen *s, int out)
 {
     ZOOM_SCREEN (s);
+    if (zs->zooms[out].currentZoom == 1.0f &&
+	zs->zooms[out].newZoom == 1.0f &&
+	zs->zooms[out].zVelocity == 0.0f)
+	return FALSE;
     if (zs->zooms[out].currentZoom != zs->zooms[out].newZoom ||
 	zs->zooms[out].xVelocity || zs->zooms[out].yVelocity ||
 	zs->zooms[out].zVelocity)
