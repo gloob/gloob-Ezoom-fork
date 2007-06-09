@@ -135,7 +135,6 @@ typedef struct _ZoomScreen {
     PaintOutputProc		 paintOutput;
     CompOption opt[SOPT_NUM];
     CompTimeoutHandle mouseIntervalTimeoutHandle;
-    float pointerSensitivity;
     ZoomArea *zooms;
     int nZooms;
     int mouseX;
@@ -146,7 +145,6 @@ typedef struct _ZoomScreen {
     CursorTexture cursor;
     Bool cursorInfoSelected;
     Bool cursorHidden;
-    Bool hideNormal;
 } ZoomScreen;
 
 /* These prototypes must be pre-defined since they cross-refference eachother
@@ -1624,7 +1622,6 @@ zoomInitScreen (CompPlugin *p,
     zs->maxTranslate = 0.85f;
     zs->mouseX = -1;
     zs->mouseY = -1;
-    zs->hideNormal = FALSE;
     zs->cursorInfoSelected = FALSE;
     zs->cursor.isSet = FALSE;
     zs->cursorHidden = FALSE;
