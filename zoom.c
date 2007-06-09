@@ -113,6 +113,19 @@ typedef struct _ZoomDisplay {
     CompOption opt[DOPT_NUM];
 } ZoomDisplay;
 
+/* Stores an actual zoom-setup. This can later be used to store/restore zoom
+ * areas on the fly. 
+ *
+ * [xy]Translate and newZoom are target values, and [xy]Translate allways ranges
+ * from -0.5 to 0.5. 
+ *
+ * currentZoom is actual zoomed value, while ztrans is the calculated
+ * translation of the z axis.
+ *
+ * real[XY]Translate are the currently used values in the same range as
+ * [xy]Translate, and [xy]trans is adjusted for the zoom level in place.
+ * [xyz]trans should never be modified except in updateActualTranslates()
+ */
 typedef struct _ZoomArea {
     int output;
     GLfloat currentZoom;
@@ -488,7 +501,6 @@ constrainZoomTranslate (CompScreen *s)
  * mouse pointer. This is to allow input, and is NOT necesarry
  * when input redirection is available to us.
  * The center is not the center of the screen. This is the target-center.
- * TODO: Better output stuff.
  */
 static void
 setCenter (CompScreen *s, int x, int y, Bool instant)
@@ -582,7 +594,6 @@ panZoom (CompScreen *s, int xvalue, int yvalue)
 }
 
 /* Sets the zoom (or scale) level.
- * FIXME: Output.
  */
 static void
 setScale (CompScreen *s, int out, float x, float y)
@@ -628,7 +639,6 @@ setScale (CompScreen *s, int out, float x, float y)
 /* Syncs the center, based on translations, back to the mouse. 
  * This should be called when doing non-IR zooming and moving the zoom
  * area based on events other than mouse movement.
- * FIXME: Output.
  */
 static void
 syncCenterToMouse (CompScreen *s)
@@ -760,6 +770,9 @@ restrainCursor (CompScreen *s, int out)
 }
 
 /* Check if the cursor is still visible.
+ * We also make sure to activate/deactivate cursor scaling here
+ * so we turn on/off the pointer if it moves from one head to another.
+ * FIXME: Detect an actual output change instead of spamming.
  */
 static void 
 cursorMoved (CompScreen *s)
