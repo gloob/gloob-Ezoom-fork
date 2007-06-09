@@ -194,7 +194,7 @@ isActive (CompScreen *s, int out)
     ZOOM_SCREEN (s);
     if (!outputIsZoomArea (s, out))
 	return FALSE;
-    if (zs->grabbed & (1 >> zs->zooms[out].output))
+    if (zs->grabbed & (1 << zs->zooms[out].output))
 	return TRUE;
     return FALSE;
 }
@@ -357,7 +357,7 @@ zoomPreparePaintScreen (CompScreen *s,
 		if (!isZoomed (s, out))
 		{
 		    zs->zooms[out].xVelocity = zs->zooms[out].yVelocity = 0.0f;
-		    zs->grabbed &= ~(1 >> zs->zooms[out].output);
+		    zs->grabbed &= ~(1 << zs->zooms[out].output);
 		}
 	    }
 	}
@@ -611,7 +611,7 @@ setScale (CompScreen *s, int out, float x, float y)
 		compAddTimeout (zs->opt[SOPT_POLL_INTERVAL].value.i, 
 				updateMouseInterval, s);
 	}
-	zs->grabbed |= (1 >> zs->zooms[out].output);
+	zs->grabbed |= (1 << zs->zooms[out].output);
 	cursorZoomActive (s);
     }
     if (value == 1.0f)
