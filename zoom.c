@@ -691,12 +691,12 @@ convertToZoomedTarget (CompScreen *s,
     CompOutput *o = &s->outputDev[out];
     ZoomArea *za = &zs->zooms[out];
     *resultX = x - (za->xTranslate * 
-		    (1.0f - za->currentZoom) * o->width) - o->width/2;
-    *resultX /= za->currentZoom;
+		    (1.0f - za->newZoom) * o->width) - o->width/2;
+    *resultX /= za->newZoom;
     *resultX += o->width/2;
     *resultY = y - (za->yTranslate * 
-		    (1.0f - za->currentZoom) * o->height) - o->height/2;
-    *resultY /= za->currentZoom;
+		    (1.0f - za->newZoom) * o->height) - o->height/2;
+    *resultY /= za->newZoom;
     *resultY += o->height/2;
 }
 
@@ -719,16 +719,16 @@ ensureVisibility (CompScreen *s, int x, int y, int margin)
     ZoomArea *za = &zs->zooms[out];
     if (zoomX + margin > o->region.extents.x2)
 	za->xTranslate += 
-	    (za->currentZoom * (zoomX+margin - o->region.extents.x2))/o->width;
+	    (za->newZoom * (zoomX+margin - o->region.extents.x2))/o->width;
     else if (zoomX - margin < o->region.extents.x1)
 	za->xTranslate += 
-	    (za->currentZoom * (zoomX-margin + o->region.extents.x1))/o->width;
+	    (za->newZoom * (zoomX-margin + o->region.extents.x1))/o->width;
     if (zoomY + margin > o->region.extents.y2)
 	za->yTranslate += 
-	    (za->currentZoom * (zoomY+margin - o->region.extents.y2))/o->height;
+	    (za->newZoom * (zoomY+margin - o->region.extents.y2))/o->height;
     else if (zoomY - margin < o->region.extents.y1)
 	za->yTranslate += 
-	    (za->currentZoom * (zoomY-margin + o->region.extents.y1))/o->height;
+	    (za->newZoom * (zoomY-margin + o->region.extents.y1))/o->height;
     constrainZoomTranslate (s);
     return TRUE;
 }
@@ -741,7 +741,7 @@ restrainCursor (CompScreen *s, int out)
     int diffX = 0, diffY = 0;
     CompOutput *o = &s->outputDev[out];
     ZOOM_SCREEN (s);
-    float z = zs->zooms[out].currentZoom;
+    float z = zs->zooms[out].newZoom;
     int margin = zs->opt[SOPT_RESTRAIN_MARGIN].value.i;
     convertToZoomedTarget (s, out, zs->mouseX, zs->mouseY, &x, &y);
     if (x > o->region.extents.x2 - margin)
