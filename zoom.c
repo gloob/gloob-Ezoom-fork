@@ -1379,6 +1379,7 @@ zoomHandleEvent (CompDisplay *d,
     CompWindow *w;
     CompScreen *s;
     static Window lastMapped = 0;
+    int out;
     switch (event->type) {
 	case FocusIn:
 	    if ((event->xfocus.mode != NotifyNormal) 
@@ -1398,14 +1399,14 @@ zoomHandleEvent (CompDisplay *d,
 		break;
 	    if (!zs->opt[SOPT_FOLLOW_FOCUS].value.b)
 		break;
-	    if (!zs->grabbed && 
+	    out = outputDeviceForWindow (w);
+	    if (!isActive (w->screen, out) && 
 		!zs->opt[SOPT_ALLWAYS_FOCUS_FIT_WINDOW].value.b)
 		break;
 	    if (zs->opt[SOPT_FOCUS_FIT_WINDOW].value.b)
 	    {
 		int width = w->width + w->input.left + w->input.right; 
 		int height = w->height + w->input.top + w->input.bottom;
-		int out = outputDeviceForWindow (w);
 		
 		setScale (w->screen, out, 
 			  (float) width / w->screen->outputDev[out].width, 
