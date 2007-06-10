@@ -785,10 +785,17 @@ cursorMoved (CompScreen *s)
 	if (zs->opt[SOPT_RESTRAIN_MOUSE].value.b)
 	    restrainCursor (s, out);
 	if (zs->opt[SOPT_MOUSE_PAN].value.b)
+	{
 	    ensureVisibility (s, 
 			      zs->mouseX, 
 			      zs->mouseY, 
 			      zs->opt[SOPT_RESTRAIN_MARGIN].value.i);
+	    ensureVisibility (s, 
+			      zs->mouseX + zs->cursor.width/2, 
+			      zs->mouseY + zs->cursor.height/2, 
+			      zs->opt[SOPT_RESTRAIN_MARGIN].value.i);
+
+	}
 	cursorZoomActive (s);
     }
     else 
