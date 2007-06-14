@@ -34,6 +34,47 @@
  * plugin written for the Beryl project and copyrighted to Dennis Kasprzyk and
  * Quinn Storm.
  *
+ * Note on actual zoom process
+ *
+ * This plugin (still) uses the traditional method of translating along the
+ * z-axis to zoom. Recent work on the original zoom desktop plugin favors
+ * scaling the image instead, which avoids all clipping issues. This plugin
+ * might be re-factored to use this in the future.
+ *
+ * The animation is done in preparePaintScreen, while instant movements
+ * are done by calling updateActualTranslate () after updating the 
+ * translations. This causes [xyz]trans to be re-calculated. We keep track
+ * of each head separately; It does not make sense to zoom a window across
+ * multiple heads in most (or all?) cases. 
+ *
+ * Note on input
+ *
+ * We can not redirect input yet, but this plugin offers two fundamentally
+ * different approaches to achieve input:
+ *
+ * Making sure the real mouse is allways at the correct place. This is
+ * the traditional way we did input zoom in Beryl. This also means that
+ * whenever you move the mouse, we have to move the zoomed area, and that
+ * if we are working on a window that's in the upper right corner, the
+ * mouse has to be in the upper right corner too. This is probably the
+ * techincally best sollution, as it is fairly simple, but it has the obvious
+ * weakness that mouse movement equals panning, so you can't keep a single 
+ * window fully visible and interact with it without parts of it going
+ * off screen.
+ *
+ * The second method involves hiding the real cursor and showing a "fake"
+ * one. This involves using XFixes to first get hold of the actual cursor
+ * (ie: normal pointer, resize-pointer, grab-pointer, etc) and XFixes to
+ * hide the original. We then convert the real mouse coordinates to their
+ * corresponding values zoomed, and draw the cursor. This gives a splendid
+ * effect and is fairly close to what we will be able to do with input
+ * redirection, but has a few weaknesses, the biggest being use of 
+ * XFixes which tends to bug up (Loose the cursor entirely, even when
+ * we aren't hiding it, happens on firefox-loading cursors for instance).
+ * The second, and rather minor weakness is that the sensitivity is rather
+ * ... crazy. If you zoom in so your 1024-wide screen is showing 102 pixels,
+ * you only have to move the mouse 1/10th of the distance you normally would
+ * to move it across the visible area. 
  */
 
 #include <stdio.h>
@@ -133,11 +174,11 @@ typedef struct _ZoomArea {
     GLfloat xVelocity;
     GLfloat yVelocity;
     GLfloat zVelocity;
-    GLfloat xTranslate; // Target (Modify this for fluent movement)
+    GLfloat xTranslate;
     GLfloat yTranslate;
-    GLfloat realXTranslate; // Real, unadjusted (Modify this too for instant)
+    GLfloat realXTranslate;
     GLfloat realYTranslate;
-    GLfloat xtrans; // Real, adjusted (Don't modify these.)
+    GLfloat xtrans;
     GLfloat ytrans;
     GLfloat ztrans;
 } ZoomArea;
@@ -326,7 +367,7 @@ adjustXYVelocity (CompScreen *s, int out, float chunk)
 	(zs->zooms[out].yVelocity * chunk) / s->redrawTime;
 }
 
-/* Update/set translations based on zoom level.
+/* Update/set translations based on zoom level and real translate.
  */
 static void
 updateActualTranslates (ZoomArea *za)
@@ -342,8 +383,7 @@ updateActualTranslates (ZoomArea *za)
     za->ytrans = za->realYTranslate * (1.0f - za->currentZoom);
 }
 
-/* Calculates the real translation to be applied in PaintScreen().
- * Needs cleaning...
+/* Animate the movement (if any) in preperation of a paint screen.
  */
 static void
 zoomPreparePaintScreen (CompScreen *s,
@@ -468,8 +508,9 @@ zoomPaintOutput (CompScreen		 *s,
 }
 
 /* Makes sure we're not attempting to translate too far.
- * We are restricted to 0.5 because 
- * */
+ * We are restricted to 0.5 to not go beyond the end
+ * of the screen/head.
+ */
 static inline void
 constrainZoomTranslate (CompScreen *s)
 {
@@ -492,15 +533,17 @@ constrainZoomTranslate (CompScreen *s)
 /* Functions for adjusting the zoomed area.
  * These are the core of the zoom plugin; Anything wanting
  * to adjust the zoomed area must use setCenter or setZoomArea
- * and setScale. 
+ * and setScale or frontends to them. 
  */
 
 /* Sets the center of the zoom area to X,Y.
  * We have to be able to warp the pointer here: If we are moved by
  * anything except mouse movement, we have to sync the
  * mouse pointer. This is to allow input, and is NOT necesarry
- * when input redirection is available to us.
- * The center is not the center of the screen. This is the target-center.
+ * when input redirection is available to us or if we're cheating
+ * and using a scaled mouse cursor to immitate IR.
+ * The center is not the center of the screen. This is the target-center;
+ * that is, it's the point that's the same regardless of zoom level.
  */
 static void
 setCenter (CompScreen *s, int x, int y, Bool instant)
@@ -572,8 +615,6 @@ zoomAreaToWindow (CompWindow *w)
 
 /* Pans the zoomed area vertically/horisontaly by
  * value * zs->panFactor
- * Used both by key bindings and future mouse-based
- * panning.
  * TODO: Fix output.
  */
 static void
@@ -593,7 +634,10 @@ panZoom (CompScreen *s, int xvalue, int yvalue)
     constrainZoomTranslate (s);
 }
 
-/* Sets the zoom (or scale) level.
+/* Sets the zoom (or scale) level. Takes two float's
+ * as argument for legacy reasons mainly; it uses the
+ * larger of the two, allowing us to easily scale to
+ * fit an area. FIXME: This shouldn't happen here.
  */
 static void
 setScale (CompScreen *s, int out, float x, float y)
@@ -633,7 +677,8 @@ setScale (CompScreen *s, int out, float x, float y)
 /* Mouse code...
  * This takes care of keeping the mouse in sync with the zoomed area and
  * vice versa. This is necesarry since we don't have input redirection (yet).
- * They are easily disabled.
+ * They are easily disabled. We can also use a scaled mouse cursor. See
+ * heading for description.
  */
 
 /* Syncs the center, based on translations, back to the mouse. 
@@ -870,8 +915,7 @@ freeCursor (CursorTexture * cursor)
     cursor->texture = 0;
 }
 
-/* Draws the actual cursor. 
- * FIXME: Clean up the math.
+/* Translate into place and draw the scaled cursor.
  */
 static void
 drawCursor (CompScreen *s, CompOutput *output, const CompTransform *transform)
@@ -914,7 +958,9 @@ drawCursor (CompScreen *s, CompOutput *output, const CompTransform *transform)
     }
 }
 
-/* The cursor needs an update */
+/* Create (if necessarry) a texture to store the cursor,
+ * fetch the cursor with XFixes. Store it.
+ */
 static void
 zoomUpdateCursor (CompScreen * s, CursorTexture * cursor)
 {
