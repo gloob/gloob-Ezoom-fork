@@ -1,45 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <compiz>
-    <plugin name="zoom">
+    <plugin name="ezoom">
 	<deps>
 	    <relation type="after">
 		<plugin>expo</plugin>
 	    </relation>
 	</deps>
-	<short>Zoom Desktop</short>
-	<short xml:lang="ca">Fes zoom a l'escriptori</short>
-	<short xml:lang="cs">Přiblížit plochu</short>
-	<short xml:lang="da">Zoom på skrivebord</short>
-	<short xml:lang="de">Desktop zoomen</short>
-	<short xml:lang="es">Ampliar/reducir escritorio</short>
-	<short xml:lang="fi">Työpöydän zoomaus</short>
-	<short xml:lang="fr">Zoom - Bureau</short>
-	<short xml:lang="hu">Munkaasztal nagyítása</short>
-	<short xml:lang="it">Zoom desktop</short>
-	<short xml:lang="ja">デスクトップのズーム</short>
-	<short xml:lang="pl">Powiększ biurko</short>
-	<short xml:lang="pt">Aproximar Área de Trabalho</short>
-	<short xml:lang="pt_BR">Aproximar Área de Trabalho</short>
-	<short xml:lang="ru">Изменить масштаб рабочего стола</short>
-	<short xml:lang="zh_CN">缩放桌面</short>
-	<short xml:lang="zh_TW">縮放桌面</short>
-	<long>Zoom and pan desktop cube</long>
-	<long xml:lang="ca">Fes zoom i gira el cub de l'escriptori</long>
-	<long xml:lang="cs">Přiblížit a posunout kostku ploch</long>
-	<long xml:lang="da">Zoom og panorer på skrivebordskubus</long>
-	<long xml:lang="de">Desktop-Würfel zoomen und schwenken</long>
-	<long xml:lang="es">Ampliar o reducir y panorámica del cubo de escritorio</long>
-	<long xml:lang="fi">Zoomaa ja panoroi työpöytää</long>
-	<long xml:lang="fr">Zoom et panoramique du cube du bureau</long>
-	<long xml:lang="hu">A munkaasztalkocka nagyítása és pásztázása</long>
-	<long xml:lang="it">Applica zoom a panoramica a cubo desktop</long>
-	<long xml:lang="ja">デスクトップキューブのズームとパン</long>
-	<long xml:lang="pl">Powiększ i przesuń kostkę pulpitu</long>
-	<long xml:lang="pt">Aplicar zoom e pan ao cubo da área de trabalho</long>
-	<long xml:lang="pt_BR">Aplicar zoom e pan ao cubo da área de trabalho</long>
-	<long xml:lang="ru">Изменение масштаба и сдвига куба рабочего стола</long>
-	<long xml:lang="zh_CN">缩放和桌面立方体</long>
-	<long xml:lang="zh_TW">縮放和平移桌面立方體</long>
+	<short>Enhanced Zoom Desktop</short>
+	<long>Enhanced zoom functions for visually imparied and others</long>
 	<display>
 	    <option type="action" name="initiate">
 		<short>Initiate</short>

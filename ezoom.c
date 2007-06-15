@@ -1751,7 +1751,7 @@ CompPluginDep zoomDeps[] = {
 };
 
 CompPluginVTable zoomVTable = {
-    "zoom",
+    "ezoom",
     zoomGetVersion,
     zoomGetMetadata,
     zoomInit,

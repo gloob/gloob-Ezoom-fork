@@ -21,7 +21,7 @@
 ## configuration
 
 #enter plugin name here
-PLUGIN = zoom
+PLUGIN = ezoom
 
 #enter dependencies here
 BUILDDEP = compiz
