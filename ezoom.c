@@ -211,6 +211,7 @@ static void cursorZoomInactive (CompScreen *s);
 static void drawCursor (CompScreen *s, CompOutput *output, const CompTransform
 			*transform);
 static void restrainCursor (CompScreen *s, int out);
+static Bool fetchMousePosition (CompScreen *s);
 
 #define GET_ZOOM_DISPLAY(d)				      \
     ((ZoomDisplay *) (d)->privates[displayPrivateIndex].ptr)
@@ -670,8 +671,6 @@ setScale (CompScreen *s, int out, float x, float y)
     }
     zs->zooms[out].newZoom = value;
     damageScreen(s);
-    if (zs->opt[SOPT_MOUSE_PAN].value.b)
-	restrainCursor (s, out);
 }
 
 /* Mouse code...
@@ -773,22 +772,31 @@ ensureVisibility (CompScreen *s, int x, int y, int margin)
     o = &s->outputDev[out];
     convertToZoomedTarget (s, out, x, y, &zoomX, &zoomY);
     ZoomArea *za = &zs->zooms[out];
+#define FACTOR (za->newZoom / (1.0f - za->newZoom))
     if (zoomX + margin > o->region.extents.x2)
 	za->xTranslate +=
-	    (za->newZoom * (zoomX+margin - o->region.extents.x2))/o->width;
+	    (FACTOR * (float) (zoomX + margin - o->region.extents.x2)) /
+	    (float) o->width;
     else if (zoomX - margin < o->region.extents.x1)
 	za->xTranslate +=
-	    (za->newZoom * (zoomX-margin - o->region.extents.x1))/o->width;
+	    (FACTOR * (float) (zoomX - margin + o->region.extents.x1)) /
+	    (float) o->width;
     if (zoomY + margin > o->region.extents.y2)
 	za->yTranslate +=
-	    (za->newZoom * (zoomY+margin - o->region.extents.y2))/o->height;
+	    (FACTOR * (float) (zoomY + margin - o->region.extents.y2)) /
+	    (float) o->height;
     else if (zoomY - margin < o->region.extents.y1)
 	za->yTranslate +=
-	    (za->newZoom * (zoomY-margin - o->region.extents.y1))/o->height;
+	    (FACTOR * (float) (zoomY - margin + o->region.extents.y1)) /
+	    (float) o->height;
+#undef FACTOR
     constrainZoomTranslate (s);
     return TRUE;
 }
-/* Ensures that the cursor is visible on the given head
+/* Ensures that the cursor is visible on the given head.
+ * Note that we check if currentZoom is 1.0f, because that
+ * often means that mouseX and mouseY is not up-to-date (since
+ * the polling timer just started).
  */
 static void
 restrainCursor (CompScreen *s, int out)
@@ -799,6 +807,8 @@ restrainCursor (CompScreen *s, int out)
     ZOOM_SCREEN (s);
     float z = zs->zooms[out].newZoom;
     int margin = zs->opt[SOPT_RESTRAIN_MARGIN].value.i;
+    if (zs->zooms[out].currentZoom == 1.0f)
+	fetchMousePosition (s);
     convertToZoomedTarget (s, out, zs->mouseX, zs->mouseY, &x, &y);
     if (x > o->region.extents.x2 - margin)
 	diffX = x - o->region.extents.x2 + margin;
@@ -818,6 +828,7 @@ restrainCursor (CompScreen *s, int out)
  * We also make sure to activate/deactivate cursor scaling here
  * so we turn on/off the pointer if it moves from one head to another.
  * FIXME: Detect an actual output change instead of spamming.
+ * FIXME: The second ensureVisibility (sync with restrain).
  */
 static void
 cursorMoved (CompScreen *s)
@@ -835,11 +846,11 @@ cursorMoved (CompScreen *s)
 			      zs->mouseX,
 			      zs->mouseY,
 			      zs->opt[SOPT_RESTRAIN_MARGIN].value.i);
-	    ensureVisibility (s,
+	    /* ensureVisibility (s,
 			      zs->mouseX + zs->cursor.width/2,
 			      zs->mouseY + zs->cursor.height/2,
 			      zs->opt[SOPT_RESTRAIN_MARGIN].value.i);
-
+			      */
 	}
 	cursorZoomActive (s);
     }
@@ -849,12 +860,11 @@ cursorMoved (CompScreen *s)
     }
 }
 
-/* Update the mouse position.
- * Based on the zoom engine in use, we will have to move the zoom area.
- * This might have to be added to a timer.
+/* Updates zs->mouse[XY], returns TRUE if it changed and
+ * is within the bounds of the current screen.
  */
-static void
-updateMousePosition (CompScreen *s)
+static Bool
+fetchMousePosition (CompScreen *s)
 {
     Window root_return;
     Window child_return;
@@ -864,20 +874,34 @@ updateMousePosition (CompScreen *s)
     XQueryPointer (s->display->display, s->root,
 		   &root_return, &child_return,
 		   &rootX, &rootY, &winX, &winY, &maskReturn);
-
-    ZOOM_SCREEN(s);
+    if (rootX > s->width || rootY > s->height || s->root != root_return)
+	return FALSE;
+    ZOOM_SCREEN (s);
     if ((rootX != zs->mouseX || rootY != zs->mouseY))
     {
-	if (rootX > s->width || rootY > s->height || s->root != root_return)
-	    return;
+	zs->lastChange = time(NULL);
 	zs->mouseX = rootX;
 	zs->mouseY = rootY;
-	int out = outputDeviceForPoint (s, rootX, rootY);
+	return TRUE;
+    }
+    return FALSE;
+}
+
+
+/* Update the mouse position.
+ * Based on the zoom engine in use, we will have to move the zoom area.
+ * This might have to be added to a timer.
+ */
+static void
+updateMousePosition (CompScreen *s)
+{
+
+    ZOOM_SCREEN(s);
+    if (fetchMousePosition (s))
+    {
+	int out = outputDeviceForPoint (s, zs->mouseX, zs->mouseY);
 	if (zs->opt[SOPT_SYNC_MOUSE].value.b && !isInMovement (s, out))
-	{
-	    zs->lastChange = time(NULL);
-	    setCenter (s, rootX, rootY, TRUE);
-	}
+	    setCenter (s, zs->mouseX, zs->mouseY, TRUE);
 	cursorMoved (s);
 	damageScreen (s);
     }
