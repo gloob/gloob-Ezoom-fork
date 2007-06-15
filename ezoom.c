@@ -1415,60 +1415,74 @@ zoomTerminate (CompDisplay     *d,
     return FALSE;
 }
 
-/* Fetches focus changes and adjusts the zoom area. 
- * The focus handeling should be moved into a separate function
- * before a release.
+/* Focus-track related event handeling.
  * The lastMapped is a hack to ensure that newly mapped windows are
  * caught even if the grab that (possibly) triggered them affected
  * the mode. Windows created by a keybind (like creating a terminal
  * on a keybind) tends to trigger FocusIn events with mode other than
  * Normal. This works around this problem.
+ * FIXME: Cleanup.
+ * TODO: Avoid maximized windows. 
+ */
+static void
+focusTrack (CompDisplay *d,
+	    XEvent *event)
+{
+    CompWindow *w; 
+    int out;
+    static Window lastMapped = 0;
+
+    if (event->type == MapNotify)
+    {
+	lastMapped = event->xmap.window;
+	return;
+    }
+    else if (event->type != FocusIn)
+	return;
+
+    if ((event->xfocus.mode != NotifyNormal) 
+	&& (lastMapped != event->xfocus.window))
+	return;
+    lastMapped = 0;
+    w = findWindowAtDisplay(d, event->xfocus.window);
+    if (w == NULL || w->id == d->activeWindow)
+	return;
+
+    ZOOM_SCREEN (w->screen);
+    
+    if (time(NULL) - zs->lastChange < zs->opt[SOPT_FOCUS_DELAY].value.i || 
+	!zs->opt[SOPT_FOLLOW_FOCUS].value.b)
+	return;
+
+    out = outputDeviceForWindow (w);
+    if (!isActive (w->screen, out) && 
+	!zs->opt[SOPT_ALLWAYS_FOCUS_FIT_WINDOW].value.b)
+	return;
+    if (zs->opt[SOPT_FOCUS_FIT_WINDOW].value.b)
+    {
+	int width = w->width + w->input.left + w->input.right; 
+	int height = w->height + w->input.top + w->input.bottom;
+	
+	setScale (w->screen, out, 
+		  (float) width / w->screen->outputDev[out].width, 
+		  (float)  height/w->screen->outputDev[out].height);
+    }
+    zoomAreaToWindow (w);
+}
+
+/* Event handler. Pass focus-related events on and handle 
+ * XFixes events.
  */
 static void
 zoomHandleEvent (CompDisplay *d,
 		 XEvent      *event)
 {
     ZOOM_DISPLAY(d);
-    CompWindow *w;
     CompScreen *s;
-    static Window lastMapped = 0;
-    int out;
     switch (event->type) {
 	case FocusIn:
-	    if ((event->xfocus.mode != NotifyNormal) 
-		&& (lastMapped != event->xfocus.window))
-		break;
-	    lastMapped = 0;
-	    w = findWindowAtDisplay(d, event->xfocus.window);
-	    if (w == NULL) 
-		break;
-
-	    if (w->id == d->activeWindow)
-		break;
-	    ZOOM_SCREEN (w->screen);
-	    
-	    if (time(NULL) - zs->lastChange < 
-		zs->opt[SOPT_FOCUS_DELAY].value.i)
-		break;
-	    if (!zs->opt[SOPT_FOLLOW_FOCUS].value.b)
-		break;
-	    out = outputDeviceForWindow (w);
-	    if (!isActive (w->screen, out) && 
-		!zs->opt[SOPT_ALLWAYS_FOCUS_FIT_WINDOW].value.b)
-		break;
-	    if (zs->opt[SOPT_FOCUS_FIT_WINDOW].value.b)
-	    {
-		int width = w->width + w->input.left + w->input.right; 
-		int height = w->height + w->input.top + w->input.bottom;
-		
-		setScale (w->screen, out, 
-			  (float) width / w->screen->outputDev[out].width, 
-			  (float)  height/w->screen->outputDev[out].height);
-	    }
-	    zoomAreaToWindow (w);
-	    break;
 	case MapNotify:
-	    lastMapped = event->xmap.window;
+	    focusTrack (d, event);
 	    break;
 	default:
 	    if (event->type == zd->fixesEventBase + XFixesCursorNotify)
