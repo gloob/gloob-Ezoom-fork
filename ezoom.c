@@ -779,7 +779,7 @@ ensureVisibility (CompScreen *s, int x, int y, int margin)
 	    (float) o->width;
     else if (zoomX - margin < o->region.extents.x1)
 	za->xTranslate +=
-	    (FACTOR * (float) (zoomX - margin + o->region.extents.x1)) /
+	    (FACTOR * (float) (zoomX - margin - o->region.extents.x1)) /
 	    (float) o->width;
     if (zoomY + margin > o->region.extents.y2)
 	za->yTranslate +=
@@ -787,7 +787,7 @@ ensureVisibility (CompScreen *s, int x, int y, int margin)
 	    (float) o->height;
     else if (zoomY - margin < o->region.extents.y1)
 	za->yTranslate +=
-	    (FACTOR * (float) (zoomY - margin + o->region.extents.y1)) /
+	    (FACTOR * (float) (zoomY - margin - o->region.extents.y1)) /
 	    (float) o->height;
 #undef FACTOR
     constrainZoomTranslate (s);
