@@ -52,12 +52,12 @@
  * We can not redirect input yet, but this plugin offers two fundamentally
  * different approaches to achieve input:
  *
- * Making sure the real mouse is allways at the correct place. This is
+ * Making sure the real mouse is always at the correct place. This is
  * the traditional way we did input zoom in Beryl. This also means that
  * whenever you move the mouse, we have to move the zoomed area, and that
  * if we are working on a window that's in the upper right corner, the
  * mouse has to be in the upper right corner too. This is probably the
- * techincally best sollution, as it is fairly simple, but it has the obvious
+ * techincally best solution, as it is fairly simple, but it has the obvious
  * weakness that mouse movement equals panning, so you can't keep a single
  * window fully visible and interact with it without parts of it going
  * off screen.
@@ -157,7 +157,7 @@ typedef struct _ZoomDisplay {
 /* Stores an actual zoom-setup. This can later be used to store/restore zoom
  * areas on the fly.
  *
- * [xy]Translate and newZoom are target values, and [xy]Translate allways ranges
+ * [xy]Translate and newZoom are target values, and [xy]Translate always ranges
  * from -0.5 to 0.5.
  *
  * currentZoom is actual zoomed value, while ztrans is the calculated
@@ -267,7 +267,7 @@ isZoomed (CompScreen *s, int out)
 }
 
 /* Returns true if the head in question is currently moving.
- * Since we don't allways bother resetting everything when
+ * Since we don't always bother resetting everything when
  * canceling zoom, we check for the condition of being completly
  * zoomed out and not zooming in/out first.
  */
