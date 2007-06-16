@@ -166,9 +166,12 @@ typedef struct _ZoomDisplay {
  * real[XY]Translate are the currently used values in the same range as
  * [xy]Translate, and [xy]trans is adjusted for the zoom level in place.
  * [xyz]trans should never be modified except in updateActualTranslates()
+ *
+ * viewport is a mask of the viewport, or ~0 for "any".
  */
 typedef struct _ZoomArea {
     int output;
+    unsigned long int viewport;
     GLfloat currentZoom;
     GLfloat newZoom;
     GLfloat xVelocity;
@@ -320,6 +323,7 @@ initialiseZoomArea (ZoomArea *za, int out)
     za->yTranslate = 0.0f;
     za->realXTranslate = 0.0f;
     za->realYTranslate = 0.0f;
+    za->viewport = ~0;
     updateActualTranslates (za);
 }
 
