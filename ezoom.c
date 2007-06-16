@@ -1711,6 +1711,9 @@ zoomInitScreen (CompPlugin *p,
 	zs->zooms[i].zVelocity = 0.0f;
 	zs->zooms[i].xTranslate = 0.0f;
 	zs->zooms[i].yTranslate = 0.0f;
+	zs->zooms[i].realXTranslate = 0.0f;
+	zs->zooms[i].realYTranslate = 0.0f;
+	updateActualTranslates (&zs->zooms[i]);
     }
     zs->grabbed = 0;
     zs->mouseX = -1;
