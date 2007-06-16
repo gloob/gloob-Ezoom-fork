@@ -266,6 +266,22 @@ isZoomed (CompScreen *s, int out)
     return FALSE;
 }
 
+/* Update/set translations based on zoom level and real translate.
+ */
+static void
+updateActualTranslates (ZoomArea *za)
+{
+    za->ztrans = DEFAULT_Z_CAMERA * za->currentZoom;
+    if (za->ztrans <= 0.1f)
+    {
+	za->zVelocity = 0.0f;
+	za->ztrans = 0.1f;
+    }
+
+    za->xtrans = -za->realXTranslate * (1.0f - za->currentZoom);
+    za->ytrans = za->realYTranslate * (1.0f - za->currentZoom);
+}
+
 /* Returns true if the head in question is currently moving.
  * Since we don't always bother resetting everything when
  * canceling zoom, we check for the condition of being completly
@@ -289,6 +305,23 @@ isInMovement (CompScreen *s, int out)
     return FALSE;
 }
 
+/* Set the initial values of a zoom area.
+ */
+static void
+initialiseZoomArea (ZoomArea *za, int out)
+{
+    za->output = out;
+    za->currentZoom = 1.0f;
+    za->newZoom = 1.0f;
+    za->xVelocity = 0.0f;
+    za->yVelocity = 0.0f;
+    za->zVelocity = 0.0f;
+    za->xTranslate = 0.0f;
+    za->yTranslate = 0.0f;
+    za->realXTranslate = 0.0f;
+    za->realYTranslate = 0.0f;
+    updateActualTranslates (za);
+}
 
 /* Adjust the velocity in the z-direction.
  */
@@ -366,22 +399,6 @@ adjustXYVelocity (CompScreen *s, int out, float chunk)
 	(zs->zooms[out].xVelocity * chunk) / s->redrawTime;
     zs->zooms[out].realYTranslate +=
 	(zs->zooms[out].yVelocity * chunk) / s->redrawTime;
-}
-
-/* Update/set translations based on zoom level and real translate.
- */
-static void
-updateActualTranslates (ZoomArea *za)
-{
-    za->ztrans = DEFAULT_Z_CAMERA * za->currentZoom;
-    if (za->ztrans <= 0.1f)
-    {
-	za->zVelocity = 0.0f;
-	za->ztrans = 0.1f;
-    }
-
-    za->xtrans = -za->realXTranslate * (1.0f - za->currentZoom);
-    za->ytrans = za->realYTranslate * (1.0f - za->currentZoom);
 }
 
 /* Animate the movement (if any) in preperation of a paint screen.
@@ -1703,17 +1720,7 @@ zoomInitScreen (CompPlugin *p,
 	/* zs->grabbed is a mask ... Thus this limit */
 	if (i > sizeof (long int) * 8)
 	    break;
-	zs->zooms[i].output = i;
-	zs->zooms[i].currentZoom = 1.0f;
-	zs->zooms[i].newZoom = 1.0f;
-	zs->zooms[i].xVelocity = 0.0f;
-	zs->zooms[i].yVelocity = 0.0f;
-	zs->zooms[i].zVelocity = 0.0f;
-	zs->zooms[i].xTranslate = 0.0f;
-	zs->zooms[i].yTranslate = 0.0f;
-	zs->zooms[i].realXTranslate = 0.0f;
-	zs->zooms[i].realYTranslate = 0.0f;
-	updateActualTranslates (&zs->zooms[i]);
+	initialiseZoomArea (&zs->zooms[i], i);
     }
     zs->grabbed = 0;
     zs->mouseX = -1;
