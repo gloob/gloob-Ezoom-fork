@@ -221,8 +221,8 @@
 		    <precision>0.01</precision>
 		</option>
 		<option type="bool" name="spec_target_focus">
-		    <short>Target Focus on Specific level</short>
-		    <long>Enable this to target the focused window when jumping to a specific window. Disable to target mouse.</long>
+		    <short>Target Focused Window on Specific level</short>
+		    <long>Enable this to target the focused window when jumping to a specific zoom level. Disable to target mouse.</long>
 		    <default>true</default>
 		</option>
 	    </group>
@@ -251,7 +251,7 @@
 		<short>Zoom Movement</short>
 		<option type="float" name="pan_factor">
 		    <short>Pan Factor</short>
-		    <long>How much to move the zoom area for each pan-trigger</long>
+		    <long>Move the zoomed area this much whenever you pan the zoomed area with keys.</long>
 		    <default>0.1</default>
 		    <min>0.001</min>
 		    <max>1.0</max>
@@ -274,22 +274,7 @@
 		    <short xml:lang="ru">Коэффициент масштабирования</short>
 		    <short xml:lang="zh_CN">缩放比例</short>
 		    <short xml:lang="zh_TW">縮放倍率</short>
-		    <long>Zoom factor</long>
-		    <long xml:lang="ca">Factor del zoom</long>
-		    <long xml:lang="cs">Násobek přiblížení</long>
-		    <long xml:lang="da">Zoomfaktor</long>
-		    <long xml:lang="de">Zoomfaktor</long>
-		    <long xml:lang="es">Factor de zoom</long>
-		    <long xml:lang="fi">Zoomauskerroin</long>
-		    <long xml:lang="fr">Facteur du zoom</long>
-		    <long xml:lang="hu">Nagyítási arány</long>
-		    <long xml:lang="it">Fattore zoom</long>
-		    <long xml:lang="ja">ズーム要素</long>
-		    <long xml:lang="pl">Współczynnik przybliżania</long>
-		    <long xml:lang="pt_BR">Fator de zoom</long>
-		    <long xml:lang="ru">Коэффициент масштабирования</long>
-		    <long xml:lang="zh_CN">缩放比例</long>
-		    <long xml:lang="zh_TW">縮放倍率</long>
+		    <long>Zoom in/out by this factor. Higher value means quicker zooming.</long>
 		    <default>1.150</default>
 		    <min>1.01</min>
 		    <max>3</max>
@@ -299,13 +284,13 @@
 	    <group>
 		<short>Focus Tracking</short>
 		<option type="bool" name="follow_focus">
-		    <short>Follow focus</short>
-		    <long>Move the zoom area when focus changes</long>
+		    <short>Enable focus tracking</short>
+		    <long>Move the zoom area when focus changes.</long>
 		    <default>true</default>
 		</option>
 		<option type="bool" name="focus_fit_window">
-		    <short>Fit to window on focus track</short>
-		    <long>Fit the zoomed area to the window when the zoomed area moves as a result of focus tracking.  </long>
+		    <short>Fit zoom level to window on focus change</short>
+		    <long>Fit the zoomed area to the window when the zoomed area moves as a result of focus tracking.</long>
 		    <default>false</default>
 		</option>
 		<option type="bool" name="allways_focus_fit_window">
@@ -325,7 +310,7 @@
 		<short>Mouse Behavior</short>
 		<option type="bool" name="sync_mouse">
 		    <short>Sync Mouse</short>
-		    <long>Allways keep the mouse in the correct place. This is how traditional input zoom was achieved, this can be disabeld if you draw a scaled mouse pointer. The scaled pointer is adjusted for the zoom level, and thus doesn't require the mouse to be synced with the zoom area.</long>
+		    <long>Allways keep the zoomed area in sync with where the mouse is, and vice versa. Use this if you don't intend to drraw a scaled pointer or hide the original pointer. The zoomed area will move as you move your mouse.</long>
 		    <default>true</default>
 		</option>
 		<option type="bool" name="scale_mouse">
