@@ -1134,6 +1134,8 @@ zoomIn (CompDisplay     *d,
     {
 	ZOOM_SCREEN (s);
 	int out = outputDeviceForPoint (s, pointerX, pointerY);
+	if (zs->opt[SOPT_SYNC_MOUSE].value.b && !isInMovement (s, out))
+	    setCenter (s, pointerX, pointerY, TRUE);
 	setScale (s, out,
 		  zs->zooms[out].newZoom/zs->opt[SOPT_ZOOM_FACTOR].value.f,
 		  -1.0f);
