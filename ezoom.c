@@ -275,12 +275,11 @@ static void
 updateActualTranslates (ZoomArea *za)
 {
     za->ztrans = DEFAULT_Z_CAMERA * za->currentZoom;
-    if (za->ztrans <= 0.1f)
+    if (za->ztrans <= 0.0001f)
     {
 	za->zVelocity = 0.0f;
-	za->ztrans = 0.1f;
+	za->ztrans = 0.0001f;
     }
-
     za->xtrans = -za->realXTranslate * (1.0f - za->currentZoom);
     za->ytrans = za->realYTranslate * (1.0f - za->currentZoom);
 }
@@ -489,19 +488,18 @@ zoomPaintOutput (CompScreen		 *s,
     {
 	ScreenPaintAttrib sa = *sAttrib;
 	int		  saveFilter;
-
+	CompTransform zTransform = *transform;
 	mask &= ~PAINT_SCREEN_REGION_MASK;
 	mask |= PAINT_SCREEN_CLEAR_MASK;
 
-	sa.xTranslate += zs->zooms[out].xtrans;
-	sa.yTranslate += zs->zooms[out].ytrans;
-	sa.zCamera = -zs->zooms[out].ztrans;
-
-	/* hack to get sides rendered correctly */
-	if (zs->zooms[out].xtrans > 0.0f)
-	    sa.xRotate += 0.000001f;
-	else
-	    sa.xRotate -= 0.000001f;
+	matrixScale (&zTransform,
+		     1.0f / zs->zooms[out].currentZoom,
+		     1.0f / zs->zooms[out].currentZoom,
+		     1.0f);
+	matrixTranslate (&zTransform, 
+			 zs->zooms[out].xtrans,
+			 zs->zooms[out].ytrans,
+			 0); 
 
 	mask |= PAINT_SCREEN_TRANSFORMED_MASK;
 	saveFilter = s->filter[SCREEN_TRANS_FILTER];
@@ -512,7 +510,7 @@ zoomPaintOutput (CompScreen		 *s,
 	    s->filter[SCREEN_TRANS_FILTER] = COMP_TEXTURE_FILTER_FAST;
 
 	UNWRAP (zs, s, paintOutput);
-	status = (*s->paintOutput) (s, &sa, transform, region, output, mask);
+	status = (*s->paintOutput) (s, &sa, &zTransform, region, output, mask);
 	WRAP (zs, s, paintOutput, zoomPaintOutput);
 	drawCursor (s, output, transform);
 
@@ -672,7 +670,7 @@ setScale (CompScreen *s, int out, float x, float y)
     }
     else
     {
-	if (value * DEFAULT_Z_CAMERA < 0.1f)
+	if (value * DEFAULT_Z_CAMERA < 0.001f)
 	    value = zs->zooms[out].newZoom;
 
 	if (!zs->grabbed)
