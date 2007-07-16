@@ -1833,10 +1833,6 @@ zoomGetMetadata (CompPlugin *plugin)
     return &zoomMetadata;
 }
 
-CompPluginDep zoomDeps[] = {
-    { CompPluginRuleAfter, "expo" }
-};
-
 CompPluginVTable zoomVTable = {
     "ezoom",
     zoomGetVersion,
@@ -1852,11 +1848,7 @@ CompPluginVTable zoomVTable = {
     zoomGetDisplayOptions,
     zoomSetDisplayOption,
     zoomGetScreenOptions,
-    zoomSetScreenOption,
-    zoomDeps,
-    sizeof(zoomDeps) / sizeof(zoomDeps[0]),
-    0, /* Features */
-    0  /* nFeatures */
+    zoomSetScreenOption
 };
 
 CompPluginVTable *
