@@ -108,6 +108,7 @@ typedef enum _ZdOpt
     DOPT_FIT_TO_WINDOW,
     DOPT_CENTER_MOUSE,
     DOPT_FIT_TO_ZOOM,
+    DOPT_SET_ZOOM_AREA,
     DOPT_NUM
 } ZoomDisplayOptions;
 
@@ -1101,6 +1102,51 @@ cursorZoomActive (CompScreen *s)
     }
 }
 
+/* Set the zoom area
+ * This is an interface for scripting. 
+ * int32:x: x coordiante
+ * int32:y: y coordinate
+ * int32:width: The width of the area (can be ommited for point-targeting)
+ * int32:height: The height of the area (ditto)
+ * boolean:scale: True if we should modify the zoom level, false to just
+ *                adjust the movement/translation.
+ * boolean:restrain: True to warp the pointer so it's visible. 
+ */
+static Bool
+setZoomAreaAction (CompDisplay     *d,
+	CompAction      *action,
+	CompActionState state,
+	CompOption      *option,
+	int		nOption)
+{
+    CompScreen *s;
+    Window     xid;
+
+    xid = getIntOptionNamed (option, nOption, "root", 0);
+    s = findScreenAtDisplay (d, xid);
+
+    if (s)
+    {
+	int x, y, width, height, out;
+	Bool scale, restrain;
+	x = getIntOptionNamed (option, nOption, "x", 100);
+	y = getIntOptionNamed (option, nOption, "y", 100);
+	width = getIntOptionNamed (option, nOption, "width", 0);
+	height = getIntOptionNamed (option, nOption, "height", 0);
+	scale = getBoolOptionNamed (option, nOption, "scale", FALSE);
+	restrain = getBoolOptionNamed (option, nOption, "restrain", FALSE);
+	out = outputDeviceForPoint (s, x, y);
+	setZoomArea (s, x, y, width, height, FALSE);
+	CompOutput *o = &s->outputDev[out];
+	if (scale && width && height)
+	    setScale (s, out, (float) width/o->width, 
+		      (float) height/o->height);
+	if (restrain)
+	    restrainCursor (s, out);
+    }
+    return TRUE;
+}
+
 /* Zoom in to the area pointed to by the mouse.
  */
 static Bool
@@ -1555,7 +1601,8 @@ static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
     { "pan_down", "action", 0, zoomPanDown, 0 },
     { "fit_to_window", "action", 0, zoomToWindow, 0 },
     { "center_mouse", "action", 0, zoomCenterMouse, 0 },
-    { "fit_to_zoom", "action", 0, zoomFitWindowToZoom, 0 }
+    { "fit_to_zoom", "action", 0, zoomFitWindowToZoom, 0 },
+    { "set_zoom_area", "action", 0, setZoomAreaAction, 0}
 };
 
 static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {
