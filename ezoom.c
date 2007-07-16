@@ -36,10 +36,9 @@
  *
  * Note on actual zoom process
  *
- * This plugin (still) uses the traditional method of translating along the
- * z-axis to zoom. Recent work on the original zoom desktop plugin favors
- * scaling the image instead, which avoids all clipping issues. This plugin
- * might be re-factored to use this in the future.
+ * This plug-in has been refactored to use scaling instead of z-translation
+ * for the actual zoom operation. This presented only minor diffs, but some
+ * minor tasks are left to sort out as of this writing.
  *
  * The animation is done in preparePaintScreen, while instant movements
  * are done by calling updateActualTranslate () after updating the
@@ -160,8 +159,7 @@ typedef struct _ZoomDisplay {
  * [xy]Translate and newZoom are target values, and [xy]Translate always ranges
  * from -0.5 to 0.5.
  *
- * currentZoom is actual zoomed value, while ztrans is the calculated
- * translation of the z axis.
+ * currentZoom is actual zoomed value
  *
  * real[XY]Translate are the currently used values in the same range as
  * [xy]Translate, and [xy]trans is adjusted for the zoom level in place.
@@ -183,7 +181,6 @@ typedef struct _ZoomArea {
     GLfloat realYTranslate;
     GLfloat xtrans;
     GLfloat ytrans;
-    GLfloat ztrans;
 } ZoomArea;
 
 typedef struct _ZoomScreen {
@@ -274,12 +271,6 @@ isZoomed (CompScreen *s, int out)
 static void
 updateActualTranslates (ZoomArea *za)
 {
-    za->ztrans = DEFAULT_Z_CAMERA * za->currentZoom;
-    if (za->ztrans <= 0.0001f)
-    {
-	za->zVelocity = 0.0f;
-	za->ztrans = 0.0001f;
-    }
     za->xtrans = -za->realXTranslate * (1.0f - za->currentZoom);
     za->ytrans = za->realYTranslate * (1.0f - za->currentZoom);
 }
@@ -670,9 +661,6 @@ setScale (CompScreen *s, int out, float x, float y)
     }
     else
     {
-	if (value * DEFAULT_Z_CAMERA < 0.001f)
-	    value = zs->zooms[out].newZoom;
-
 	if (!zs->grabbed)
 	{
 	    zs->mouseIntervalTimeoutHandle =
