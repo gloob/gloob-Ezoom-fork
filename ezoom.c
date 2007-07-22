@@ -1115,10 +1115,10 @@ cursorZoomActive (CompScreen *s)
  */
 static Bool
 setZoomAreaAction (CompDisplay     *d,
-	CompAction      *action,
-	CompActionState state,
-	CompOption      *option,
-	int		nOption)
+		   CompAction      *action,
+		   CompActionState state,
+		   CompOption      *option,
+		   int		nOption)
 {
     CompScreen *s;
     Window     xid;
@@ -1147,6 +1147,62 @@ setZoomAreaAction (CompDisplay     *d,
 #define HEIGHT (y2 - y1)
 	setZoomArea (s, x1, y1, WIDTH, HEIGHT, FALSE);
 	CompOutput *o = &s->outputDev[out];
+	if (scale && WIDTH && HEIGHT)
+	    setScale (s, out, (float) WIDTH/o->width, 
+		      (float) HEIGHT/o->height);
+#undef WIDTH
+#undef HEIGHT
+	if (restrain)
+	    restrainCursor (s, out);
+    }
+    return TRUE;
+}
+
+/* Ensure visibility of an area defined by x1->x2/y1->y2
+ * int:x1: left X coordinate
+ * int:x2: right X Coordinate
+ * int:y1: top Y coordinate
+ * int:y2: bottom Y coordinate
+ * bool:scale: zoom out if necesarry to ensure visibility
+ * bool:restrain: Restrain the mouse cursor
+ * int:margin: The margin to use (default: 0)
+ * if x2/y2 is omitted, it is ignored.
+ */
+static Bool
+ensureVisibilityAction (CompDisplay     *d,
+			CompAction      *action,
+			CompActionState state,
+			CompOption      *option,
+			int		nOption)
+{
+    CompScreen *s;
+    Window     xid;
+
+    xid = getIntOptionNamed (option, nOption, "root", 0);
+    s = findScreenAtDisplay (d, xid);
+
+    if (s)
+    {
+	int x1, y1, x2, y2, margin, out;
+	Bool scale, restrain;
+	x1 = getIntOptionNamed (option, nOption, "x1", -1);
+	y1 = getIntOptionNamed (option, nOption, "y1", -1);
+	x2 = getIntOptionNamed (option, nOption, "x2", -1);
+	y2 = getIntOptionNamed (option, nOption, "y2", -1);
+	margin = getBoolOptionNamed (option, nOption, "margin", 0);
+	scale = getBoolOptionNamed (option, nOption, "scale", FALSE);
+	restrain = getBoolOptionNamed (option, nOption, "restrain", FALSE);
+	if (x1 < 0 || y1 < 0)
+	    return FALSE;
+	if (x2 < 0)
+	    y2 = y1 + 1;
+	out = outputDeviceForPoint (s, x1, y1);
+	ensureVisibility (s, x1, y1, margin);
+	if (x2 >= 0 && y2 >= 0)
+	    ensureVisibility (s, x2, y2, margin);
+	CompOutput *o = &s->outputDev[out];
+#define WIDTH (x2 - x1)
+#define HEIGHT (y2 - y1)
 	if (scale && WIDTH && HEIGHT)
 	    setScale (s, out, (float) WIDTH/o->width, 
 		      (float) HEIGHT/o->height);
@@ -1613,6 +1669,7 @@ static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
     { "fit_to_window", "action", 0, zoomToWindow, 0 },
     { "center_mouse", "action", 0, zoomCenterMouse, 0 },
     { "fit_to_zoom", "action", 0, zoomFitWindowToZoom, 0 },
+    { "ensure_visibility", "action", 0, ensureVisibilityAction, 0}, 
     { "set_zoom_area", "action", 0, setZoomAreaAction, 0}
 };
 
