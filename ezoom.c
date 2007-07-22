@@ -1104,10 +1104,11 @@ cursorZoomActive (CompScreen *s)
 
 /* Set the zoom area
  * This is an interface for scripting. 
- * int32:x: x coordiante
- * int32:y: y coordinate
- * int32:width: The width of the area (can be ommited for point-targeting)
- * int32:height: The height of the area (ditto)
+ * int32:x1: left x coordiante
+ * int32:y1: top y coordinate
+ * int32:x2: right x
+ * int32:y2: bottom y 
+ * x2 and y2 can be omitted to assume x1==x2+1 y1==y2+1
  * boolean:scale: True if we should modify the zoom level, false to just
  *                adjust the movement/translation.
  * boolean:restrain: True to warp the pointer so it's visible. 
@@ -1127,20 +1128,30 @@ setZoomAreaAction (CompDisplay     *d,
 
     if (s)
     {
-	int x, y, width, height, out;
+	int x1, y1, x2, y2, out;
 	Bool scale, restrain;
-	x = getIntOptionNamed (option, nOption, "x", 100);
-	y = getIntOptionNamed (option, nOption, "y", 100);
-	width = getIntOptionNamed (option, nOption, "width", 0);
-	height = getIntOptionNamed (option, nOption, "height", 0);
+	x1 = getIntOptionNamed (option, nOption, "x1", -1);
+	y1 = getIntOptionNamed (option, nOption, "y1", -1);
+	x2 = getIntOptionNamed (option, nOption, "x2", -1);
+	y2 = getIntOptionNamed (option, nOption, "y2", -1);
 	scale = getBoolOptionNamed (option, nOption, "scale", FALSE);
 	restrain = getBoolOptionNamed (option, nOption, "restrain", FALSE);
-	out = outputDeviceForPoint (s, x, y);
-	setZoomArea (s, x, y, width, height, FALSE);
+	if (x1 < 0 || y1 < 0)
+	    return FALSE;
+	if (x2 < 0)
+	    x2 = x1 + 1;
+	if (y2 < 0)
+	    y2 = y1 + 1;
+	out = outputDeviceForPoint (s, x1, y1);
+#define WIDTH (x2 - x1)
+#define HEIGHT (y2 - y1)
+	setZoomArea (s, x1, y1, WIDTH, HEIGHT, FALSE);
 	CompOutput *o = &s->outputDev[out];
-	if (scale && width && height)
-	    setScale (s, out, (float) width/o->width, 
-		      (float) height/o->height);
+	if (scale && WIDTH && HEIGHT)
+	    setScale (s, out, (float) WIDTH/o->width, 
+		      (float) HEIGHT/o->height);
+#undef WIDTH
+#undef HEIGHT
 	if (restrain)
 	    restrainCursor (s, out);
     }
