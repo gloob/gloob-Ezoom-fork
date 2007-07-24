@@ -110,6 +110,8 @@ typedef enum _ZdOpt
     DOPT_FIT_TO_ZOOM,
     DOPT_ENSURE_VISIBILITY,
     DOPT_SET_ZOOM_AREA,
+    DOPT_LOCK_ZOOM,
+    DOPT_UNLOCK_ZOOM,
     DOPT_NUM
 } ZoomDisplayOptions;
 
@@ -183,6 +185,7 @@ typedef struct _ZoomArea {
     GLfloat realYTranslate;
     GLfloat xtrans;
     GLfloat ytrans;
+    Bool locked;
 } ZoomArea;
 
 typedef struct _ZoomScreen {
@@ -316,6 +319,7 @@ initialiseZoomArea (ZoomArea *za, int out)
     za->realXTranslate = 0.0f;
     za->realYTranslate = 0.0f;
     za->viewport = ~0;
+    za->locked = FALSE;
     updateActualTranslates (za);
 }
 
@@ -564,7 +568,8 @@ setCenter (CompScreen *s, int x, int y, Bool instant)
     ZOOM_SCREEN(s);
     int out = outputDeviceForPoint (s, x,y);
     CompOutput *o = &s->outputDev[out];
-
+    if (zs->zooms[out].locked)
+	return;
     zs->zooms[out].xTranslate = (float)
 	((x - o->region.extents.x1) - o->width  / 2) / (o->width);
     zs->zooms[out].yTranslate = (float)
@@ -593,6 +598,8 @@ setZoomArea (CompScreen *s, int x, int y, int width, int height, Bool instant)
     int out = outputDeviceForGeometry (s, x, y, width, height, 0);
     CompOutput *o = &s->outputDev[out];
     if (zs->zooms[out].newZoom == 1.0f)
+	return;
+    if (zs->zooms[out].locked)
 	return;
     zs->zooms[out].xTranslate =
 	 (float) -((o->width/2) - (x + (width/2) - o->region.extents.x1))
@@ -657,6 +664,8 @@ setScale (CompScreen *s, int out, float x, float y)
 {
     float value = x > y ? x : y;
     ZOOM_SCREEN(s);
+    if (zs->zooms[out].locked)
+	return;
     if (value >= 1.0f)
     {
 	value = 1.0f;
@@ -766,7 +775,8 @@ convertToZoomedTarget (CompScreen *s,
 
 /* Make sure the given point + margin is visible;
  * Translate to make it visible if necesarry.
- * Returns false if the point isn't on a actively zoomed head.
+ * Returns false if the point isn't on a actively zoomed head
+ * or the area is locked.
  */
 static Bool
 ensureVisibility (CompScreen *s, int x, int y, int margin)
@@ -781,6 +791,8 @@ ensureVisibility (CompScreen *s, int x, int y, int margin)
     o = &s->outputDev[out];
     convertToZoomedTarget (s, out, x, y, &zoomX, &zoomY);
     ZoomArea *za = &zs->zooms[out];
+    if (za->locked)
+	return FALSE;
 #define FACTOR (za->newZoom / (1.0f - za->newZoom))
     if (zoomX + margin > o->region.extents.x2)
 	za->xTranslate +=
@@ -1243,6 +1255,64 @@ zoomIn (CompDisplay     *d,
     return TRUE;
 }
 
+/* Locks/unlocks the zoom area */
+static inline void
+lockZoom (ZoomArea *za)
+{
+    za->locked = TRUE;
+}
+
+static inline void
+unlockZoom (ZoomArea *za)
+{
+    za->locked = FALSE;
+}
+
+/* Locks down the current zoom area
+ */
+static Bool
+lockZoomAction (CompDisplay     *d,
+		CompAction      *action,
+		CompActionState state,
+		CompOption      *option,
+		int		nOption)
+{
+    CompScreen *s;
+    Window     xid;
+
+    xid = getIntOptionNamed (option, nOption, "root", 0);
+    s = findScreenAtDisplay (d, xid);
+
+    if (s)
+    {
+	ZOOM_SCREEN (s);
+	int out = outputDeviceForPoint (s, pointerX, pointerY);
+	lockZoom (&zs->zooms[out]);
+    }
+    return TRUE;
+}
+
+static Bool
+unlockZoomAction (CompDisplay     *d,
+		  CompAction      *action,
+		  CompActionState state,
+		  CompOption      *option,
+		  int		nOption)
+{
+    CompScreen *s;
+    Window     xid;
+
+    xid = getIntOptionNamed (option, nOption, "root", 0);
+    s = findScreenAtDisplay (d, xid);
+
+    if (s)
+    {
+	ZOOM_SCREEN (s);
+	int out = outputDeviceForPoint (s, pointerX, pointerY);
+	unlockZoom (&zs->zooms[out]);
+    }
+    return TRUE;
+}
 /* Zoom to a specific level.
  * taget defines the target zoom level.
  * First set the scale level and mark the display as grabbed internally (to
@@ -1671,7 +1741,9 @@ static const CompMetadataOptionInfo zoomDisplayOptionInfo[] = {
     { "center_mouse", "action", 0, zoomCenterMouse, 0 },
     { "fit_to_zoom", "action", 0, zoomFitWindowToZoom, 0 },
     { "ensure_visibility", "action", 0, ensureVisibilityAction, 0}, 
-    { "set_zoom_area", "action", 0, setZoomAreaAction, 0}
+    { "set_zoom_area", "action", 0, setZoomAreaAction, 0}, 
+    { "lock_zoom", "action", 0, lockZoomAction, 0},
+    { "unlock_zoom", "action", 0, unlockZoomAction, 0}
 };
 
 static const CompMetadataOptionInfo zoomScreenOptionInfo[] = {

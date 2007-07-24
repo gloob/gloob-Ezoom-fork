@@ -92,6 +92,22 @@
 			<button>&lt;Super&gt;Button4</button>
 		    </default>
 		</option>
+		<option type="action" name="lock_zoom">
+		    <short>Lock zoom area</short>
+		    <long>Locks the zoom area so it doesn't change on various events</long>
+		    <allowed key="true" button="true"/>
+		    <default>
+			<key>&lt;Super&gt;l</key>
+		    </default>
+		</option>
+		<option type="action" name="unlock_zoom">
+		    <short>Unlock zoom area</short>
+		    <long>Unlocks a previously locked zoom area</long>
+		    <allowed key="true" button="true"/>
+		    <default>
+			<key>&lt;Super&gt;u</key>
+		    </default>
+		</option>
 		<option type="action" name="zoom_specific_1">
 		    <short>Zoom Specific Level 1</short>
 		    <long>Zoom to the specific zoom level 1</long>
