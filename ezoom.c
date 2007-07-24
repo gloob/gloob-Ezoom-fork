@@ -108,6 +108,7 @@ typedef enum _ZdOpt
     DOPT_FIT_TO_WINDOW,
     DOPT_CENTER_MOUSE,
     DOPT_FIT_TO_ZOOM,
+    DOPT_ENSURE_VISIBILITY,
     DOPT_SET_ZOOM_AREA,
     DOPT_NUM
 } ZoomDisplayOptions;
