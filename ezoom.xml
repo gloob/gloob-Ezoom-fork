@@ -145,7 +145,7 @@
 		    <long>Pan (move) the zoom area left</long>
 		    <allowed key="true" button="true"/>
 		    <default>
-			<key>&lt;Super&gt;q</key>
+			<key>&lt;Super&gt;a</key>
 		    </default>
 		</option>
 		<option type="action" name="pan_right">
@@ -153,7 +153,7 @@
 		    <long>Pan (move) the zoom area right</long>
 		    <allowed key="true" button="true"/>
 		    <default>
-			<key>&lt;Super&gt;e</key>
+			<key>&lt;Super&gt;d</key>
 		    </default>
 		</option>
 		<option type="action" name="pan_up">
