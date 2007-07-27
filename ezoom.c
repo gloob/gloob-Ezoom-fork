@@ -232,6 +232,21 @@ static Bool fetchMousePosition (CompScreen *s);
 
 #define NUM_OPTIONS(s) (sizeof ((s)->opt) / sizeof (CompOption))
 
+/* Checks if a specific screen grab exist. DO NOT USE THIS.
+ * This is a temporary fix that WILL be removed asap.
+ * See comments in drawCursor.
+ */
+
+static inline Bool 
+dontuseScreengrabExist (CompScreen * s, char * grab)
+{
+    int i;
+    for (i = 0; i < s->maxGrab; i++)
+	if (s->grabs[i].active && !strcmp(s->grabs[i].name, grab))
+	    return TRUE;
+    return FALSE;
+}
+
 /* Check if the output is valid
  */
 static inline Bool
@@ -971,6 +986,18 @@ drawCursor (CompScreen *s, CompOutput *output, const CompTransform *transform)
     {
 	CompTransform sTransform = *transform;
 	int ax, ay, x, y;
+	
+	/* This is a hack because these transformations are wrong when
+	 * we're working exposed. Expo is capable of telling where the
+	 * real mouse is despite zoom, so we don't have to disable the
+	 * zoom. We do, however, have to show the original pointer.
+	 */
+	if (dontuseScreengrabExist (s, "expo"))
+	{
+	    cursorZoomInactive (s);
+	    return;
+	}
+
 	transformToScreenSpace (s, output, -DEFAULT_Z_CAMERA, &sTransform);
 	convertToZoomed (s, out, zs->mouseX, zs->mouseY, &ax, &ay);
         glPushMatrix ();
