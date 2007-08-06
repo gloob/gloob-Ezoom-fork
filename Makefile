@@ -37,9 +37,13 @@ ifeq ($(BUILD_GLOBAL),true)
 	PKGDIR = $(CLIBDIR)/pkgconfig
 	DESTDIR = $(shell pkg-config --variable=libdir compiz)/compiz
 	XMLDIR = $(shell pkg-config --variable=prefix compiz)/share/compiz
+	IMAGEDIR = $(shell pkg-config --variable=prefix compiz)/share/compiz
+	DATADIR = $(shell pkg-config --variable=prefix compiz)/share/compiz
 else
 	DESTDIR = $(HOME)/.compiz/plugins
 	XMLDIR = $(HOME)/.compiz/metadata
+	IMAGEDIR = $(HOME)/.compiz/images
+	DATADIR = $(HOME)/.compiz/data
 endif
 
 BUILDDIR = build
@@ -47,13 +51,16 @@ BUILDDIR = build
 ECHO	  = `which echo`
 
 CC        = gcc
+CPP       = g++
 LIBTOOL   = libtool
 INSTALL   = install
 
 BCOP      = `pkg-config --variable=bin bcop`
 
-CFLAGS    = -g -Wall `pkg-config --cflags $(PKG_DEP) compiz ` $(CFLAGS_ADD)
+CFLAGS    = -g -Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -fno-strict-aliasing `pkg-config --cflags $(PKG_DEP) compiz ` $(CFLAGS_ADD)
 LDFLAGS   = `pkg-config --libs $(PKG_DEP) compiz ` $(LDFLAGS_ADD)
+
+DEFINES   = -DIMAGEDIR=$(IMAGEDIR) -DDATADIR=$(DATADIR)
 
 POFILEDIR = $(shell if [ -n "$(PODIR)" ]; then $(ECHO) $(PODIR); else $(ECHO) ./po;fi )
 
@@ -75,13 +82,24 @@ ifeq ($(BUILD_GLOBAL),true)
     hdr-install-target := $(shell if [ -e compiz-$(PLUGIN).pc.in -a -n "$(PREFIX)" -a -d "$(PREFIX)" -a -e $(PLUGIN).h ]; then $(ECHO) "$(PLUGIN).h"; fi )
 endif
 
-# find all the object files (including those from .moc.cpp files)
+# find all the object files
 
 c-objs     := $(patsubst %.c,%.lo,$(shell find -name '*.c' 2> /dev/null | grep -v "$(BUILDDIR)/" | sed -e 's/^.\///'))
+c-objs     += $(patsubst %.cpp,%.lo,$(shell find -name '*.cpp' 2> /dev/null | grep -v "$(BUILDDIR)/" | sed -e 's/^.\///'))
+c-objs     += $(patsubst %.cxx,%.lo,$(shell find -name '*.cxx' 2> /dev/null | grep -v "$(BUILDDIR)/" | sed -e 's/^.\///'))
 c-objs     := $(filter-out $(bcop-target-src:.c=.lo),$(c-objs))
+
+h-files    := $(shell find -name '*.h' 2> /dev/null | grep -v "$(BUILDDIR)/" | sed -e 's/^.\///')
+h-files    += $(bcop-target-hdr)
+h-files    += $(shell pkg-config --variable=includedir compiz)/compiz/compiz.h
 
 all-c-objs := $(addprefix $(BUILDDIR)/,$(c-objs)) 
 all-c-objs += $(bcop-target-src:.c=.lo)
+
+# additional files
+
+data-files  := $(shell find data/  -name '*' -type f 2> /dev/null | sed -e 's/data\///')
+image-files := $(shell find images/ -name '*' -type f 2> /dev/null | sed -e 's/images\///')
 
 # system include path parameter, -isystem doesn't work on old gcc's
 inc-path-param = $(shell if [ -z "`gcc --version | head -n 1 | grep ' 3'`" ]; then $(ECHO) "-isystem"; else $(ECHO) "-I"; fi)
@@ -213,28 +231,49 @@ $(BUILDDIR)/compiz-%.pc: compiz-%.pc.in
 # Compiling
 #
 
-$(BUILDDIR)/%.lo: %.c
+$(BUILDDIR)/%.lo: %.c $(h-files)
 	@if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -n -e "\033[0;1;5mcompiling \033[0m: \033[0;32m$< \033[0m-> \033[0;31m$@\033[0m"; \
 	else \
 		$(ECHO) "compiling $< -> $@"; \
 	fi
-	@$(LIBTOOL) --quiet --mode=compile $(CC) $(CFLAGS) -I$(BUILDDIR) -c -o $@ $<
+	@$(LIBTOOL) --quiet --mode=compile $(CC) $(CFLAGS) $(DEFINES) -I$(BUILDDIR) -c -o $@ $<
 	@if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -e "\r\033[0mcompiling : \033[34m$< -> $@\033[0m"; \
 	fi
 
-$(BUILDDIR)/%.lo: $(BUILDDIR)/%.c
+$(BUILDDIR)/%.lo: $(BUILDDIR)/%.c $(h-files)
 	@if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -n -e "\033[0;1;5mcompiling \033[0m: \033[0;32m$< \033[0m-> \033[0;31m$@\033[0m"; \
 	else \
 		$(ECHO) "compiling $< -> $@"; \
 	fi
-	@$(LIBTOOL) --quiet --mode=compile $(CC) $(CFLAGS) -I$(BUILDDIR) -c -o $@ $<
+	@$(LIBTOOL) --quiet --mode=compile $(CC) $(CFLAGS) $(DEFINES) -I$(BUILDDIR) -c -o $@ $<
 	@if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -e "\r\033[0mcompiling : \033[34m$< -> $@\033[0m"; \
 	fi
 
+$(BUILDDIR)/%.lo: %.cpp $(h-files)
+	@if [ '$(color)' != 'no' ]; then \
+		$(ECHO) -n -e "\033[0;1;5mcompiling \033[0m: \033[0;32m$< \033[0m-> \033[0;31m$@\033[0m"; \
+	else \
+		$(ECHO) "compiling $< -> $@"; \
+	fi
+	@$(LIBTOOL) --quiet --mode=compile $(CPP) $(CFLAGS) $(DEFINES) -I$(BUILDDIR) -c -o $@ $<
+	@if [ '$(color)' != 'no' ]; then \
+		$(ECHO) -e "\r\033[0mcompiling : \033[34m$< -> $@\033[0m"; \
+	fi
+
+$(BUILDDIR)/%.lo: %.cxx $(h-files)
+	@if [ '$(color)' != 'no' ]; then \
+		$(ECHO) -n -e "\033[0;1;5mcompiling \033[0m: \033[0;32m$< \033[0m-> \033[0;31m$@\033[0m"; \
+	else \
+		$(ECHO) "compiling $< -> $@"; \
+	fi
+	@$(LIBTOOL) --quiet --mode=compile $(CPP) $(CFLAGS) $(DEFINES) -I$(BUILDDIR) -c -o $@ $<
+	@if [ '$(color)' != 'no' ]; then \
+		$(ECHO) -e "\r\033[0mcompiling : \033[34m$< -> $@\033[0m"; \
+	fi
 
 #
 # Linking
@@ -242,7 +281,7 @@ $(BUILDDIR)/%.lo: $(BUILDDIR)/%.c
 
 cxx-rpath-prefix := -Wl,-rpath,
 
-$(BUILDDIR)/lib$(PLUGIN).la: $(addprefix $(BUILDDIR)/,$(c-objs))
+$(BUILDDIR)/lib$(PLUGIN).la: $(all-c-objs)
 	@if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -e -n "\033[0;1;5mlinking   \033[0m: \033[0;31m$@\033[0m"; \
 	else \
@@ -322,6 +361,34 @@ install: $(DESTDIR) all
 		$(ECHO) -e "\r\033[0minstall   : \033[34m$(schema-output)\033[0m"; \
 	    fi; \
 	fi
+	@if [ -n "$(data-files)" ]; then \
+	    mkdir -p $(DATADIR); \
+	    for FILE in $(data-files); do \
+		if [ '$(color)' != 'no' ]; then \
+		    $(ECHO) -n -e "\033[0;1;5minstall   \033[0m: \033[0;31m$(DATADIR)/$$FILE\033[0m"; \
+		else \
+		    $(ECHO) "install   : $(DATADIR)/$$FILE"; \
+		fi; \
+		cp data/$$FILE $(DATADIR)/$$FILE; \
+		if [ '$(color)' != 'no' ]; then \
+		    $(ECHO) -e "\r\033[0minstall   : \033[34m$(DATADIR)/$$FILE\033[0m"; \
+		fi; \
+	    done \
+	fi
+	@if [ -n "$(image-files)" ]; then \
+	    mkdir -p $(IMAGEDIR); \
+	    for FILE in $(image-files); do \
+		if [ '$(color)' != 'no' ]; then \
+		    $(ECHO) -n -e "\033[0;1;5minstall   \033[0m: \033[0;31m$(IMAGEDIR)/$$FILE\033[0m"; \
+		else \
+		    $(ECHO) "install   : $(IMAGEDIR)/$$FILE"; \
+		fi; \
+		cp images/$$FILE $(IMAGEDIR)/$$FILE; \
+		if [ '$(color)' != 'no' ]; then \
+		    $(ECHO) -e "\r\033[0minstall   : \033[34m$(IMAGEDIR)/$$FILE\033[0m"; \
+		fi; \
+	    done \
+	fi
 
 uninstall:	
 	@if [ -e $(DESTDIR)/lib$(PLUGIN).so ]; then \
@@ -367,4 +434,30 @@ uninstall:
 	    if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -e "\r\033[0muninstall : \033[34m$(PKGDIR)/compiz-$(PLUGIN).pc\033[0m"; \
 	    fi; \
+	fi
+	@if [ -n "$(data-files)" ]; then \
+	    for FILE in $(data-files); do \
+		if [ '$(color)' != 'no' ]; then \
+		    $(ECHO) -n -e "\033[0;1;5muninstall \033[0m: \033[0;31m$(DATADIR)/$$FILE\033[0m"; \
+		else \
+		    $(ECHO) "uninstall : $(DATADIR)/$$FILE"; \
+		fi; \
+		rm -f $(DATADIR)/$$FILE; \
+		if [ '$(color)' != 'no' ]; then \
+		    $(ECHO) -e "\r\033[0muninstall : \033[34m$(DATADIR)/$$FILE\033[0m"; \
+		fi; \
+	    done \
+	fi
+	@if [ -n "$(image-files)" ]; then \
+	    for FILE in $(image-files); do \
+		if [ '$(color)' != 'no' ]; then \
+		    $(ECHO) -n -e "\033[0;1;5muninstall \033[0m: \033[0;31m$(IMAGEDIR)/$$FILE\033[0m"; \
+		else \
+		    $(ECHO) "uninstall : $(IMAGEDIR)/$$FILE"; \
+		fi; \
+		rm -f $(IMAGEDIR)/$$FILE; \
+		if [ '$(color)' != 'no' ]; then \
+		    $(ECHO) -e "\r\033[0muninstall : \033[34m$(IMAGEDIR)/$$FILE\033[0m"; \
+		fi; \
+	    done \
 	fi
