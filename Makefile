@@ -24,10 +24,44 @@
 # PKG_DEP = pango
 # LDFLAGS_ADD = -lGLU
 # CFLAGS_ADD = -I/usr/include/foo
+# CHK_HEADERS = compiz-cube.h
 #
 
 #load config file
+
+ECHO	  = `which echo`
+
+# default color settings
+color := $(shell if [ $$TERM = "dumb" ]; then $(ECHO) "no"; else $(ECHO) "yes"; fi)
+
+ifeq ($(shell if [ -f plugin.info ]; then $(ECHO) -n "found"; fi ),found)
 include plugin.info
+else
+$(error $(shell if [ '$(color)' != 'no' ]; then \
+		$(ECHO) -e "\033[1;31m[ERROR]\033[0m \"plugin.info\" file not found"; \
+	else \
+		$(ECHO) "[ERROR] \"plugin.info\" file not found"; \
+	fi;))
+endif
+
+ifneq ($(shell if pkg-config --exists compiz; then $(ECHO) -n "found"; fi ),found)
+$(error $(shell if [ '$(color)' != 'no' ]; then \
+		$(ECHO) -e -n "\033[1;31m[ERROR]\033[0m Compiz not installed"; \
+	else \
+		$(ECHO) -n "[ERROR] Compiz not installed"; \
+	fi))
+endif
+
+
+ifneq ($(shell if [ -n "$(PKG_DEP)" ]; then if pkg-config --exists $(PKG_DEP); then $(ECHO) -n "found"; fi; \
+       else $(ECHO) -n "found"; fi ),found)
+$(error $(shell if [ '$(color)' != 'no' ]; then \
+		$(ECHO) -e -n "\033[1;31m[ERROR]\033[0m "; \
+	else \
+		$(ECHO) -n "[ERROR] "; \
+	fi; \
+	pkg-config --print-errors --short-errors --errors-to-stdout $(PKG_DEP); ))
+endif
 
 
 ifeq ($(BUILD_GLOBAL),true)
@@ -48,8 +82,6 @@ endif
 
 BUILDDIR = build
 
-ECHO	  = `which echo`
-
 CC        = gcc
 CPP       = g++
 LIBTOOL   = libtool
@@ -60,9 +92,12 @@ BCOP      = `pkg-config --variable=bin bcop`
 CFLAGS    = -g -Wall -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -fno-strict-aliasing `pkg-config --cflags $(PKG_DEP) compiz ` $(CFLAGS_ADD)
 LDFLAGS   = `pkg-config --libs $(PKG_DEP) compiz ` $(LDFLAGS_ADD)
 
-DEFINES   = -DIMAGEDIR=$(IMAGEDIR) -DDATADIR=$(DATADIR)
+DEFINES   = -DIMAGEDIR=\"$(IMAGEDIR)\" -DDATADIR=\"$(DATADIR)\"
 
 POFILEDIR = $(shell if [ -n "$(PODIR)" ]; then $(ECHO) $(PODIR); else $(ECHO) ./po;fi )
+
+COMPIZ_HEADERS = compiz.h compiz-core.h
+COMPIZ_INC = $(shell pkg-config --variable=includedir compiz)/compiz/
 
 is-bcop-target  := $(shell if [ -e $(PLUGIN).xml.in ]; then cat $(PLUGIN).xml.in | grep "useBcop=\"true\""; \
 		     else if [ -e $(PLUGIN).xml ]; then cat $(PLUGIN).xml | grep "useBcop=\"true\""; fi; fi)
@@ -73,13 +108,13 @@ bcop-target     := $(shell if [ -n "$(is-bcop-target)" ]; then $(ECHO) $(BUILDDI
 bcop-target-src := $(shell if [ -n "$(is-bcop-target)" ]; then $(ECHO) $(BUILDDIR)/$(PLUGIN)_options.c; fi )
 bcop-target-hdr := $(shell if [ -n "$(is-bcop-target)" ]; then $(ECHO) $(BUILDDIR)/$(PLUGIN)_options.h; fi )
 
-gen-schemas     := $(shell if [ -e $(PLUGIN).xml.in -o -e $(PLUGIN).xml -a -n "`pkg-config --variable=xsltdir compiz-gconf`" ]; then $(ECHO) true; fi )
+gen-schemas     := $(shell if [ \( -e $(PLUGIN).xml.in -o -e $(PLUGIN).xml \) -a -n "`pkg-config --variable=xsltdir compiz-gconf`" ]; then $(ECHO) true; fi )
 schema-target   := $(shell if [ -n "$(gen-schemas)" ]; then $(ECHO) $(BUILDDIR)/$(PLUGIN).xml; fi )
 schema-output   := $(shell if [ -n "$(gen-schemas)" ]; then $(ECHO) $(BUILDDIR)/compiz-$(PLUGIN).schema; fi )
 
 ifeq ($(BUILD_GLOBAL),true)
     pkg-target         := $(shell if [ -e compiz-$(PLUGIN).pc.in -a -n "$(PREFIX)" -a -d "$(PREFIX)" ]; then $(ECHO) "$(BUILDDIR)/compiz-$(PLUGIN).pc"; fi )
-    hdr-install-target := $(shell if [ -e compiz-$(PLUGIN).pc.in -a -n "$(PREFIX)" -a -d "$(PREFIX)" -a -e $(PLUGIN).h ]; then $(ECHO) "$(PLUGIN).h"; fi )
+    hdr-install-target := $(shell if [ -e compiz-$(PLUGIN).pc.in -a -n "$(PREFIX)" -a -d "$(PREFIX)" -a -e compiz-$(PLUGIN).h ]; then $(ECHO) "compiz-$(PLUGIN).h"; fi )
 endif
 
 # find all the object files
@@ -91,7 +126,7 @@ c-objs     := $(filter-out $(bcop-target-src:.c=.lo),$(c-objs))
 
 h-files    := $(shell find -name '*.h' 2> /dev/null | grep -v "$(BUILDDIR)/" | sed -e 's/^.\///')
 h-files    += $(bcop-target-hdr)
-h-files    += $(shell pkg-config --variable=includedir compiz)/compiz/compiz.h
+h-files    += $(foreach file,$(COMPIZ_HEADERS) $(CHK_HEADERS),$(shell $(ECHO) -n "$(COMPIZ_INC)$(file)"))
 
 all-c-objs := $(addprefix $(BUILDDIR)/,$(c-objs)) 
 all-c-objs += $(bcop-target-src:.c=.lo)
@@ -104,8 +139,22 @@ image-files := $(shell find images/ -name '*' -type f 2> /dev/null | sed -e 's/i
 # system include path parameter, -isystem doesn't work on old gcc's
 inc-path-param = $(shell if [ -z "`gcc --version | head -n 1 | grep ' 3'`" ]; then $(ECHO) "-isystem"; else $(ECHO) "-I"; fi)
 
-# default color settings
-color := $(shell if [ $$TERM = "dumb" ]; then $(ECHO) "no"; else $(ECHO) "yes"; fi)
+# Tests
+ifeq ($(shell if [ -n "$(is-bcop-target)" -a -z "$(BCOP)" ]; then $(ECHO) -n "error"; fi ),error)
+$(error $(shell if [ '$(color)' != 'no' ]; then \
+		$(ECHO) -e -n "\033[1;31m[ERROR]\033[0m BCOP not installed but is needed to build plugin"; \
+	else \
+		$(ECHO) -n "[ERROR] BCOP not installed but is needed to build plugin"; \
+	fi))
+endif
+
+ifeq ($(shell if [ "x$(BUILD_GLOBAL)" != "xtrue" -a -e compiz-$(PLUGIN).pc.in ]; then $(ECHO) -n "warn"; fi ),warn)
+$(warning $(shell if [ '$(color)' != 'no' ]; then \
+		$(ECHO) -e -n "\033[1;31m[WARNING]\033[0m This plugin might be needed by other plugins. Install it with \"BUILD_GLOBAL=true sudo make install\" "; \
+	else \
+		$(ECHO) -n "[WARNING]  This plugin might be needed by other plugins. Install it with \"BUILD_GLOBAL=true sudo make install\""; \
+	fi))
+endif
 
 #
 # Do it.
@@ -369,6 +418,8 @@ install: $(DESTDIR) all
 		else \
 		    $(ECHO) "install   : $(DATADIR)/$$FILE"; \
 		fi; \
+	    	FILEDIR="$(DATADIR)/`dirname "$$FILE"`"; \
+		mkdir -p "$$FILEDIR"; \
 		cp data/$$FILE $(DATADIR)/$$FILE; \
 		if [ '$(color)' != 'no' ]; then \
 		    $(ECHO) -e "\r\033[0minstall   : \033[34m$(DATADIR)/$$FILE\033[0m"; \
@@ -383,6 +434,8 @@ install: $(DESTDIR) all
 		else \
 		    $(ECHO) "install   : $(IMAGEDIR)/$$FILE"; \
 		fi; \
+	    	FILEDIR="$(IMAGEDIR)/`dirname "$$FILE"`"; \
+		mkdir -p "$$FILEDIR"; \
 		cp images/$$FILE $(IMAGEDIR)/$$FILE; \
 		if [ '$(color)' != 'no' ]; then \
 		    $(ECHO) -e "\r\033[0minstall   : \033[34m$(IMAGEDIR)/$$FILE\033[0m"; \
