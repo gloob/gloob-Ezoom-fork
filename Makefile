@@ -405,7 +405,8 @@ install: $(DESTDIR) all
 	    else \
 		$(ECHO) "install   : $(schema-output)"; \
 	    fi; \
-	    gconftool-2 --install-schema-file=$(schema-output) > /dev/null; \
+	    GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source` \
+	    gconftool-2 --makefile-install-rule $(schema-output) > /dev/null; \
 	    if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -e "\r\033[0minstall   : \033[34m$(schema-output)\033[0m"; \
 	    fi; \
