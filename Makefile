@@ -405,8 +405,12 @@ install: $(DESTDIR) all
 	    else \
 		$(ECHO) "install   : $(schema-output)"; \
 	    fi; \
-	    GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source` \
-	    gconftool-2 --makefile-install-rule $(schema-output) > /dev/null; \
+	    GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`; \
+	    if [ "x$(USER)" = "xroot" ]; then \
+		gconftool-2 --makefile-install-rule $(schema-output) > /dev/null; \
+	    else \
+		gconftool-2 --install-schema-file=$(schema-output) > /dev/null; \
+	    fi; \
 	    if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -e "\r\033[0minstall   : \033[34m$(schema-output)\033[0m"; \
 	    fi; \
@@ -487,6 +491,18 @@ uninstall:
 	    rm -f $(PKGDIR)/compiz-$(PLUGIN).pc; \
 	    if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -e "\r\033[0muninstall : \033[34m$(PKGDIR)/compiz-$(PLUGIN).pc\033[0m"; \
+	    fi; \
+	fi
+	@if [ -n "$(schema-output)" -a -e "$(schema-output)" -a 'x$(USER)' = 'xroot' ]; then \
+	    if [ '$(color)' != 'no' ]; then \
+		$(ECHO) -n -e "\033[0;1;5muninstall \033[0m: \033[0;31m$(schema-output)\033[0m"; \
+	    else \
+		$(ECHO) "uninstall : $(schema-output)"; \
+	    fi; \
+	    GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source` \
+	    gconftool-2 --makefile-install-rule $(schema-output) > /dev/null; \
+	    if [ '$(color)' != 'no' ]; then \
+		$(ECHO) -e "\r\033[0muninstall : \033[34m$(schema-output)\033[0m"; \
 	    fi; \
 	fi
 	@if [ -n "$(data-files)" ]; then \
