@@ -405,8 +405,8 @@ install: $(DESTDIR) all
 	    else \
 		$(ECHO) "install   : $(schema-output)"; \
 	    fi; \
-	    GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source`; \
 	    if [ "x$(USER)" = "xroot" ]; then \
+		GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source` \
 		gconftool-2 --makefile-install-rule $(schema-output) > /dev/null; \
 	    else \
 		gconftool-2 --install-schema-file=$(schema-output) > /dev/null; \
@@ -500,7 +500,7 @@ uninstall:
 		$(ECHO) "uninstall : $(schema-output)"; \
 	    fi; \
 	    GCONF_CONFIG_SOURCE=`gconftool-2 --get-default-source` \
-	    gconftool-2 --makefile-install-rule $(schema-output) > /dev/null; \
+	    gconftool-2 --makefile-uninstall-rule $(schema-output) > /dev/null; \
 	    if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -e "\r\033[0muninstall : \033[34m$(schema-output)\033[0m"; \
 	    fi; \
