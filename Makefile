@@ -372,7 +372,7 @@ install: $(DESTDIR) all
 		$(ECHO) "install   : $(XMLDIR)/$(PLUGIN).xml"; \
 	    fi; \
 	    mkdir -p $(XMLDIR); \
-	    cp $(BUILDDIR)/$(PLUGIN).xml $(XMLDIR)/$(PLUGIN).xml; \
+	    $(INSTALL)  $(BUILDDIR)/$(PLUGIN).xml $(XMLDIR)/$(PLUGIN).xml; \
 	    if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -e "\r\033[0minstall   : \033[34m$(XMLDIR)/$(PLUGIN).xml\033[0m"; \
 	    fi; \
@@ -383,7 +383,7 @@ install: $(DESTDIR) all
 	    else \
 		$(ECHO) "install   : $(CINCDIR)/compiz/$(hdr-install-target)"; \
 	    fi; \
-	    cp $(hdr-install-target) $(CINCDIR)/compiz/$(hdr-install-target); \
+	    $(INSTALL) --mode=u=rw,go=r,a-s $(hdr-install-target) $(CINCDIR)/compiz/$(hdr-install-target); \
 	    if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -e "\r\033[0minstall   : \033[34m$(CINCDIR)/compiz/$(hdr-install-target)\033[0m"; \
 	    fi; \
@@ -394,7 +394,7 @@ install: $(DESTDIR) all
 	    else \
 		$(ECHO) "install   : $(PKGDIR)/compiz-$(PLUGIN).pc"; \
 	    fi; \
-	    cp $(pkg-target) $(PKGDIR)/compiz-$(PLUGIN).pc; \
+	    $(INSTALL) --mode=u=rw,go=r,a-s $(pkg-target) $(PKGDIR)/compiz-$(PLUGIN).pc; \
 	    if [ '$(color)' != 'no' ]; then \
 		$(ECHO) -e "\r\033[0minstall   : \033[34m$(PKGDIR)/compiz-$(PLUGIN).pc\033[0m"; \
 	    fi; \
@@ -425,7 +425,7 @@ install: $(DESTDIR) all
 		fi; \
 	    	FILEDIR="$(DATADIR)/`dirname "$$FILE"`"; \
 		mkdir -p "$$FILEDIR"; \
-		cp data/$$FILE $(DATADIR)/$$FILE; \
+		$(INSTALL) --mode=u=rw,go=r,a-s data/$$FILE $(DATADIR)/$$FILE; \
 		if [ '$(color)' != 'no' ]; then \
 		    $(ECHO) -e "\r\033[0minstall   : \033[34m$(DATADIR)/$$FILE\033[0m"; \
 		fi; \
@@ -441,7 +441,7 @@ install: $(DESTDIR) all
 		fi; \
 	    	FILEDIR="$(IMAGEDIR)/`dirname "$$FILE"`"; \
 		mkdir -p "$$FILEDIR"; \
-		cp images/$$FILE $(IMAGEDIR)/$$FILE; \
+		$(INSTALL) --mode=u=rw,go=r,a-s images/$$FILE $(IMAGEDIR)/$$FILE; \
 		if [ '$(color)' != 'no' ]; then \
 		    $(ECHO) -e "\r\033[0minstall   : \033[34m$(IMAGEDIR)/$$FILE\033[0m"; \
 		fi; \
