@@ -181,6 +181,7 @@ class ZoomScreen :
 	bool			 cursorInfoSelected;
 	bool			 cursorHidden;
 	CompRect		 box;
+	CompPoint	         clickPos;
 
 	MousePoller		 pollHandle; // mouse poller object
 

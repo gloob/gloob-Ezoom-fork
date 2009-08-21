@@ -353,6 +353,8 @@ ZoomScreen::donePaint ()
 	    }
 	}
     }
+    else if (grabIndex)
+	cScreen->damageScreen ();
     else
         toggleFunctions (false);
 
@@ -406,7 +408,7 @@ ZoomScreen::glPaintOutput (const GLScreenPaintAttrib &attrib,
 			   unsigned int		     mask)
 {
     bool status;
-    int	 out = output->id ();    
+    int	 out = output->id ();
 
     if (isActive (out))
     {
@@ -1336,6 +1338,8 @@ ZoomScreen::zoomBoxActivate (CompAction         *action,
 			     CompOption::Vector options)
 {
 	grabIndex = screen->pushGrab (None, "ezoom");
+	clickPos.setX (pointerX);
+	clickPos.setY (pointerY);
 	box.setGeometry (pointerX, pointerY, 0, 0);
 	if (state & CompAction::StateInitButton)
 	    action->setState (action->state () | CompAction::StateTermButton);
@@ -1360,26 +1364,24 @@ ZoomScreen::zoomBoxDeactivate (CompAction         *action,
 	    screen->removeGrab (grabIndex, NULL);
 	    grabIndex = 0;
 
-	    if (pointerX < box.x1 ())
+	    if (pointerX < clickPos.x ())
 	    {
-		unsigned int xB = box.x1 ();
 		box.setX (pointerX);
-		box.setWidth (xB - pointerX);
+		box.setWidth (clickPos.x () - pointerX);
 	    }
 	    else
 	    {
-		box.setWidth (pointerX - box.x1 ());
+		box.setWidth (pointerX - clickPos.x ());
 	    }
 
-	    if (pointerY < box.y1 ())
+	    if (pointerY < clickPos.y ())
 	    {
-		unsigned int yB = box.y1 ();
-		box.setX (pointerX);
-		box.setWidth (yB - pointerY);
+		box.setY (pointerY);
+		box.setHeight (clickPos.y () - pointerY);
 	    }
 	    else
 	    {
-		box.setWidth (pointerX - box.y1 ());
+		box.setHeight (pointerY - clickPos.y ());
 	    }
 	    
 	    x = MIN (box.x1 (), box.x2 ());
@@ -1716,26 +1718,24 @@ ZoomScreen::handleEvent (XEvent *event)
 	    mev =  (XMotionEvent *) event;
 		if (grabIndex)
 		{
-		    if (pointerX < box.x1 ())
+		    if (pointerX < clickPos.x ())
 		    {
-			unsigned int xB = box.x1 ();
 			box.setX (pointerX);
-			box.setWidth (xB - pointerX);
+			box.setWidth (clickPos.x () - pointerX);
 		    }
 		    else
 		    {
-			box.setWidth (pointerX - box.x1 ());
+			box.setWidth (pointerX - clickPos.x ());
 		    }
 
-		    if (pointerY < box.y1 ())
+		    if (pointerY < clickPos.y ())
 		    {
-			unsigned int yB = box.y1 ();
-			box.setX (pointerX);
-			box.setWidth (yB - pointerY);
+			box.setY (pointerY);
+			box.setHeight (clickPos.y () - pointerY);
 		    }
 		    else
 		    {
-			box.setWidth (pointerX - box.y1 ());
+			box.setHeight (pointerY - clickPos.y ());
 		    }
 		    cScreen->damageScreen ();
 		}
