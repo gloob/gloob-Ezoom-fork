@@ -1242,34 +1242,34 @@ ZoomScreen::setZoomAreaAction (CompAction         *action,
 			       CompAction::State  state,
 			       CompOption::Vector options)
 {
-	int        x1, y1, x2, y2, out;
-	Bool       scale, restrain;
-	CompOutput *o; 
+    int        x1, y1, x2, y2, out;
+    Bool       scale, restrain;
+    CompOutput *o; 
 
-	x1 = CompOption::getIntOptionNamed (options, "x1", -1);
-	y1 = CompOption::getIntOptionNamed (options, "y1", -1);
-	x2 = CompOption::getIntOptionNamed (options, "x2", -1);
-	y2 = CompOption::getIntOptionNamed (options, "y2", -1);
-	scale = CompOption::getBoolOptionNamed (options, "scale", FALSE);
-	restrain = CompOption::getBoolOptionNamed (options, "restrain", FALSE);
+    x1 = CompOption::getIntOptionNamed (options, "x1", -1);
+    y1 = CompOption::getIntOptionNamed (options, "y1", -1);
+    x2 = CompOption::getIntOptionNamed (options, "x2", -1);
+    y2 = CompOption::getIntOptionNamed (options, "y2", -1);
+    scale = CompOption::getBoolOptionNamed (options, "scale", FALSE);
+    restrain = CompOption::getBoolOptionNamed (options, "restrain", FALSE);
 
-	if (x1 < 0 || y1 < 0)
-	    return FALSE;
+    if (x1 < 0 || y1 < 0)
+        return FALSE;
 
-	if (x2 < 0)
-	    x2 = x1 + 1;
+    if (x2 < 0)
+        x2 = x1 + 1;
 
-	if (y2 < 0)
-	    y2 = y1 + 1;
+    if (y2 < 0)
+        y2 = y1 + 1;
 
-	out = screen->outputDeviceForPoint (x1, y1);
+    out = screen->outputDeviceForPoint (x1, y1);
 #define WIDTH (x2 - x1)
 #define HEIGHT (y2 - y1)
-	setZoomArea (x1, y1, WIDTH, HEIGHT, FALSE);
-	o = &screen->outputDevs (). at(out);
-	if (scale && WIDTH && HEIGHT)
-	    setScaleBigger (out, (float) WIDTH / o->width (), 
-			    (float) HEIGHT / o->height ());
+    setZoomArea (x1, y1, WIDTH, HEIGHT, FALSE);
+    o = &screen->outputDevs (). at(out);
+    if (scale && WIDTH && HEIGHT)
+        setScaleBigger (out, (float) WIDTH / o->width (), 
+		        (float) HEIGHT / o->height ());
 #undef WIDTH
 #undef HEIGHT
 	if (restrain)
@@ -1295,39 +1295,39 @@ ZoomScreen::ensureVisibilityAction (CompAction         *action,
 			            CompAction::State  state,
 			            CompOption::Vector options)
 {
-	int        x1, y1, x2, y2, margin, out;
-	Bool       scale, restrain;
-	CompOutput *o;
+    int        x1, y1, x2, y2, margin, out;
+    Bool       scale, restrain;
+    CompOutput *o;
 
-	x1 = CompOption::getIntOptionNamed (options, "x1", -1);
-	y1 = CompOption::getIntOptionNamed (options, "y1", -1);
-	x2 = CompOption::getIntOptionNamed (options, "x2", -1);
-	y2 = CompOption::getIntOptionNamed (options, "y2", -1);
-	margin = CompOption::getBoolOptionNamed (options, "margin", 0);
-	scale = CompOption::getBoolOptionNamed (options, "scale", FALSE);
-	restrain = CompOption::getBoolOptionNamed (options, "restrain", FALSE);
-	if (x1 < 0 || y1 < 0)
-	    return FALSE;
-	if (x2 < 0)
-	    y2 = y1 + 1;
-	out = screen->outputDeviceForPoint (x1, y1);
-	ensureVisibility (x1, y1, margin);
-	if (x2 >= 0 && y2 >= 0)
-	    ensureVisibility (x2, y2, margin);
-	o = &screen->outputDevs (). at(out);
+    x1 = CompOption::getIntOptionNamed (options, "x1", -1);
+    y1 = CompOption::getIntOptionNamed (options, "y1", -1);
+    x2 = CompOption::getIntOptionNamed (options, "x2", -1);
+    y2 = CompOption::getIntOptionNamed (options, "y2", -1);
+    margin = CompOption::getBoolOptionNamed (options, "margin", 0);
+    scale = CompOption::getBoolOptionNamed (options, "scale", FALSE);
+    restrain = CompOption::getBoolOptionNamed (options, "restrain", FALSE);
+    if (x1 < 0 || y1 < 0)
+        return FALSE;
+    if (x2 < 0)
+        y2 = y1 + 1;
+    out = screen->outputDeviceForPoint (x1, y1);
+    ensureVisibility (x1, y1, margin);
+    if (x2 >= 0 && y2 >= 0)
+        ensureVisibility (x2, y2, margin);
+    o = &screen->outputDevs (). at(out);
 #define WIDTH (x2 - x1)
 #define HEIGHT (y2 - y1)
-	if (scale && WIDTH && HEIGHT)
-	    setScaleBigger (out, (float) WIDTH / o->width (), 
-			    (float) HEIGHT / o->height ());
+    if (scale && WIDTH && HEIGHT)
+        setScaleBigger (out, (float) WIDTH / o->width (), 
+		        (float) HEIGHT / o->height ());
 #undef WIDTH
 #undef HEIGHT
-	if (restrain)
-	    restrainCursor (out);
+    if (restrain)
+	restrainCursor (out);
 
     toggleFunctions (true);
 
-	return true;
+    return true;
 }
 
 /* Finished here */
@@ -1337,12 +1337,12 @@ ZoomScreen::zoomBoxActivate (CompAction         *action,
 			     CompAction::State  state,
 			     CompOption::Vector options)
 {
-	grabIndex = screen->pushGrab (None, "ezoom");
-	clickPos.setX (pointerX);
-	clickPos.setY (pointerY);
-	box.setGeometry (pointerX, pointerY, 0, 0);
-	if (state & CompAction::StateInitButton)
-	    action->setState (action->state () | CompAction::StateTermButton);
+    grabIndex = screen->pushGrab (None, "ezoom");
+    clickPos.setX (pointerX);
+    clickPos.setY (pointerY);
+    box.setGeometry (pointerX, pointerY, 0, 0);
+    if (state & CompAction::StateInitButton)
+        action->setState (action->state () | CompAction::StateTermButton);
 
     toggleFunctions (true);
 
@@ -1354,49 +1354,49 @@ ZoomScreen::zoomBoxDeactivate (CompAction         *action,
 			       CompAction::State  state,
 			       CompOption::Vector options)
 {
-	int x, y, width, height;
+    int x, y, width, height;
 
-	if (grabIndex)
-	{
-	    int        out;
-	    CompOutput *o;
+    if (grabIndex)
+    {
+        int        out;
+        CompOutput *o;
 
-	    screen->removeGrab (grabIndex, NULL);
-	    grabIndex = 0;
+        screen->removeGrab (grabIndex, NULL);
+        grabIndex = 0;
 
-	    if (pointerX < clickPos.x ())
-	    {
-		box.setX (pointerX);
-		box.setWidth (clickPos.x () - pointerX);
-	    }
-	    else
-	    {
-		box.setWidth (pointerX - clickPos.x ());
-	    }
+        if (pointerX < clickPos.x ())
+        {
+	        box.setX (pointerX);
+	        box.setWidth (clickPos.x () - pointerX);
+        }
+        else
+        {
+	        box.setWidth (pointerX - clickPos.x ());
+        }
 
-	    if (pointerY < clickPos.y ())
-	    {
-		box.setY (pointerY);
-		box.setHeight (clickPos.y () - pointerY);
-	    }
-	    else
-	    {
-		box.setHeight (pointerY - clickPos.y ());
-	    }
-	    
-	    x = MIN (box.x1 (), box.x2 ());
-	    y = MIN (box.y1 (), box.y2 ());
-	    width = MAX (box.x1 (), box.x2 ()) - x;
-	    height = MAX (box.y1 (), box.y2 ()) - y;
+        if (pointerY < clickPos.y ())
+        {
+	        box.setY (pointerY);
+	        box.setHeight (clickPos.y () - pointerY);
+        }
+        else
+        {
+	        box.setHeight (pointerY - clickPos.y ());
+        }
+        
+        x = MIN (box.x1 (), box.x2 ());
+        y = MIN (box.y1 (), box.y2 ());
+        width = MAX (box.x1 (), box.x2 ()) - x;
+        height = MAX (box.y1 (), box.y2 ()) - y;
 
-	    CompWindow::Geometry outGeometry (x, y, width, height, 0);
+        CompWindow::Geometry outGeometry (x, y, width, height, 0);
 
-	    out = screen->outputDeviceForGeometry (outGeometry);
-	    o = &screen->outputDevs (). at (out);
-	    setScaleBigger (out, (float) width/o->width (), (float)
-			    height/o->height ());
-	    setZoomArea (x,y,width,height,FALSE);
-	}
+        out = screen->outputDeviceForGeometry (outGeometry);
+        o = &screen->outputDevs (). at (out);
+        setScaleBigger (out, (float) width/o->width (), (float)
+		        height/o->height ());
+        setZoomArea (x,y,width,height,FALSE);
+    }
 
     toggleFunctions (true);
 
@@ -1716,29 +1716,29 @@ ZoomScreen::handleEvent (XEvent *event)
     switch (event->type) {
 	case MotionNotify:
 	    mev =  (XMotionEvent *) event;
-		if (grabIndex)
-		{
-		    if (pointerX < clickPos.x ())
-		    {
-			box.setX (pointerX);
-			box.setWidth (clickPos.x () - pointerX);
-		    }
-		    else
-		    {
-			box.setWidth (pointerX - clickPos.x ());
-		    }
+	    if (grabIndex)
+	    {
+	        if (pointerX < clickPos.x ())
+	        {
+		    box.setX (pointerX);
+		    box.setWidth (clickPos.x () - pointerX);
+	        }
+	        else
+	        {
+		    box.setWidth (pointerX - clickPos.x ());
+	        }
 
-		    if (pointerY < clickPos.y ())
-		    {
-			box.setY (pointerY);
-			box.setHeight (clickPos.y () - pointerY);
-		    }
-		    else
-		    {
-			box.setHeight (pointerY - clickPos.y ());
-		    }
-		    cScreen->damageScreen ();
-		}
+	        if (pointerY < clickPos.y ())
+	        {
+		    box.setY (pointerY);
+		    box.setHeight (clickPos.y () - pointerY);
+	        }
+	        else
+	        {
+		    box.setHeight (pointerY - clickPos.y ());
+	        }
+	        cScreen->damageScreen ();
+	    }
 	    break;
 	case FocusIn:
 	case MapNotify:
