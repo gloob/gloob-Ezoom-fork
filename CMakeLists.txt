@@ -1,3 +1,5 @@
-include (CompizFusion)
+find_package (Compiz REQUIRED)
 
-compiz_fusion_plugin (ezoom PLUGINDEPS mousepoll)
+include (CompizPlugin)
+
+compiz_plugin (ezoom PLUGINDEPS composite opengl mousepoll)
