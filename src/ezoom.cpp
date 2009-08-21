@@ -72,11 +72,24 @@
 
 COMPIZ_PLUGIN_20090315 (ezoom, ZoomPluginVTable)
 
+
+/* This toggles paint functions. We don't need to continually run code when we
+ * are not doing anything */
+static inline void
+toggleFunctions (bool enabled)
+{
+    ZOOM_SCREEN (screen);
+
+    screen->handleEventSetEnabled (zs, enabled);
+    zs->cScreen->preparePaintSetEnabled (zs, enabled);
+    zs->gScreen->glPaintOutputSetEnabled (zs, enabled);
+    zs->cScreen->donePaintSetEnabled (zs, enabled);
+}
+
 /* Checks if a specific screen grab exist. DO NOT USE THIS.
  * This is a temporary fix that SHOULD be removed asap.
  * See comments in drawCursor.
  */
-
 static inline bool
 dontuseScreengrabExist (char * grab)
 {
@@ -340,6 +353,8 @@ ZoomScreen::donePaint ()
 	    }
 	}
     }
+    else
+        toggleFunctions (false);
 
     cScreen->donePaint ();
 }
@@ -1258,6 +1273,8 @@ ZoomScreen::setZoomAreaAction (CompAction         *action,
 	if (restrain)
 	    restrainCursor (out); 
 
+    toggleFunctions (true);
+
     return true;
 }
 
@@ -1306,6 +1323,8 @@ ZoomScreen::ensureVisibilityAction (CompAction         *action,
 	if (restrain)
 	    restrainCursor (out);
 
+    toggleFunctions (true);
+
 	return true;
 }
 
@@ -1320,6 +1339,8 @@ ZoomScreen::zoomBoxActivate (CompAction         *action,
 	box.setGeometry (pointerX, pointerY, 0, 0);
 	if (state & CompAction::StateInitButton)
 	    action->setState (action->state () | CompAction::StateTermButton);
+
+    toggleFunctions (true);
 
     return true;
 }
@@ -1375,6 +1396,8 @@ ZoomScreen::zoomBoxDeactivate (CompAction         *action,
 	    setZoomArea (x,y,width,height,FALSE);
 	}
 
+    toggleFunctions (true);
+
     return true;
 }
 
@@ -1393,6 +1416,8 @@ ZoomScreen::zoomIn (CompAction         *action,
 	setScale (out,
 		  zooms.at (out)->newZoom /
 		  optionGetZoomFactor ());
+
+    toggleFunctions (true);
 
     return true;
 }
@@ -1447,6 +1472,8 @@ ZoomScreen::zoomSpecific (CompAction         *action,
 	    setCenter (x, y, FALSE);
 	}
 
+    toggleFunctions (true);
+
     return true;
 }
 
@@ -1476,6 +1503,8 @@ ZoomScreen::zoomToWindow (CompAction         *action,
     setScaleBigger (out, (float) width/o->width (), 
 		    (float) height/o->height ());
     areaToWindow (w);
+    toggleFunctions (true);
+
     return TRUE;
 }
 
@@ -1558,6 +1587,9 @@ ZoomScreen::zoomFitWindowToZoom (CompAction         *action,
 	w->sendSyncRequest ();
 
     w->configureXWindow (mask, &xwc);
+
+    toggleFunctions (true);
+
     return TRUE;
 }
 
@@ -1574,6 +1606,8 @@ ZoomScreen::initiate (CompAction         *action,
     if (state & CompAction::StateInitButton)
 	action->setState (action->state () | CompAction::StateTermButton);
 
+    toggleFunctions (true);
+
     return true;
 }
 
@@ -1587,6 +1621,8 @@ ZoomScreen::zoomOut (CompAction         *action,
 	setScale (out,
 		  zooms.at (out)->newZoom *
 		  optionGetZoomFactor ());
+
+    toggleFunctions (true);
 
     return true;
 }
@@ -1605,6 +1641,8 @@ ZoomScreen::terminate (CompAction         *action,
 	    zooms.at (out)->newZoom = 1.0f;
 	    cScreen->damageScreen ();
 	}
+
+    toggleFunctions (true);
 
     action->setState (action->state () & ~(CompAction::StateTermKey |
 					   CompAction::StateTermButton));
@@ -1663,6 +1701,8 @@ ZoomScreen::focusTrack (XEvent *event)
     }
 
     areaToWindow (w);
+
+    toggleFunctions (true);
 }
 
 /* Event handler. Pass focus-related events on and handle XFixes events. */
@@ -1735,9 +1775,9 @@ ZoomScreen::ZoomScreen (CompScreen *screen) :
     cursorInfoSelected (false),
     cursorHidden (false)
 {
-    ScreenInterface::setHandler (screen);
-    CompositeScreenInterface::setHandler (cScreen);
-    GLScreenInterface::setHandler (gScreen);
+    ScreenInterface::setHandler (screen, false);
+    CompositeScreenInterface::setHandler (cScreen, false);
+    GLScreenInterface::setHandler (gScreen, false);
 
     int major, minor, n;
     fixesSupported = 
