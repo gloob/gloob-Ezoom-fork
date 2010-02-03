@@ -93,7 +93,7 @@ toggleFunctions (bool enabled)
 static inline bool
 dontuseScreengrabExist (char * grab)
 {
-    if (screen->otherGrabExist (grab, 0))
+    if (screen->otherGrabExist (grab, NULL))
 	return true;
     return false;
 }
@@ -1456,7 +1456,7 @@ ZoomScreen::zoomSpecific (CompAction         *action,
 
 	if (target == 1.0f && zooms.at (out)->newZoom == 1.0f)
 	    return FALSE;
-	if (screen->otherGrabExist (0))
+	if (screen->otherGrabExist (NULL))
 	    return FALSE;
 
 	setScale (out, target);
