@@ -104,7 +104,7 @@ outputIsZoomArea (int out)
 {
     ZOOM_SCREEN (screen);
 
-    if (out < 0 || out >= zs->zooms.size ())
+    if (out < 0 || (unsigned int) out >= zs->zooms.size ())
 	return FALSE;
     return TRUE;
 }
@@ -313,7 +313,7 @@ ZoomScreen::preparePaint (int	   msSinceLastPaint)
 	chunk  = amount / (float) steps;
 	while (steps--)
 	{
-	    int out;
+	    unsigned int out;
 	    for (out = 0; out < zooms.size (); out++)
 	    {
 		if (!isInMovement (out) || !isActive (out))
@@ -343,7 +343,7 @@ ZoomScreen::donePaint ()
 {
     if (grabbed)
     {
-	int out;
+	unsigned int out;
 	for (out = 0; out < zooms.size (); out++)
 	{
 	    if (isInMovement (out) && isActive (out))
@@ -458,7 +458,7 @@ ZoomScreen::glPaintOutput (const GLScreenPaintAttrib &attrib,
 static inline void
 constrainZoomTranslate ()
 {
-    int out;
+    unsigned int out;
     ZOOM_SCREEN (screen);
 
     for (out = 0; out < zs->zooms.size (); out++)
@@ -572,7 +572,7 @@ ZoomScreen::areaToWindow (CompWindow *w)
 void
 ZoomScreen::panZoom (int xvalue, int yvalue)
 {
-    int out;
+    unsigned int out;
 
     for (out = 0; out < zooms.size (); out++)
     {
@@ -1047,7 +1047,7 @@ ZoomScreen::drawCursor (CompOutput          *output,
 	 * real mouse is despite zoom, so we don't have to disable the
 	 * zoom. We do, however, have to show the original pointer.
 	 */
-	if (dontuseScreengrabExist ("expo"))
+	if (dontuseScreengrabExist ((char *) "expo"))
 	{
 	    cursorZoomInactive ();
 	    return;
@@ -1146,7 +1146,6 @@ ZoomScreen::updateCursor (CursorTexture * cursor)
     cursor->height = ci->height;
     cursor->hotX = ci->xhot;
     cursor->hotY = ci->yhot;
-#warning fixme: shouldnt cast malloc here. This is bound to cause trouble...
     pixels = (unsigned char *) malloc (ci->width * ci->height * 4);
 
     if (!pixels) 
@@ -1530,7 +1529,6 @@ ZoomScreen::zoomCenterMouse (CompAction         *action,
 			     CompOption::Vector options)
 {
     int        out;
-    Window     xid;
 
     out = screen->outputDeviceForPoint (pointerX, pointerY);
     screen->warpPointer ((int) (screen->outputDevs ().at (out).width ()/2 +
@@ -1779,7 +1777,8 @@ ZoomScreen::ZoomScreen (CompScreen *screen) :
     CompositeScreenInterface::setHandler (cScreen, false);
     GLScreenInterface::setHandler (gScreen, false);
 
-    int major, minor, n;
+    int major, minor;
+    unsigned int n;
     fixesSupported = 
 	XFixesQueryExtension(screen->dpy (), 
 			     &fixesEventBase,
@@ -1794,7 +1793,7 @@ ZoomScreen::ZoomScreen (CompScreen *screen) :
 
     n = screen->outputDevs ().size ();
 
-    for (int i = 0; i < n; i++)
+    for (unsigned int i = 0; i < n; i++)
     {
 	/* zs->grabbed is a mask ... Thus this limit */
 	if (i > sizeof (long int) * 8)
