@@ -3,6 +3,8 @@
     <plugin name="ezoom" useBcop="true">
 	<deps>
 	    <relation type="after">
+		<plugin>composite</plugin>
+		<plugin>opengl</plugin>
 		<plugin>expo</plugin>
 	    </relation>
 	    <relation type="before">
