@@ -117,7 +117,7 @@ class ZoomScreen :
 	class CursorTexture
 	{
 	    public:
-		Bool       isSet;
+		bool       isSet;
 		GLuint     texture;
 		CompScreen *screen;
 		int        width;
@@ -158,7 +158,7 @@ class ZoomScreen :
 		GLfloat           realYTranslate;
 		GLfloat           xtrans;
 		GLfloat           ytrans;
-		Bool              locked;
+		bool              locked;
 	    public:
 
 		ZoomArea (int out);
@@ -237,7 +237,7 @@ class ZoomScreen :
 		     int        y, 
 		     int        width, 
 		     int        height, 
-		     Bool       instant);
+		     bool       instant);
 
 	void
 	areaToWindow (CompWindow *w);

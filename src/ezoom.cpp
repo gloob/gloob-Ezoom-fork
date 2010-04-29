@@ -105,8 +105,8 @@ outputIsZoomArea (int out)
     ZOOM_SCREEN (screen);
 
     if (out < 0 || (unsigned int) out >= zs->zooms.size ())
-	return FALSE;
-    return TRUE;
+	return false;
+    return true;
 }
 
 /* Check if zoom is active on the output specified */
@@ -116,10 +116,10 @@ isActive (int out)
     ZOOM_SCREEN (screen);
 
     if (!outputIsZoomArea (out))
-	return FALSE;
+	return false;
     if (zs->grabbed & (1 << zs->zooms.at (out)->output))
-	return TRUE;
-    return FALSE;
+	return true;
+    return false;
 }
 
 /* Check if we are zoomed out and not going anywhere
@@ -131,16 +131,16 @@ isZoomed (int out)
     ZOOM_SCREEN (screen);
 
     if (!outputIsZoomArea (out))
-	return FALSE;
+	return false;
 
     if (zs->zooms.at (out)->currentZoom != 1.0f 
 	|| zs->zooms.at (out)->newZoom != 1.0f)
-	return TRUE;
+	return true;
 
     if (zs->zooms.at (out)->zVelocity != 0.0f)
-	return TRUE;
+	return true;
 
-    return FALSE;
+    return false;
 }
 
 /* Returns the distance to the defined edge in zoomed pixels.  */
@@ -185,15 +185,15 @@ ZoomScreen::isInMovement (int out)
     if (zooms.at (out)->currentZoom == 1.0f &&
 	zooms.at (out)->newZoom == 1.0f &&
 	zooms.at (out)->zVelocity == 0.0f)
-	return FALSE;
+	return false;
     if (zooms.at (out)->currentZoom != zooms.at (out)->newZoom ||
 	zooms.at (out)->xVelocity || zooms.at (out)->yVelocity ||
 	zooms.at (out)->zVelocity)
-	return TRUE;
+	return true;
     if (zooms.at (out)->xTranslate != zooms.at (out)->realXTranslate ||
 	zooms.at (out)->yTranslate != zooms.at (out)->realYTranslate)
-	return TRUE;
-    return FALSE;
+	return true;
+    return false;
 }
 
 /* Set the initial values of a zoom area.  */
@@ -523,7 +523,7 @@ ZoomScreen::setZoomArea (int        x,
 	     		 int        y, 
 	     		 int        width, 
 	     		 int        height, 
-	     		 Bool       instant)
+	     		 bool       instant)
 {
     CompWindow::Geometry outGeometry (x, y, width, height, 0);
     int         out = screen->outputDeviceForGeometry (outGeometry);
@@ -564,7 +564,7 @@ ZoomScreen::areaToWindow (CompWindow *w)
     int top = w->serverY () - w->input ().top;
     int height = w->height ()  + w->input ().top + w->input ().bottom;
     
-    setZoomArea (left, top, width, height, FALSE);
+    setZoomArea (left, top, width, height, false);
 }
 
 /* Pans the zoomed area vertically/horizontally by * value * zs->panFactor
@@ -743,13 +743,13 @@ ZoomScreen::ensureVisibility (int x, int y, int margin)
 
     out = screen->outputDeviceForPoint (x, y);
     if (!isActive (out))
-	return FALSE;
+	return false;
 
     o = &screen->outputDevs ().at (out);
     convertToZoomedTarget (out, x, y, &zoomX, &zoomY);
     ZoomArea *za = zooms.at (out);
     if (za->locked)
-	return FALSE;
+	return false;
 
 #define FACTOR (za->newZoom / (1.0f - za->newZoom))
     if (zoomX + margin > o->x2 ())
@@ -771,7 +771,7 @@ ZoomScreen::ensureVisibility (int x, int y, int margin)
 	    (float) o->height ();
 #undef FACTOR
     constrainZoomTranslate ();
-    return TRUE;
+    return true;
 }
 
 /* Attempt to ensure the visibility of an area defined by x1/y1 and x2/y2.
@@ -881,12 +881,12 @@ ZoomScreen::ensureVisibilityArea (int         x1,
 	    }
 	    break;
 	case CENTER:
-	    setCenter (x1 + (x2 - x1 / 2), y1 + (y2 - y1 / 2), FALSE);
+	    setCenter (x1 + (x2 - x1 / 2), y1 + (y2 - y1 / 2), false);
 	    return;
 	    break;
     }
 
-    setZoomArea (targetX, targetY, targetW, targetH, FALSE);
+    setZoomArea (targetX, targetY, targetW, targetH, false);
     return ;
 }
 
@@ -995,7 +995,7 @@ ZoomScreen::updateMousePosition (const CompPoint &p)
     out = screen->outputDeviceForPoint (mouse.x (), mouse.y ());
     lastChange = time(NULL);
     if (optionGetSyncMouse () && !isInMovement (out))
-	setCenter (mouse.x (), mouse.y (), TRUE);
+	setCenter (mouse.x (), mouse.y (), true);
     cursorMoved ();
     cScreen->damageScreen ();
 }
@@ -1023,7 +1023,7 @@ ZoomScreen::freeCursor (CursorTexture * cursor)
 	return;
 	
     //makeScreenCurrent (cursor->screen); ??
-    cursor->isSet = FALSE;
+    cursor->isSet = false;
     glDeleteTextures (1, &cursor->texture);
     cursor->texture = 0;
 }
@@ -1100,7 +1100,7 @@ ZoomScreen::updateCursor (CursorTexture * cursor)
 
     if (!cursor->isSet)
     {
-	cursor->isSet = TRUE;
+	cursor->isSet = true;
 	cursor->screen = screen;
 	// makeScreenCurrent (s); // ???
 	glEnable (GL_TEXTURE_RECTANGLE_ARB);
@@ -1181,7 +1181,7 @@ ZoomScreen::cursorZoomInactive ()
 
     if (cursorInfoSelected)
     {
-	cursorInfoSelected = FALSE;
+	cursorInfoSelected = false;
 	XFixesSelectCursorInput (screen->dpy (), screen->root (), 0);
     }
 
@@ -1192,7 +1192,7 @@ ZoomScreen::cursorZoomInactive ()
 
     if (cursorHidden)
     {
-	cursorHidden = FALSE;
+	cursorHidden = false;
 	XFixesShowCursor (screen->dpy (), screen->root ());
     }
 }
@@ -1212,7 +1212,7 @@ ZoomScreen::cursorZoomActive ()
 
     if (!cursorInfoSelected)
     {
-	cursorInfoSelected = TRUE;
+	cursorInfoSelected = true;
         XFixesSelectCursorInput (screen->dpy (), screen->root (),
 				 XFixesDisplayCursorNotifyMask);
 	updateCursor (&cursor);
@@ -1220,7 +1220,7 @@ ZoomScreen::cursorZoomActive ()
     if (canHideCursor && !cursorHidden &&
 	optionGetHideOriginalMouse ())
     {
-	cursorHidden = TRUE;
+	cursorHidden = true;
 	XFixesHideCursor (screen->dpy (), screen->root ());
     }
 }
@@ -1242,18 +1242,18 @@ ZoomScreen::setZoomAreaAction (CompAction         *action,
 			       CompOption::Vector options)
 {
     int        x1, y1, x2, y2, out;
-    Bool       scale, restrain;
+    bool       scale, restrain;
     CompOutput *o; 
 
     x1 = CompOption::getIntOptionNamed (options, "x1", -1);
     y1 = CompOption::getIntOptionNamed (options, "y1", -1);
     x2 = CompOption::getIntOptionNamed (options, "x2", -1);
     y2 = CompOption::getIntOptionNamed (options, "y2", -1);
-    scale = CompOption::getBoolOptionNamed (options, "scale", FALSE);
-    restrain = CompOption::getBoolOptionNamed (options, "restrain", FALSE);
+    scale = CompOption::getBoolOptionNamed (options, "scale", false);
+    restrain = CompOption::getBoolOptionNamed (options, "restrain", false);
 
     if (x1 < 0 || y1 < 0)
-        return FALSE;
+        return false;
 
     if (x2 < 0)
         x2 = x1 + 1;
@@ -1264,7 +1264,7 @@ ZoomScreen::setZoomAreaAction (CompAction         *action,
     out = screen->outputDeviceForPoint (x1, y1);
 #define WIDTH (x2 - x1)
 #define HEIGHT (y2 - y1)
-    setZoomArea (x1, y1, WIDTH, HEIGHT, FALSE);
+    setZoomArea (x1, y1, WIDTH, HEIGHT, false);
     o = &screen->outputDevs (). at(out);
     if (scale && WIDTH && HEIGHT)
         setScaleBigger (out, (float) WIDTH / o->width (), 
@@ -1295,7 +1295,7 @@ ZoomScreen::ensureVisibilityAction (CompAction         *action,
 			            CompOption::Vector options)
 {
     int        x1, y1, x2, y2, margin, out;
-    Bool       scale, restrain;
+    bool       scale, restrain;
     CompOutput *o;
 
     x1 = CompOption::getIntOptionNamed (options, "x1", -1);
@@ -1303,10 +1303,10 @@ ZoomScreen::ensureVisibilityAction (CompAction         *action,
     x2 = CompOption::getIntOptionNamed (options, "x2", -1);
     y2 = CompOption::getIntOptionNamed (options, "y2", -1);
     margin = CompOption::getBoolOptionNamed (options, "margin", 0);
-    scale = CompOption::getBoolOptionNamed (options, "scale", FALSE);
-    restrain = CompOption::getBoolOptionNamed (options, "restrain", FALSE);
+    scale = CompOption::getBoolOptionNamed (options, "scale", false);
+    restrain = CompOption::getBoolOptionNamed (options, "restrain", false);
     if (x1 < 0 || y1 < 0)
-        return FALSE;
+        return false;
     if (x2 < 0)
         y2 = y1 + 1;
     out = screen->outputDeviceForPoint (x1, y1);
@@ -1394,7 +1394,7 @@ ZoomScreen::zoomBoxDeactivate (CompAction         *action,
         o = &screen->outputDevs (). at (out);
         setScaleBigger (out, (float) width/o->width (), (float)
 		        height/o->height ());
-        setZoomArea (x,y,width,height,FALSE);
+        setZoomArea (x,y,width,height,false);
     }
 
     toggleFunctions (true);
@@ -1412,7 +1412,7 @@ ZoomScreen::zoomIn (CompAction         *action,
 	int out = screen->outputDeviceForPoint (pointerX, pointerY);
 
 	if (optionGetSyncMouse ()&& !isInMovement (out))
-	    setCenter (pointerX, pointerY, TRUE);
+	    setCenter (pointerX, pointerY, true);
 
 	setScale (out,
 		  zooms.at (out)->newZoom /
@@ -1454,9 +1454,9 @@ ZoomScreen::zoomSpecific (CompAction         *action,
 	CompWindow   *w;
 
 	if (target == 1.0f && zooms.at (out)->newZoom == 1.0f)
-	    return FALSE;
+	    return false;
 	if (screen->otherGrabExist (NULL))
-	    return FALSE;
+	    return false;
 
 	setScale (out, target);
 
@@ -1470,7 +1470,7 @@ ZoomScreen::zoomSpecific (CompAction         *action,
 	{
 	    x = CompOption::getIntOptionNamed (options, "x", 0);
 	    y = CompOption::getIntOptionNamed (options, "y", 0);
-	    setCenter (x, y, FALSE);
+	    setCenter (x, y, false);
 	}
 
     toggleFunctions (true);
@@ -1496,7 +1496,7 @@ ZoomScreen::zoomToWindow (CompAction         *action,
     xid = CompOption::getIntOptionNamed (options, "window", 0);
     w = screen->findWindow (xid);
     if (!w)
-	return TRUE;
+	return true;
     width = w->width () + w->input ().left + w->input ().right;
     height = w->height () + w->input ().top + w->input ().bottom;
     out = screen->outputDeviceForGeometry (w->geometry ());
@@ -1506,7 +1506,7 @@ ZoomScreen::zoomToWindow (CompAction         *action,
     areaToWindow (w);
     toggleFunctions (true);
 
-    return TRUE;
+    return true;
 }
 
 bool
@@ -1560,7 +1560,7 @@ ZoomScreen::zoomFitWindowToZoom (CompAction         *action,
     w = screen->findWindow (CompOption::getIntOptionNamed (
 							 options, "window", 0));
     if (!w)
-	return TRUE;
+	return true;
 
     out = screen->outputDeviceForGeometry (w->geometry ());
     xwc.x = w->serverX ();
@@ -1590,7 +1590,7 @@ ZoomScreen::zoomFitWindowToZoom (CompAction         *action,
 
     toggleFunctions (true);
 
-    return TRUE;
+    return true;
 }
 
 bool
@@ -1646,7 +1646,7 @@ ZoomScreen::terminate (CompAction         *action,
 
     action->setState (action->state () & ~(CompAction::StateTermKey |
 					   CompAction::StateTermButton));
-    return FALSE;
+    return false;
 }
 
 /* Focus-track related event handling.
