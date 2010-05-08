@@ -80,8 +80,8 @@
 
 #include <cmath>
 
-class ZoomScreen :
-    public PluginClassHandler <ZoomScreen, CompScreen>,
+class EZoomScreen :
+    public PluginClassHandler <EZoomScreen, CompScreen>,
     public EzoomOptions,
     public ScreenInterface,
     public CompositeScreenInterface,
@@ -89,8 +89,8 @@ class ZoomScreen :
 {
     public:
 
-	ZoomScreen (CompScreen *);
-	~ZoomScreen ();
+	EZoomScreen (CompScreen *);
+	~EZoomScreen ();
 
     public:
 
@@ -213,7 +213,7 @@ class ZoomScreen :
     public:
 
 	int
-	distanceToEdge (int out, ZoomScreen::ZoomEdge edge);
+	distanceToEdge (int out, EZoomScreen::ZoomEdge edge);
 
 	bool
 	isInMovement (int out);
@@ -388,10 +388,10 @@ class ZoomScreen :
 };
 
 #define ZOOM_SCREEN(s)							       \
-     ZoomScreen *zs = ZoomScreen::get (s)
+     EZoomScreen *zs = EZoomScreen::get (s)
 
 class ZoomPluginVTable :
-    public CompPlugin::VTableForScreen <ZoomScreen>
+    public CompPlugin::VTableForScreen <EZoomScreen>
 {
     public:
 
