@@ -6,6 +6,7 @@
 		<plugin>composite</plugin>
 		<plugin>opengl</plugin>
 		<plugin>expo</plugin>
+		<plugin>decor</plugin>
 	    </relation>
 	    <relation type="before">
 		<plugin>staticswitcher</plugin>
