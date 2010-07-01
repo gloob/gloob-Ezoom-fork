@@ -1806,7 +1806,7 @@ EZoomScreen::postLoad ()
 
 EZoomScreen::EZoomScreen (CompScreen *screen) :
     PluginClassHandler <EZoomScreen, CompScreen> (screen),
-    PluginStateWriter <EZoomScreen> (this, "EZOOM", screen->root ()),
+    PluginStateWriter <EZoomScreen> (this, screen->root ()),
     cScreen (CompositeScreen::get (screen)),
     gScreen (GLScreen::get (screen)),
     grabbed (0),
