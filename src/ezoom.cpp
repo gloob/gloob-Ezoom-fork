@@ -341,6 +341,11 @@ EZoomScreen::preparePaint (int	   msSinceLastPaint)
 		    zooms.at (out).xVelocity = zooms.at (out).yVelocity =
 			0.0f;
 		    grabbed &= ~(1 << zooms.at (out).output);
+		    if (!grabbed)
+		    {
+			cScreen->damageScreen ();
+			toggleFunctions (false);
+		    }
 		}
 	    }
 	}
