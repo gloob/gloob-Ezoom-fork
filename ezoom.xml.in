@@ -23,6 +23,10 @@
 	<options>
 	    <group>
 		<_short>Zoom In/Out</_short>
+		<option type="action" name="set_zoom_area">
+		</option>
+		<option type="action" name="ensure_visibility">
+		</option>
 		<option type="button" name="zoom_in_button">
 		    <_short>Zoom In</_short>
 		    <_long>Zoom In</_long>

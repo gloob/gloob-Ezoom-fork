@@ -1791,7 +1791,7 @@ EZoomScreen::postLoad ()
 {
     if (zooms.empty ())
 	return;
-
+    
     toggleFunctions (true);
     
     if (!pollHandle.active ())
@@ -1896,8 +1896,12 @@ EZoomScreen::EZoomScreen (CompScreen *screen) :
     optionSetZoomBoxButtonTerminate (boost::bind (
 					&EZoomScreen::zoomBoxDeactivate, this,
 					_1, _2, _3));
-#warning: fixme: set_zoom_area has magically disappeared
-    //actionSet (SetZoomAreaInitiate, setZoomAreaAction);
+    optionSetSetZoomAreaInitiate (boost::bind (
+					&EZoomScreen::setZoomAreaAction, this,
+					_1, _2, _3));
+    optionSetEnsureVisibilityInitiate (boost::bind (
+					&EZoomScreen::ensureVisibilityAction, this,
+					_1, _2, _3));
 
 }
 
