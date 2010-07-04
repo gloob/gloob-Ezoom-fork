@@ -1789,7 +1789,7 @@ EZoomScreen::CursorTexture::CursorTexture () :
 void
 EZoomScreen::postLoad ()
 {
-    if (zooms.empty ())
+    if (!grabbed)
 	return;
     
     toggleFunctions (true);

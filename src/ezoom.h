@@ -197,6 +197,7 @@ class EZoomScreen :
 	{
 	    ar & zooms;
 	    ar & lastChange;
+	    ar & grabbed;
 	}
 
 	std::vector <ZoomArea>   zooms; // list of zooms (different zooms for
