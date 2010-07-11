@@ -1030,7 +1030,6 @@ EZoomScreen::freeCursor (CursorTexture * cursor)
     if (!cursor->isSet)
 	return;
 	
-    //makeScreenCurrent (cursor->screen); ??
     cursor->isSet = false;
     glDeleteTextures (1, &cursor->texture);
     cursor->texture = 0;
