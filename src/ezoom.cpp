@@ -432,7 +432,6 @@ EZoomScreen::glPaintOutput (const GLScreenPaintAttrib &attrib,
     if (isActive (out))
     {
 	GLScreenPaintAttrib sa = attrib;
-	int		    saveFilter;
 	GLMatrix            zTransform = transform;
 
 	mask &= ~PAINT_SCREEN_REGION_MASK;
@@ -446,18 +445,11 @@ EZoomScreen::glPaintOutput (const GLScreenPaintAttrib &attrib,
 			      0);
 
 	mask |= PAINT_SCREEN_TRANSFORMED_MASK;
-	saveFilter = gScreen->textureFilter ();
-
-	if (optionGetFilterLinear ())
-	    gScreen->setTextureFilter (GLTexture::Good);
-	else
-	    gScreen->setTextureFilter (GLTexture::Fast);
 
 	status = gScreen->glPaintOutput (sa, zTransform, region, output, mask);
 
 	drawCursor (output, transform);
 
-	gScreen->setTextureFilter (saveFilter);
     }
     else
     {
@@ -1119,32 +1111,15 @@ EZoomScreen::updateCursor (CursorTexture * cursor)
     {
 	cursor->isSet = true;
 	cursor->screen = screen;
-	// makeScreenCurrent (s); // ???
 	glEnable (GL_TEXTURE_RECTANGLE_ARB);
 	glGenTextures (1, &cursor->texture);
 	glBindTexture (GL_TEXTURE_RECTANGLE_ARB, cursor->texture);
 
-	if (optionGetFilterLinear () &&
-	    gScreen->textureFilter () != GL_NEAREST) // ???
-	{
-	    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB,
-			     GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB,
-			     GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	}
-	else
-	{
-	    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB,
-			     GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB,
-			     GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	}
 	glTexParameteri (GL_TEXTURE_RECTANGLE_ARB,
 			 GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameteri (GL_TEXTURE_RECTANGLE_ARB,
 			 GL_TEXTURE_WRAP_T, GL_CLAMP);
     } else {
-	//makeScreenCurrent (cursor->screen); ???
 	glEnable (GL_TEXTURE_RECTANGLE_ARB);
     }
 
