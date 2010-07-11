@@ -93,6 +93,7 @@ toggleFunctions (bool enabled)
 static inline bool
 dontuseScreengrabExist (char * grab)
 {
+    fprintf(stderr,"THIS IS NOT HOW IT WORKS! Needs to be ported _correctly_ to c++.\n");
     if (screen->otherGrabExist (grab, NULL))
 	return true;
     return false;
@@ -1055,11 +1056,15 @@ EZoomScreen::drawCursor (CompOutput          *output,
  don't have to disable the
 	 * zoom. We do, however, have to show the original pointer.
 	 */
+	/*
+	 * XXX: This is broken, too, because the real code never got
+	 * ported. - K
 	if (dontuseScreengrabExist ((char *) "expo"))
 	{
 	    cursorZoomInactive ();
 	    return;
 	}
+	*/
 
 	sTransform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
 	convertToZoomed (out, mouse.x (), mouse.y (), &ax, &ay);
