@@ -1123,15 +1123,6 @@ EZoomScreen::updateCursor (CursorTexture * cursor)
     }
 
     XFixesCursorImage *ci = XFixesGetCursorImage(dpy);
-    /* Hack to avoid changing to an invisible (bugged)cursor image.
-     * Example: The animated Firefox cursors.
-     */
-    if (ci->width <= 1 && ci->height <= 1)
-    {
-	XFree (ci);
-	return;
-    }
-
 
     cursor->width = ci->width;
     cursor->height = ci->height;
