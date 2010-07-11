@@ -1,6 +1,6 @@
 /*
  * Copyright © 2005 Novell, Inc.
- * Copyright (C) 2007, 2008 Kristian Lyngstøl
+ * Copyright (C) 2007, 2008,2010 Kristian Lyngstøl
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -23,9 +23,10 @@
  *
  *
  * Author(s):
- *	- Original zoom plug-in; David Reveman <davidr@novell.com>
  *	- Most features beyond basic zoom;
  *	  Kristian Lyngstol <kristian@bohemians.org>
+ *	- Original zoom plug-in; David Reveman <davidr@novell.com>
+ *	- Original port to C++ by Sam Spilsbury <smspillaz@gmail.com>
  *
  * Description:
  *
@@ -65,6 +66,10 @@
  * you zoom in, since the mouse isn't really zoomed at all.
  *
  * Todo:
+ *  - Walk through C++ port and adjust comments for 2010.
+ *  - Fix expo
+ *  - See if anyone misses the filter setting
+ *  - Verify XFixes fix... err.
  *  - Different multi head modes
  */
 
