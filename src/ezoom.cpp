@@ -91,19 +91,6 @@ toggleFunctions (bool enabled)
     zs->cScreen->donePaintSetEnabled (zs, enabled);
 }
 
-/* Checks if a specific screen grab exist. DO NOT USE THIS.
- * This is a temporary fix that SHOULD be removed asap.
- * See comments in drawCursor.
- */
-static inline bool
-dontuseScreengrabExist (char * grab)
-{
-    fprintf(stderr,"THIS IS NOT HOW IT WORKS! Needs to be ported _correctly_ to c++.\n");
-    if (screen->otherGrabExist (grab, NULL))
-	return true;
-    return false;
-}
-
 /* Check if the output is valid */
 static inline bool
 outputIsZoomArea (int out)
@@ -1053,23 +1040,16 @@ EZoomScreen::drawCursor (CompOutput          *output,
 	GLMatrix      sTransform = transform;
 	float	      scaleFactor;
 	int           ax, ay, x, y;	
-
-	/* FIXME:
-	 * This is a hack because these transformations are wrong when
-	 * we're working exposed. Expo is capable of telling where the
-	 * real mouse is despite zoom, so we
- don't have to disable the
-	 * zoom. We do, however, have to show the original pointer.
-	 */
+	
 	/*
-	 * XXX: This is broken, too, because the real code never got
-	 * ported. - K
-	if (dontuseScreengrabExist ((char *) "expo"))
+	 * XXX: expo knows how to handle mouse when zoomed, so we back off
+	 * when expo is active.
+	 */
+	if (screen->grabExist ( "expo"))
 	{
 	    cursorZoomInactive ();
 	    return;
 	}
-	*/
 
 	sTransform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
 	convertToZoomed (out, mouse.x (), mouse.y (), &ax, &ay);
