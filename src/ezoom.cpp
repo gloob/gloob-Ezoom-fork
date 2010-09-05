@@ -97,8 +97,10 @@ outputIsZoomArea (int out)
 {
     ZOOM_SCREEN (screen);
 
-    if (out < 0 || (unsigned int) out >= zs->zooms.size ())
+    if (out < 0)
 	return false;
+    else if ((unsigned int) out >= zs->zooms.size ())
+	zs->zooms.resize (screen->outputDevs ().size ());
     return true;
 }
 
@@ -783,7 +785,15 @@ EZoomScreen::convertToZoomed (int        out,
 			     int        *resultX,
 			     int        *resultY)
 {
-    CompOutput  *o = &screen->outputDevs ()[out];
+    CompOutput *o;
+
+    if (!outputIsZoomArea (out))
+    {
+	*resultX = x;
+	*resultY = y;
+    }
+
+    o = &screen->outputDevs ()[out];
     ZoomArea    &za = zooms.at (out);
 
     x -= o->x1 ();
@@ -808,7 +818,14 @@ EZoomScreen::convertToZoomedTarget (int	  out,
 			           int	  *resultX,
 			           int	  *resultY)
 {
-    CompOutput  *o = &screen->outputDevs ().at (out);
+    CompOutput *o;
+
+    if (!outputIsZoomArea (out))
+    {
+	*resultX = x;
+	*resultY = y;
+    }
+
     ZoomArea    &za = zooms.at (out);
 
     x -= o->x1 ();
