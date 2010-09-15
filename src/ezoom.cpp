@@ -826,6 +826,8 @@ EZoomScreen::convertToZoomedTarget (int	  out,
 	*resultY = y;
     }
 
+    o = &screen->outputDevs ().at (out);
+
     ZoomArea    &za = zooms.at (out);
 
     x -= o->x1 ();
