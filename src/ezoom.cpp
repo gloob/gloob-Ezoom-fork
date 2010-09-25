@@ -138,13 +138,6 @@ isZoomed (int out)
     return false;
 }
 
-void
-EZoomScreen::terminateTheater ()
-{
-    tFadingIn = false;
-    tFadingOut = true;
-}
-
 /* Returns the distance to the defined edge in zoomed pixels.  */
 int
 EZoomScreen::distanceToEdge (int out, EZoomScreen::ZoomEdge edge)
@@ -313,43 +306,6 @@ EZoomScreen::adjustXYVelocity (int out, float chunk)
 	(zooms.at (out).yVelocity * chunk) / cScreen->redrawTime ();
 }
 
-void
-EZoomScreen::updateTheater (int ms)
-{
-
-    if (tFadingIn || tFadingOut)
-	tAlpha = (1.0 - ((tDuration - tTimer) / (float) tDuration)) * OPAQUE;
-
-    if (tAlpha < 0)
-	tAlpha = 0;
-
-    if (tTimer >= tDuration || tAlpha > OPAQUE)
-    {
-	tAlpha = OPAQUE;
-	tFadingIn = false;
-	tTimer = tDuration;
-    }
-
-    if (tTimer <= 0)
-    {
-	theaterZoomActive = false;
-	tAlpha = 0;
-	tFadingOut = false;
-	tTimer = 0;
-    }
-    else
-	theaterZoomActive = true;
-
-    if (tFadingIn)
-	tTimer += ms;
-
-    if (tFadingOut)
-	tTimer -= ms;
- 
-    if (tAlpha == 0 || tTimer == 0)
-	tFadingOut = false;
-}
-
 /* Animate the movement (if any) in preparation of a paint screen.  */
 void
 EZoomScreen::preparePaint (int	   msSinceLastPaint)
@@ -380,7 +336,7 @@ EZoomScreen::preparePaint (int	   msSinceLastPaint)
 		    zooms.at (out).xVelocity = zooms.at (out).yVelocity =
 			0.0f;
 		    grabbed &= ~(1 << zooms.at (out).output);
-		    if (!grabbed && !tFadingIn && !tFadingOut)
+		    if (!grabbed)
 		    {
 			cScreen->damageScreen ();
 			toggleFunctions (false);
@@ -391,9 +347,6 @@ EZoomScreen::preparePaint (int	   msSinceLastPaint)
 	if (optionGetSyncMouse ())
 	    syncCenterToMouse ();
     }
-
-    if (optionGetTheaterMode ())
-	updateTheater (msSinceLastPaint);
 
     cScreen->preparePaint (msSinceLastPaint);
 }
@@ -416,11 +369,8 @@ EZoomScreen::donePaint ()
     }
     else if (grabIndex)
 	cScreen->damageScreen ();
-    else if (!tFadingIn && !tFadingOut)
+    else
         toggleFunctions (false);
-
-    if (tFadingIn || tFadingOut)
-	cScreen->damageScreen ();
 
     cScreen->donePaint ();
 }
@@ -461,44 +411,6 @@ EZoomScreen::drawBox (const GLMatrix &transform,
     glEnableClientState (GL_TEXTURE_COORD_ARRAY);
     glPopMatrix ();
 }
-
-void
-EZoomScreen::drawTheater (const GLScreenPaintAttrib &sAttrib,
-			  const GLMatrix            &transform,
-			  CompOutput                *output)
-{
-    if (!theaterZoomActive || !optionGetTheaterMode ())
-	return;
-
-    /* Creates a list of rects to draw storing them in a region
-     * We want to draw everywhere except for selectedZoomBox */
-    CompRegion outputReg (*output);
-    CompRegion visibleReg (selectedZoomBox);
-    CompRegion blackReg = outputReg - visibleReg;
-
-    GLMatrix sTransform (transform);
-
-    glPushMatrix ();
-
-    sTransform.toScreenSpace (output, -DEFAULT_Z_CAMERA);
-
-    glLoadMatrixf (sTransform.getMatrix ());
-
-    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
-    glEnable (GL_BLEND);
-
-    /* fill rectangles with black */
-    glColor4us (0x0000, 0x0000, 0x0000, tAlpha);
-    foreach (const CompRect &r, blackReg.rects ())
-	glRecti (r.x1 (), r.y2 (), r.x2 (), r.y1 ());
-
-    /* clean up */
-    glColor4usv (defaultColor);
-    glDisable (GL_BLEND);
-    glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-    glPopMatrix ();
-}
-
 /* Apply the zoom if we are grabbed.
  * Make sure to use the correct filter.
  */
@@ -512,7 +424,7 @@ EZoomScreen::glPaintOutput (const GLScreenPaintAttrib &attrib,
     bool status;
     int	 out = output->id ();
 
-    if ((isActive (out) || theaterZoomActive) && out >= 0)
+    if (isActive (out))
     {
 	GLScreenPaintAttrib sa = attrib;
 	GLMatrix            zTransform = transform;
@@ -533,18 +445,12 @@ EZoomScreen::glPaintOutput (const GLScreenPaintAttrib &attrib,
 
 	drawCursor (output, transform);
 
-	drawTheater (attrib, zTransform, output);
-
-	/* If all outputs are inactive, we automatically assume fade out */
-	if (zooms.empty ())
-	    terminateTheater ();
     }
     else
     {
 	status = gScreen->glPaintOutput (attrib, transform, region, output,
 									mask);
     }
-
     if (grabIndex)
 	drawBox (transform, output, box);
 
@@ -1473,14 +1379,6 @@ EZoomScreen::zoomBoxDeactivate (CompAction         *action,
         width = MAX (box.x1 (), box.x2 ()) - x;
         height = MAX (box.y1 (), box.y2 ()) - y;
 
-	if (optionGetTheaterMode ())
-	{
-	    selectedZoomBox.setGeometry (box.x (), box.y (),
-					 box.width (), box.height ());
-	    tFadingIn = theaterZoomActive = true;
-	    tFadingOut = false;
-	}
-
         CompWindow::Geometry outGeometry (x, y, width, height, 0);
 
         out = screen->outputDeviceForGeometry (outGeometry);
@@ -1717,8 +1615,6 @@ EZoomScreen::zoomOut (CompAction         *action,
 	      zooms.at (out).newZoom *
 	      optionGetZoomFactor ());
 
-    terminateTheater ();
-
     toggleFunctions (true);
 
     return true;
@@ -1865,17 +1761,6 @@ EZoomScreen::CursorTexture::CursorTexture () :
 }
 
 void
-EZoomScreen::optionChanged (CompOption	*opt,
-			    Options	num)
-{
-    tDuration = optionGetTheaterFadeTimeout ();
-    terminateTheater ();
-
-    if (!optionGetTheaterMode ())
-	tAlpha = tTimer = 0;
-}
-
-void
 EZoomScreen::postLoad ()
 {
     if (!grabbed)
@@ -1903,13 +1788,6 @@ EZoomScreen::EZoomScreen (CompScreen *screen) :
     PluginStateWriter <EZoomScreen> (this, screen->root ()),
     cScreen (CompositeScreen::get (screen)),
     gScreen (GLScreen::get (screen)),
-    selectedZoomBox (emptyRegion.boundingRect ()),
-    theaterZoomActive (false),
-    tFadingIn (false),
-    tFadingOut (false),
-    tAlpha (0),
-    tTimer (0),
-    tDuration (optionGetTheaterFadeTimeout ()),
     grabbed (0),
     grabIndex (0),
     lastChange (0),
@@ -1998,10 +1876,6 @@ EZoomScreen::EZoomScreen (CompScreen *screen) :
     optionSetEnsureVisibilityInitiate (boost::bind (
 					&EZoomScreen::ensureVisibilityAction, this,
 					_1, _2, _3));
-    optionSetTheaterFadeTimeoutNotify (boost::bind (&EZoomScreen::optionChanged,
-								this, _1, _2));
-    optionSetTheaterModeNotify (boost::bind (&EZoomScreen::optionChanged,
-								this, _1, _2));
 
 }
 

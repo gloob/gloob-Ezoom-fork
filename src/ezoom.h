@@ -192,27 +192,6 @@ class EZoomScreen :
 
     public:
 
-	CompRect	selectedZoomBox;
-	bool		theaterZoomActive, tFadingIn, tFadingOut;
-	int		tAlpha, tTimer, tDuration;
-
-	void
-	drawTheater (const GLScreenPaintAttrib	&sAttrib,
-		     const GLMatrix		&transform,
-		     CompOutput			*output);
-
-	void
-	updateTheater (int ms);
-
-	void
-	terminateTheater ();
-
-	void
-	optionChanged (CompOption	*opt,
-		       Options		num);
-
-    public:
-
 	template <class Archive>
 	void serialize (Archive &ar, const unsigned int version)
 	{
