@@ -67,7 +67,6 @@
  *
  * Todo:
  *  - Walk through C++ port and adjust comments for 2010.
- *  - Fix expo
  *  - See if anyone misses the filter setting
  *  - Verify XFixes fix... err.
  *  - Different multi head modes
@@ -78,17 +77,19 @@
 COMPIZ_PLUGIN_20090315 (ezoom, ZoomPluginVTable)
 
 
-/* This toggles paint functions. We don't need to continually run code when we
- * are not doing anything */
+/*
+ * This toggles paint functions. We don't need to continually run code when we
+ * are not doing anything
+ */
 static inline void
-toggleFunctions (bool enabled)
+toggleFunctions (bool state)
 {
     ZOOM_SCREEN (screen);
 
-    screen->handleEventSetEnabled (zs, enabled);
-    zs->cScreen->preparePaintSetEnabled (zs, enabled);
-    zs->gScreen->glPaintOutputSetEnabled (zs, enabled);
-    zs->cScreen->donePaintSetEnabled (zs, enabled);
+    screen->handleEventSetEnabled (zs, state);
+    zs->cScreen->preparePaintSetEnabled (zs, state);
+    zs->gScreen->glPaintOutputSetEnabled (zs, state);
+    zs->cScreen->donePaintSetEnabled (zs, state);
 }
 
 /* Check if the output is valid */
