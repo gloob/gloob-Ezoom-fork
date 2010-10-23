@@ -29,46 +29,14 @@
  *	- Original zoom plug-in; David Reveman <davidr@novell.com>
  *	- Most features beyond basic zoom;
  *	  Kristian Lyngstol <kristian@bohemians.org>
+ *	- Sam I suppose? (for the c++)
  *
- * Description:
+ * Todo: Un-puke the header-file. Five levels of indentation in a .h is a
+ * clear sign that something is horribly wrong.
  *
- * This plug-in offers zoom functionality with focus tracking,
- * fit-to-window actions, mouse panning, zoom area locking. Without
- * disabling input.
+ * Essentially, this needs to be re-done for C++. As is the case of most of
+ * eZoom.
  *
- * Note on actual zoom process
- *
- * The animation is done in preparePaintScreen, while instant movements
- * are done by calling updateActualTranslate () after updating the
- * translations. This causes [xyz]trans to be re-calculated. We keep track
- * of each head separately.
- *
- * Note on input
- *
- * We can not redirect input yet, but this plug-in offers two fundamentally
- * different approaches to achieve input enabled zoom:
- *
- * 1.
- * Always have the zoomed area be in sync with the mouse cursor. This binds
- * the zoom area to the mouse position at any given time. It allows using
- * the original mouse cursor drawn by X, and is technically very safe.
- * First used in Beryl's inputzoom.
- *
- * 2.
- * Hide the real cursor and draw our own where it would be when zoomed in.
- * This allows us to navigate with the mouse without constantly moving the
- * zoom area. This is fairly close to what we want in the end when input
- * redirection is available.
- *
- * This second method has one huge issue, which is bugged XFixes. After
- * hiding the cursor once with XFixes, some mouse cursors will simply be
- * invisible. The Firefox loading cursor being one of them. 
- *
- * An other minor annoyance is that mouse sensitivity seems to increase as
- * you zoom in, since the mouse isn't really zoomed at all.
- *
- * Todo:
- *  - Different multi head modes
  */
 
 #include <core/core.h>
@@ -189,27 +157,6 @@ class EZoomScreen :
 		void
 		updateActualTranslates ();
 	};
-
-    public:
-
-	CompRect	selectedZoomBox;
-	bool		theaterZoomActive, tFadingIn, tFadingOut;
-	int		tAlpha, tTimer, tDuration;
-
-	void
-	drawTheater (const GLScreenPaintAttrib	&sAttrib,
-		     const GLMatrix		&transform,
-		     CompOutput			*output);
-
-	void
-	updateTheater (int ms);
-
-	void
-	terminateTheater ();
-
-	void
-	optionChanged (CompOption	*opt,
-		       Options		num);
 
     public:
 

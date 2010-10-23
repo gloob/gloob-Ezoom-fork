@@ -3,7 +3,6 @@
     <plugin name="ezoom" useBcop="true">
 	<deps>
 	    <relation type="after">
-		<plugin>composite</plugin>
 		<plugin>opengl</plugin>
 		<plugin>expo</plugin>
 		<plugin>decor</plugin>
@@ -49,18 +48,6 @@
 		    <_short>Zoom Box</_short>
 		    <_long>Zoom in on a boxed area</_long>
 		    <default>&lt;Super&gt;Button2</default>
-		</option>
-		<option name="theater_mode" type="bool">
-		    <_short>Theater mode</_short>
-		    <_long>Black out any area not selected by Zoom Box.</_long>
-		    <default>false</default>
-		</option>
-		<option type="int" name="theater_fade_timeout">
-		    <_short>Theater fade timeout</_short>
-		    <_long>Time in ms for fade in/out.</_long>
-		    <default>2000</default>
-		    <min>1</min>
-		    <max>8000</max>
 		</option>
 	    </group>
 	    <group>
