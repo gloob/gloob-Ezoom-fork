@@ -345,7 +345,7 @@ EZoomScreen::updateTheater (int ms)
 
     if (tFadingOut)
 	tTimer -= ms;
- 
+
     if (tAlpha == 0 || tTimer == 0)
 	tFadingOut = false;
 }
@@ -818,7 +818,7 @@ EZoomScreen::convertToZoomedTarget (int	  out,
 			           int	  *resultX,
 			           int	  *resultY)
 {
-    CompOutput *o;
+    CompOutput *o = &screen->outputDevs ().at (0);
 
     if (!outputIsZoomArea (out))
     {
@@ -980,7 +980,7 @@ EZoomScreen::ensureVisibilityArea (int         x1,
 		targetW = o->width () * zooms.at (out).newZoom;
 		targetX = x2 - targetW;
 	    }
-	
+
 	    if (HEIGHTOK)
 	    {
 		targetY = y1;
@@ -1133,7 +1133,7 @@ EZoomScreen::freeCursor (CursorTexture * cursor)
 {
     if (!cursor->isSet)
 	return;
-	
+
     cursor->isSet = false;
     glDeleteTextures (1, &cursor->texture);
     cursor->texture = 0;
@@ -1150,8 +1150,8 @@ EZoomScreen::drawCursor (CompOutput          *output,
     {
 	GLMatrix      sTransform = transform;
 	float	      scaleFactor;
-	int           ax, ay, x, y;	
-	
+	int           ax, ay, x, y;
+
 	/*
 	 * XXX: expo knows how to handle mouse when zoomed, so we back off
 	 * when expo is active.
@@ -1436,11 +1436,10 @@ EZoomScreen::zoomBoxDeactivate (CompAction         *action,
 			       CompAction::State  state,
 			       CompOption::Vector options)
 {
-    int x, y, width, height;
-
     if (grabIndex)
     {
         int        out;
+	int	   x, y, width, height;
         CompOutput *o;
 
         screen->removeGrab (grabIndex, NULL);
@@ -1448,22 +1447,22 @@ EZoomScreen::zoomBoxDeactivate (CompAction         *action,
 
         if (pointerX < clickPos.x ())
         {
-	        box.setX (pointerX);
-	        box.setWidth (clickPos.x () - pointerX);
+	    box.setX (pointerX);
+	    box.setWidth (clickPos.x () - pointerX);
         }
         else
         {
-	        box.setWidth (pointerX - clickPos.x ());
+	    box.setWidth (pointerX - clickPos.x ());
         }
 
         if (pointerY < clickPos.y ())
         {
-	        box.setY (pointerY);
-	        box.setHeight (clickPos.y () - pointerY);
+	    box.setY (pointerY);
+	    box.setHeight (clickPos.y () - pointerY);
         }
         else
         {
-	        box.setHeight (pointerY - clickPos.y ());
+	    box.setHeight (pointerY - clickPos.y ());
         }
 
         x = MIN (box.x1 (), box.x2 ());
@@ -1883,7 +1882,7 @@ EZoomScreen::postLoad ()
 
     if (!pollHandle.active ())
 	enableMousePolling ();
-	
+
     foreach (ZoomArea &za, zooms)
     {
 	grabbed |= (1 << za.output);
