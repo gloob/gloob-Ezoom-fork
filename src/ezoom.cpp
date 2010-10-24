@@ -307,44 +307,6 @@ EZoomScreen::adjustXYVelocity (int out, float chunk)
 	(zooms.at (out).yVelocity * chunk) / cScreen->redrawTime ();
 }
 
-void
-EZoomScreen::updateTheater (int ms)
-{
-
-    if (tFadingIn || tFadingOut)
-	tAlpha = (1.0 - ((tDuration - tTimer) / (float) tDuration)) * OPAQUE;
-
-    if (tAlpha < 0)
-	tAlpha = 0;
-
-    if (tTimer >= tDuration || tAlpha > OPAQUE)
-    {
-	tAlpha = OPAQUE;
-	tFadingIn = false;
-	tTimer = tDuration;
-    }
-
-    if (tTimer <= 0)
-    {
-	theaterZoomActive = false;
-	tAlpha = 0;
-	tFadingOut = false;
-	tTimer = 0;
-    }
-    else
-	theaterZoomActive = true;
-
-    if (tFadingIn)
-	tTimer += ms;
-
-    if (tFadingOut)
-	tTimer -= ms;
-
-    if (tAlpha == 0 || tTimer == 0)
-	tFadingOut = false;
-}
-
-
 /* Animate the movement (if any) in preparation of a paint screen.  */
 void
 EZoomScreen::preparePaint (int	   msSinceLastPaint)
@@ -383,7 +345,7 @@ EZoomScreen::preparePaint (int	   msSinceLastPaint)
 		}
 	    }
 	}
-	if (optionGetSyncMouse ())
+	if (optionGetZoomMode () == EzoomOptions::ZoomModeSyncMouse)
 	    syncCenterToMouse ();
     }
 
@@ -556,7 +518,7 @@ EZoomScreen::setCenter (int x, int y, bool instant)
 	zooms.at (out).updateActualTranslates ();
     }
 
-    if (optionGetMousePan ())
+    if (optionGetZoomMode () == EzoomOptions::ZoomModePanArea)
 	restrainCursor (out);
 }
 
@@ -595,7 +557,7 @@ EZoomScreen::setZoomArea (int        x,
 	zooms.at (out).updateActualTranslates ();
     }
 
-    if (optionGetMousePan ())
+    if (optionGetZoomMode () == EzoomOptions::ZoomModePanArea)
 	restrainCursor (out);
 }
 
@@ -763,15 +725,13 @@ EZoomScreen::convertToZoomedTarget (int	  out,
 			           int	  *resultX,
 			           int	  *resultY)
 {
-    CompOutput *o = &screen->outputDevs ().at (0);
+    CompOutput *o = &screen->outputDevs ().at (out);
 
     if (!outputIsZoomArea (out))
     {
 	*resultX = x;
 	*resultY = y;
     }
-
-    o = &screen->outputDevs ().at (out);
 
     ZoomArea    &za = zooms.at (out);
 
@@ -1021,7 +981,7 @@ EZoomScreen::cursorMoved ()
 	if (optionGetRestrainMouse ())
 	    restrainCursor (out);
 
-	if (optionGetMousePan ())
+	if (optionGetZoomMode () == EzoomOptions::ZoomModePanArea)
 	{
 	    ensureVisibilityArea (mouse.x () - cursor.hotX,
 				  mouse.y () - cursor.hotY,
@@ -1053,7 +1013,8 @@ EZoomScreen::updateMousePosition (const CompPoint &p)
     mouse.setY (p.y ());
     out = screen->outputDeviceForPoint (mouse.x (), mouse.y ());
     lastChange = time(NULL);
-    if (optionGetSyncMouse () && !isInMovement (out))
+    if (optionGetZoomMode () == EzoomOptions::ZoomModeSyncMouse &&
+        !isInMovement (out))
 	setCenter (mouse.x (), mouse.y (), true);
     cursorMoved ();
     cScreen->damageScreen ();
@@ -1440,7 +1401,8 @@ EZoomScreen::zoomIn (CompAction         *action,
 {
     int out = screen->outputDeviceForPoint (pointerX, pointerY);
 
-    if (optionGetSyncMouse ()&& !isInMovement (out))
+    if (optionGetZoomMode () == EzoomOptions::ZoomModeSyncMouse &&
+	!isInMovement (out))
         setCenter (pointerX, pointerY, true);
 
     setScale (out,

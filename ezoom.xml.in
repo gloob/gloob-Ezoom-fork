@@ -166,10 +166,20 @@
 	    </group>
 	    <group>
 		<_short>Mouse Behaviour</_short>
-		<option type="bool" name="sync_mouse">
-		    <_short>Sync Mouse</_short>
-		    <_long>Always keep the zoomed area in sync with where the mouse is, and vice versa. Use this if you don't intend to draw a scaled pointer or hide the original pointer. The zoomed area will move as you move your mouse.</_long>
-		    <default>false</default>
+		<option type="int" name="zoom_mode">
+		    <_short>Zoom Mode</_short>
+		    <_long>How the cursor should be tracked when zooming</_long>
+		    <min>0</min>
+		    <max>1</max>
+		    <default>0</default>
+		    <desc>
+			<value>0</value>
+			<_name>Sync Mouse</_name>
+		    </desc>
+		    <desc>
+			<value>1</value>
+			<_name>Pan Area</_name>
+		    </desc>
 		</option>
 		<option type="bool" name="scale_mouse">
 		    <_short>Scale the mouse pointer</_short>
@@ -198,11 +208,6 @@
 		    <_short>Restrain the mouse to the zoom area</_short>
 		    <_long>Attempt to keep the zoomed mouse visible by warping it when it is moved outside the zoom area.</_long>
 		    <default>false</default>
-		</option>
-		<option type="bool" name="mouse_pan">
-		    <_short>Mouse panning</_short>
-		    <_long>Pan the zoom area when the mouse cursor moves outside the visible area.</_long>
-		    <default>true</default>
 		</option>
 		<option type="int" name="restrain_margin">
 		    <_short>Mouse Restrain Margin</_short>
