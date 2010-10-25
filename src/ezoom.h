@@ -192,7 +192,7 @@ class EZoomScreen :
 	bool canHideCursor;
 
      public:
-     
+
 	void
 	postLoad ();
 
@@ -227,7 +227,7 @@ class EZoomScreen :
 	adjustXYVelocity (int out, float chunk);
 
 	void
-	drawBox (const GLMatrix &transform, 
+	drawBox (const GLMatrix &transform,
 		 CompOutput          *output,
 		 CompRect             box);
 
@@ -235,10 +235,10 @@ class EZoomScreen :
 	setCenter (int x, int y, bool instant);
 
 	void
-	setZoomArea (int        x, 
-		     int        y, 
-		     int        width, 
-		     int        height, 
+	setZoomArea (int        x,
+		     int        y,
+		     int        width,
+		     int        height,
 		     bool       instant);
 
 	void
@@ -257,10 +257,10 @@ class EZoomScreen :
 	syncCenterToMouse ();
 
 	void
-	convertToZoomed (int        out, 
-			 int        x, 
-			 int        y, 
-			 int        *resultX, 
+	convertToZoomed (int        out,
+			 int        x,
+			 int        y,
+			 int        *resultX,
 			 int        *resultY);
 
 	void
@@ -298,7 +298,7 @@ class EZoomScreen :
 	freeCursor (CursorTexture * cursor);
 
 	void
-	drawCursor (CompOutput          *output, 
+	drawCursor (CompOutput          *output,
 		    const GLMatrix      &transform);
 
 	void
@@ -308,7 +308,7 @@ class EZoomScreen :
 	cursorZoomInactive ();
 
 	void
-	cursorZoomActive ();
+	cursorZoomActive (int);
 
     public:
 

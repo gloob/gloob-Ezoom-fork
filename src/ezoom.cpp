@@ -620,7 +620,7 @@ EZoomScreen::setScale (int out, float value)
 	if (!pollHandle.active ())
 	    enableMousePolling ();
 	grabbed |= (1 << zooms.at (out).output);
-	cursorZoomActive ();
+	cursorZoomActive (out);
     }
 
     if (value == 1.0f)
@@ -993,7 +993,7 @@ EZoomScreen::cursorMoved ()
 				  NORTHWEST);
 	}
 
-	cursorZoomActive ();
+	cursorZoomActive (out);
     }
     else
     {
@@ -1194,11 +1194,19 @@ EZoomScreen::cursorZoomInactive ()
  * activation.
  */
 void
-EZoomScreen::cursorZoomActive ()
+EZoomScreen::cursorZoomActive (int out)
 {
     if (!fixesSupported)
 	return;
-    if (!optionGetScaleMouse ())
+
+    /* Force cursor hiding and mouse panning if this output is locked
+     * and cursor hiding is not enabled and we are syncing the mouse
+     */
+
+    if (!optionGetScaleMouse () &&
+        (optionGetZoomMode () == EzoomOptions::ZoomModeSyncMouse &&
+	 optionGetHideOriginalMouse () &&
+	 !zooms.at (out).locked))
 	return;
 
     if (!cursorInfoSelected)
@@ -1209,7 +1217,8 @@ EZoomScreen::cursorZoomActive ()
 	updateCursor (&cursor);
     }
     if (canHideCursor && !cursorHidden &&
-	optionGetHideOriginalMouse ())
+	(optionGetHideOriginalMouse () ||
+	 zooms.at (out).locked))
     {
 	cursorHidden = true;
 	XFixesHideCursor (screen->dpy (), screen->root ());
@@ -1763,6 +1772,9 @@ EZoomScreen::CursorTexture::CursorTexture () :
 void
 EZoomScreen::postLoad ()
 {
+    const CompPoint &m = pollHandle.getCurrentPosition ();
+    int         out = screen->outputDeviceForPoint (m.x (), m.y ());
+
     if (!grabbed)
 	return;
 
@@ -1776,7 +1788,7 @@ EZoomScreen::postLoad ()
 	grabbed |= (1 << za.output);
     }
 
-    cursorZoomActive ();
+    cursorZoomActive (out);
     updateCursor (&cursor);
 
     cScreen->damageScreen ();
