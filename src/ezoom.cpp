@@ -670,9 +670,9 @@ EZoomScreen::syncCenterToMouse ()
     if (!isInMovement (out))
 	return;
 
-    x = (int) ((zooms.at (out).realXTranslate * screen->width ()) +
+    x = (int) ((zooms.at (out).realXTranslate * o->width ()) +
 	       (o->width () / 2) + o->x1 ());
-    y = (int) ((zooms.at (out).realYTranslate * screen->height ()) +
+    y = (int) ((zooms.at (out).realYTranslate * o->height ()) +
 	       (o->height () / 2) + o->y1 ());
 
     if ((x != mouse.x () || y != mouse.y ())
