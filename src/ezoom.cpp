@@ -1133,25 +1133,55 @@ EZoomScreen::updateCursor (CursorTexture * cursor)
 
     XFixesCursorImage *ci = XFixesGetCursorImage(dpy);
 
-    cursor->width = ci->width;
-    cursor->height = ci->height;
-    cursor->hotX = ci->xhot;
-    cursor->hotY = ci->yhot;
-    pixels = (unsigned char *) malloc (ci->width * ci->height * 4);
-
-    if (!pixels)
+    if (ci)
     {
+	cursor->width = ci->width;
+	cursor->height = ci->height;
+	cursor->hotX = ci->xhot;
+	cursor->hotY = ci->yhot;
+	pixels = (unsigned char *) malloc (ci->width * ci->height * 4);
+
+	if (!pixels)
+	{
+	    XFree (ci);
+	    return;
+	}
+
+	for (i = 0; i < ci->width * ci->height; i++)
+	{
+	    unsigned long pix = ci->pixels[i];
+	    pixels[i * 4] = pix & 0xff;
+	    pixels[(i * 4) + 1] = (pix >> 8) & 0xff;
+	    pixels[(i * 4) + 2] = (pix >> 16) & 0xff;
+	    pixels[(i * 4) + 3] = (pix >> 24) & 0xff;
+	}
+
 	XFree (ci);
-	return;
     }
-
-    for (i = 0; i < ci->width * ci->height; i++)
+    else
     {
-	unsigned long pix = ci->pixels[i];
-	pixels[i * 4] = pix & 0xff;
-	pixels[(i * 4) + 1] = (pix >> 8) & 0xff;
-	pixels[(i * 4) + 2] = (pix >> 16) & 0xff;
-	pixels[(i * 4) + 3] = (pix >> 24) & 0xff;
+	/* Fallback R: 255 G: 255 B: 255 A: 255
+	 * FIXME: Draw a cairo mouse cursor */
+
+	cursor->width = 1;
+	cursor->height = 1;
+	cursor->hotX = 0;
+	cursor->hotY = 0;
+	pixels = (unsigned char *) malloc (cursor->width * cursor->height * 4);
+
+	if (!pixels)
+	    return;
+
+	for (i = 0; i < cursor->width * cursor->height; i++)
+	{
+	    unsigned long pix = 0x00ffffff;
+	    pixels[i * 4] = pix & 0xff;
+	    pixels[(i * 4) + 1] = (pix >> 8) & 0xff;
+	    pixels[(i * 4) + 2] = (pix >> 16) & 0xff;
+	    pixels[(i * 4) + 3] = (pix >> 24) & 0xff;
+	}
+
+	compLogMessage ("ezoom", CompLogLevelWarn, "unable to get system cursor image!");
     }
 
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, cursor->texture);
@@ -1159,7 +1189,7 @@ EZoomScreen::updateCursor (CursorTexture * cursor)
 		  cursor->height, 0, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
     glDisable (GL_TEXTURE_RECTANGLE_ARB);
-    XFree (ci);
+	
     free (pixels);
 }
 
