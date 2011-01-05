@@ -1131,7 +1131,7 @@ EZoomScreen::updateCursor (CursorTexture * cursor)
 	glEnable (GL_TEXTURE_RECTANGLE_ARB);
     }
 
-    XFixesCursorImage *ci = XFixesGetCursorImage(dpy);
+    XFixesCursorImage *ci = XFixesGetCursorImage (dpy);
 
     if (ci)
     {
