@@ -900,6 +900,7 @@ EZoomScreen::ensureVisibilityArea (int         x1,
 	    }
 	    break;
 	case CENTER:
+	default:
 	    setCenter (x1 + (x2 - x1 / 2), y1 + (y2 - y1 / 2), false);
 	    return;
 	    break;
