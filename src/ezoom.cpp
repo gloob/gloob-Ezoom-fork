@@ -565,10 +565,10 @@ EZoomScreen::setZoomArea (int        x,
 void
 EZoomScreen::areaToWindow (CompWindow *w)
 {
-    int left = w->serverX () - w->input ().left;
-    int width = w->width () + w->input ().left + w->input ().right;
-    int top = w->serverY () - w->input ().top;
-    int height = w->height ()  + w->input ().top + w->input ().bottom;
+    int left = w->serverX () - w->border ().left;
+    int width = w->width () + w->border ().left + w->border ().right;
+    int top = w->serverY () - w->border ().top;
+    int height = w->height ()  + w->border ().top + w->border ().bottom;
 
     setZoomArea (left, top, width, height, false);
 }
@@ -1528,8 +1528,8 @@ EZoomScreen::zoomToWindow (CompAction         *action,
     w = screen->findWindow (xid);
     if (!w)
 	return true;
-    width = w->width () + w->input ().left + w->input ().right;
-    height = w->height () + w->input ().top + w->input ().bottom;
+    width = w->width () + w->border ().left + w->border ().right;
+    height = w->height () + w->border ().top + w->border ().bottom;
     out = screen->outputDeviceForGeometry (w->geometry ());
     o = &screen->outputDevs ().at (out);
     setScaleBigger (out, (float) width/o->width (),
@@ -1599,10 +1599,10 @@ EZoomScreen::zoomFitWindowToZoom (CompAction         *action,
     xwc.y = w->serverY ();
     xwc.width = (int) (screen->outputDevs ().at (out).width () *
 		       zooms.at (out).currentZoom -
-		       (int) ((w->input ().left + w->input ().right)));
+		       (int) ((w->border ().left + w->border ().right)));
     xwc.height = (int) (screen->outputDevs ().at (out).height () *
 			zooms.at (out).currentZoom -
-			(int) ((w->input ().top + w->input ().bottom)));
+			(int) ((w->border ().top + w->border ().bottom)));
 
     w->constrainNewWindowSize (xwc.width,
 			       xwc.height,
@@ -1727,8 +1727,8 @@ EZoomScreen::focusTrack (XEvent *event)
 	return;
     if (optionGetFocusFitWindow ())
     {
-	int width = w->width () + w->input ().left + w->input ().right;
-	int height = w->height () + w->input ().top + w->input ().bottom;
+	int width = w->width () + w->border ().left + w->border ().right;
+	int height = w->height () + w->border ().top + w->border ().bottom;
 	float scale = MAX ((float) width/screen->outputDevs ().at(out).width (),
 			   (float) height/screen->outputDevs ().at (out).height ());
 	if (scale > optionGetAutoscaleMin ())
