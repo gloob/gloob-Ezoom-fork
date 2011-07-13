@@ -1,0 +1,1093 @@
+Sam Spilsbury <sam.spilsbury@canonical.com>	2011-07-07
+
+    Add VERSION file (0.9.5.0)
+
+Sam Spilsbury <sam.spilsbury@canonical.com>	2011-03-15
+
+    Update for new core API
+
+Sam Spilsbury <sam.spilsbury@canonical.com>	2011-02-24
+
+    Handle default case as centered gravity. Shut up compiler
+
+Merge: ef82714 e2c8122
+Sam Spilsbury <smspillaz@gmail.com>	2011-01-05
+
+    Merge branch 'master' of git+ssh://git.opencompositing.org/git/compiz/plugins/ezoom
+
+Sam Spilsbury <smspillaz@gmail.com>	2011-01-05
+
+    Minor coding style nitpick
+
+Sam Spilsbury <smspillaz@gmail.com>	2011-01-05
+
+    Don't crash when XFixesGetCursorImage returns null.
+    
+    Instead fall back to providing a single pixel on screen and a warning message
+
+Kristian Lyngstol <kristian@bohemians.org>	2010-11-13
+
+    Use correct monitor when syncing mouse
+    
+    Fixes the initial sync-to-mouse when using multimonitor and triggering
+    focus tracking (for example).
+
+Sam Spilsbury <smspillaz@gmail.com>	2010-10-25
+
+    Force software cusor if we locked the zoom area and "hide original pointer" is disabled and we are syncing the mouse.
+    
+    It's simply not possible to use the hardware cursor in this case
+
+Sam Spilsbury <smspillaz@gmail.com>	2010-10-24
+
+    1) fix mouse flying to top-right corner on initiate (use of uninitialized variable)
+    2) Change the way the sync and pan options work - it is absurd to be able to enable both at the same time (and doing this causes bugs anyways)
+
+Merge: aa105ae ed92808
+Sam Spilsbury <smspillaz@gmail.com>	2010-10-24
+
+    Merge branch 'master' of git+ssh://git.opencompositing.org/git/compiz/plugins/ezoom
+    
+    Conflicts:
+src/ezoom.cpp           
+
+Sam Spilsbury <smspillaz@gmail.com>	2010-10-23
+
+    Cleanup (static analysis)
+
+Kristian Lyngstol <kristian@bohemians.org>	2010-09-26
+
+    Minor nitpicks, part one
+    
+    I am going through the code looking for stupid stuff I can fix, but ergh...
+
+Kristian Lyngstol <kristian@bohemians.org>	2010-09-25
+
+    Revert "Add theater mode."
+    
+    This reverts commit 5cf8515d741880d49e9ce03798f551c2afd79814.
+    
+    First: Wtf?
+    Secondly: This does not work for stuff like "zoom to window". If a
+    black-out-everything-but-what-you-need" feature is wanted, it should not be
+    married to clicking, that pretty much goes against everything ezoom is for.
+    Third: Bugs horribly. Within 20 seconds of testing I got it to black out
+    the entire screen, black out everything but an area I _had_ zoomed at.
+    Needs more work before I'm willing to accept it.
+
+Kristian Lyngstol <kristian@bohemians.org>	2010-09-25
+
+    Remove unused dsend
+
+Scott Moreau <oreaus@gmail.com>	2010-09-14
+
+    Fix uninitialized variable.
+
+Sam Spilsbury <smspillaz@gmail.com>	2010-09-05
+
+    Resize zoom list if a new output was added
+
+Scott Moreau <oreaus@gmail.com>	2010-08-18
+
+    Add theater mode.
+
+Kristian Lyngstol <kristian@bohemians.org>	2010-07-14
+
+    Handle mouse correctly for expo too
+    
+    (Thanks for pointing out the core-function maniac)
+
+Kristian Lyngstol <kristian@bohemians.org>	2010-07-11
+
+    Comment/header/todo update
+
+Kristian Lyngstol <kristian@bohemians.org>	2010-07-11
+
+    Comment out broken code for expo-handling
+    
+    I wrote dontuse* because it is NOT the same as othergrabexist(). I'm
+    leaving this commented out because I should fix this to make eZoom behave
+    when expo is active. (This code disablex drawing of pointers when any
+    plugin EXCEPT expo was active, which is the opposite of what it's supposed
+    to do).
+
+Kristian Lyngstol <kristian@bohemians.org>	2010-07-11
+
+    Remove XFixes workaround - bugs with app switcher
+    
+    (among other things, I'm sure.)
+
+Kristian Lyngstol <kristian@bohemians.org>	2010-07-11
+
+    Remove remnants of multiscreen support.
+
+Kristian Lyngstol <kristian@bohemians.org>	2010-07-11
+
+    Remove filter-option and adjust defaults
+    
+    FireFox doesn't seem to bug up. Until further notice, I'll let this be.
+
+Kristian Lyngstol <kristian@bohemians.org>	2010-07-11
+
+    Don't attempt to filter manually for now
+    
+    This was rather... random. Might add it back later.
+
+Kristian Lyngstol <kristian@bohemians.org>	2010-07-11
+
+    Whitespace removal squad
+
+Sam Spilsbury <smspillaz@gmail.com>	2010-07-04
+
+    Remove build dependency on compiztoolbox
+
+Scott Moreau <oreaus@gmail.com>	2010-07-03
+
+    Use better conditional to avoid constant polling and damage after loading the plugin.
+
+Sam Spilsbury <smspillaz@gmail.com>	2010-07-03
+
+    Re-add set_zoom_area and ensure_visibility, transfer from hardcoded .c file to .xml.in
+
+Sam Spilsbury <smspillaz@gmail.com>	2010-07-02
+
+    Disable once all internal grabs are released
+
+Sam Spilsbury <smspillaz@gmail.com>	2010-07-01
+
+    Simplify serialization interface
+
+Sam Spilsbury <SmSpillaz@gmail.com>	2010-06-12
+
+    Added serialization interface and necessary changes
+
+Sam Spilsbury <SmSpillaz@gmail.com>	2010-05-25
+
+    Load after decor plugin to prevent windows moving after plugin load
+
+Sam Spilsbury <SmSpillaz@gmail.com>	2010-05-09
+
+    ZoomScreen:: is in use by zoom and causes problems when both plugins are loaded, so change the class name to EZoomScreen
+
+Sam Spilsbury <smspillaz@XPS-FEDORA.(none)>	2010-04-29
+
+    Use C++ bool
+
+Sam Spilsbury <smspillaz@gmail.com>	2010-04-11
+
+    Ensure that we load after composite and opengl
+
+Sam Spilsbury <smspillaz@gmail.com>	2010-02-05
+
+    Warning fixes
+
+Sam Spilsbury <smspillaz@gmail.com>	2010-02-03
+
+    Fix possible segfault on 64-bit arch. due to passing 0 to va_list and retrieving it as pointer.
+    
+    Forward port of 0da257fabb5d030fc781b8ff7db90c5ffc6ea794 to master
+
+Sam Spilsbury <smspillaz@XPS-FEDORA.(none)>	2009-08-21
+
+    Remove dummy
+
+Sam Spilsbury <smspillaz@XPS-FEDORA.(none)>	2009-08-21
+
+    Dummy commit
+
+Sam Spilsbury <smspillaz@XPS-FEDORA.(none)>	2009-08-21
+
+    Fix indentation
+
+Sam Spilsbury <smspillaz@XPS-FEDORA.(none)>	2009-08-21
+
+    Fix box drawing in the wrong place
+
+Sam Spilsbury <smspillaz@XPS-FEDORA.(none)>	2009-08-21
+
+    Only enable paint functions when required
+
+Sam Spilsbury <smspillaz@XPS-FEDORA.(none)>	2009-08-21
+
+    Initial C++ port
+
+Danny Baumann <dannybaumann@web.de>	2009-01-05
+
+    Fix memory leak.
+
+Danny Baumann <dannybaumann@web.de>	2008-12-18
+
+    Load ezoom before staticswitcher to not mess up its display.
+
+Danny Baumann <dannybaumann@web.de>	2008-12-18
+
+    Name button and key actions consistently.
+
+Kristian Lyngstol <kristian@linpro.no>	2008-11-19
+
+    Remove default values for less-common bindings
+
+Kristian Lyngstol <kristian@linpro.no>	2008-11-15
+
+    Clean up the spelling in comments
+
+Kristian Lyngstol <kristian@linpro.no>	2008-10-15
+
+    Add scale threshold for autoscaling based on focus tracking.
+    
+    This prevents accidentally fullscreening of tiny dialog boxes, 5x5pixel
+    empty gtk menus, etc.
+
+Dennis Kasprzyk <onestone@compiz-fusion.org>	2008-10-13
+
+    Fixed cmake build.
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-09-02
+
+    When enabeling mouse polling, also refresh the current values
+    
+    Fixes incorrect mouse position on initial zoom until mouse moved.
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-09-02
+
+    Add static scaling of mouse pointer
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-06-18
+
+    Initialize lastChanged on start
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-06-16
+
+    Use a separate convenience function for setting scale to an area
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-06-16
+
+    Add minimum zoom factor option
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-06-16
+
+    Fix warning
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-05-29
+
+    Add damageScreen () on unload to avoid screen garbeling when unloading.
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-05-29
+
+    Make sure the cursor is shown in FiniScreen.
+    
+    Fixes issues cursor disappearing when unloading/reloading ezoom while
+    zoomed in.
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-05-24
+
+    More comment tweaks
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-05-24
+
+    Comment tweak
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-05-24
+
+    Do not try to restrain cursor when the cursor is bigger than the zoomed area
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-05-24
+
+    Get outputdevice for zoombox by geometry, not point
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-05-23
+
+    Add zoom box feature; select and area to zoom in on it.
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-05-22
+
+    Style and comment cleanups
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-05-22
+
+    Remove more mouse code (in favor of mousepoll), comment cleanups
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-05-22
+
+    Minor comment cleanups
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-05-22
+
+    Two for the price of one! Style fixes and removal of unused stuff.
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-05-22
+
+    Use the mousepoll plugin instead of polling localy
+
+Kristian Lyngstol <kristian@yoda.lyngstol.net>	2008-05-20
+
+    Obey texture filtering settings on cursor too
+    
+    This is not really a good permanent solution, ideally the cursor should
+    be handled by a CompTexture and thus get this automatically, but this is a
+    quick fix until I come up with something better.
+
+Kristian Lyngstol <kristian@yoda.lyngstol.net>	2008-05-20
+
+    Style cleanups, first iteration
+
+Dennis Kasprzyk <onestone@opencompositing.org>	2008-04-04
+
+    CMake build file.
+
+Dennis Kasprzyk <onestone@opencompositing.org>	2008-04-03
+
+    Makefile update.
+
+Danny Baumann <dannybaumann@web.de>	2008-03-17
+
+    Only send out sync request if new size is different from previous size.
+
+Dennis Kasprzyk <onestone@opencompositing.org>	2008-03-14
+
+    Makefile update.
+
+Dennis Kasprzyk <onestone@opencompositing.org>	2008-03-14
+
+    Makefile update.
+
+Danny Baumann <dannybaumann@web.de>	2008-03-12
+
+    Makefile update
+
+Dennis Kasprzyk <onestone@opencompositing.org>	2008-01-23
+
+    Makefile update.
+
+Kristian Lyngstol <kristian@bohemians.org>	2008-01-03
+
+    Fix fit_to_window binding (move from screen to display)
+
+Wendy Lin <solinde@gmail.com>	2008-01-01
+
+    Fixed <display> and <screen>. Unbreaks settings from previous commit.
+
+Wendy Lin <solinde@gmail.com>	2008-01-01
+
+    Rearrange settings metadata
+    
+    Closes #613
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-12-10
+
+    Comment/header adjustment
+
+Danny Baumann <dannybaumann@web.de>	2007-11-03
+
+    Use window parameter.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-10-31
+
+    Restrain window size according to size hints.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-10-09
+
+    Fix typo in ezoom.c too, fixes breakage caused by 4c0a0aa9c378fd0ceb783dc80789571e04d90ffb
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-10-07
+
+    Load before switcher to properly display it
+
+Danny Baumann <dannybaumann@web.de>	2007-09-07
+
+    Track core changes.
+
+Jigish Gohil <cyberorg@prime.cyberorg.info>	2007-09-06
+
+    typo correction, thanks Excentrik
+
+Guillaume Seguin <guillaume@segu.in>	2007-08-31
+
+    * Check core plugin ABIVERSION
+
+Guillaume Seguin <guillaume@segu.in>	2007-08-31
+
+    * Track core changes
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-08-23
+
+    Use the new action system
+    
+    ... Yes, I could/should have renamed the options. Sue me.
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-08-23
+
+    Compiz const-correctness update
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-08-22
+
+    Don't use width/height <= 1 cursor images
+    
+    These are (most often) bugged ones, and results in an invisible cursor.
+    This is an attempt to alliviate the XFixes bugs that causes certain
+    cursors to go poof. This is still a problem when NOT zoomed in. This
+    is a workaround that may or may not work. Feedback wanted.
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-08-22
+
+    Comment typo
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-08-22
+
+    Don't restrain the cursor at the end of a zoom area
+    
+    This closes #312, and gives access to the screen edges when restraining the
+    cursors.
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-08-22
+
+    Use cursor hotx/hoty/width/height when restraining the pointer
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-08-21
+
+    Add ensureVisibilityArea with gravity, use this for mouse panning
+    
+    This can still be improved by dynamically detecting which gravity to use
+    based on hotX/hotY.
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-08-15
+
+    Style fixes
+
+Roland Baer <roland@Vista.(none)>	2007-08-14
+
+    Checked malloc return value
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-08-11
+
+    Remove pan left/right/up/down default bindings
+    
+    These conflict with standard text selection by word bindings, and it's
+    not reasonable to find a good set of 4 bindings located in a manner that
+    make them properly intuitive to use.
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-08-11
+
+    Simplify zoom area locking by using a single toggle binding
+
+Dennis Kasprzyk <onestone@opencompositing.org>	2007-08-06
+
+    Makefile update.
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-07-30
+
+    Resolve binding conflict (closes #277)
+
+Guillaume Seguin <guillaume@segu.in>	2007-07-28
+
+    * Update metadata for i18n
+
+Guillaume Seguin <guillaume@segu.in>	2007-07-28
+
+    * xml => xml.in
+
+Guillaume Seguin <guillaume@segu.in>	2007-07-28
+
+    * Update Makefile
+
+Guillaume Seguin <guillaume@segu.in>	2007-07-28
+
+    * Add plugin.info
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-07-27
+
+    Remove redundant files
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-07-27
+
+    Dummy commit
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-07-27
+
+    Add a workaround for expo issues until we find a proper solution.
+    
+    By checking for expo specifically we go against the concept that plugins
+    are independant. However, this will work for now, fixing this is a high
+    priority.
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-07-27
+
+    Change default pan left/right bindings (fixes expo conflict)
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-07-24
+
+    Add bind to lock zoom areas
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-07-24
+
+    Add forgotten dopt
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-07-22
+
+    Add ensureVisibility action for dbus use
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-07-22
+
+    Modify set_zoom_area action to use x1/x2/y1/y2 instead of x/width/y/height
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-07-16
+
+    Remove obsolete deps/features from vtable
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-07-16
+
+    Add interface for positioning zoom through dbus
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-07-16
+
+    Remove ztrans variable and now unnecessary limits on zoom level
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-07-12
+
+    Change the fundamental way of zooming from ztranslations to scaling
+    
+    This makes it possible to zoom in to the extreme, as it avoids clipping
+    issues. This will require some more cleaning of now unused code, but it
+    should function fine.
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-07-11
+
+    Improve a few option descriptions
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-07-11
+
+    Group options and add accessibility category
+
+Kristian Lyngstol <kristian@nihilus.(none)>	2007-07-11
+
+    Center on mouse on zoomIn with syncMouse on
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-16
+
+    Add viewport state to the ZoomArea
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-16
+
+    Split ZoomArea initialisation out into a function
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-16
+
+    Properly initialise the ZoomAreas
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-15
+
+    Typo fix for ensureVisibility
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-15
+
+    Speling is diffcult. (Sollution->solution, allways->always)
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-15
+
+    Start the API work
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-15
+
+    Reduce mouse-warping and correct the ensureVisibility () function
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-15
+
+    Whitespace
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-15
+
+    Split focus tracking out of the event handler
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-15
+
+    Rename to ezoom (enhanced zoom) to avoid name conflict
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-14
+
+    Comments
+    
+    Description of both the fundamental zoom process and the two different ways
+    of handeling input.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-10
+
+    Improve visibility of the cursor when panning; take width/height into consideration.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-10
+
+    Multihead fix for focus track; only zoom in if the head is allready zoomed
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-10
+
+    Comment/document
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-10
+
+    Don't worry about dynamic maxTranslate
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-10
+
+    Remove unused variables
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-10
+
+    Remove unused variable
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-09
+
+    Calculate for multihead when converting to zoomed coordinates
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-09
+
+    Improve precision in inMovement ()
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-09
+
+    Only re-damage screen when moving AND active. Mouse stuff.
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-09
+
+    Shift correctly for the grab mask
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-09
+
+    Use target zoom (not current) when using target translations
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-09
+
+    Style tuneups
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Don't call cursorZoom(In)Active () except in setScale
+    
+    Reduces risk of "loosing" the cursor.
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Style cleanups
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Style fixes
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Restrain cursor when zoom area is moved and mouse panning is on
+    
+    Might be a better option to center it.
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Proper mouse panning/restraining option handeling
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Rudementary mouse-panning
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Use convertToZoomed () in drawCursor() to find the translation value.
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Reduce overhead on mouse sync operations
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Cleanups
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Move the final translation updates to a function.
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Improve movementdetection
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Don't keep a seperate moving state variable.
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Simplify damaging in doneScreen
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-08
+
+    Use a mask output-based mask as zs->grabbed
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-07
+
+    Option to restrain the mouse to the zoom area
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-07
+
+    Further simplification/cleanup
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-07
+
+    Disable cursor zoom if the head the cursor is on is not zoomed.
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-07
+
+    Set the GL context to the one the cursor is stored in
+    
+    This makes sure the context is correct when the cursor texture is updated.
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-07
+
+    Whitespace
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-07
+
+    Indentation cleanup
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-07
+
+    Remove unused variable.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-07
+
+    Remove cube-option-detection
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-07
+
+    Tiny multihead fix for setCenter
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-06
+
+    Minor bigscreen-multihead fixes
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-06
+
+    Don't crash on fullscreenOutput
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-06
+
+    Center mouse correctly for bigscreen
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-06
+
+    Mousefixes for xinerama
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-06
+
+    Mindblowing ugly, dirty bigscreen code
+    
+    This will get cleaned up and probably partially redone ASAP.
+    If it bugs up: Revert it. It's not meant for actual use yet.
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-04
+
+    Don't zoom specific if a screen grab is held
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-04
+
+    Rule after expo and return false when zooming out when allready out
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-04
+
+    Use fullscreenOutput when zooming (twinview/xinerama/mergedfb fix, hopefully)
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-04
+
+    Cleanup/reordering
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-06-04
+
+    Fit window to zoom area (resize window) binding
+    
+    This is not really all that good yet: It only works good if the window's
+    x/y is aligned with 0,0 of the zoom area, since x/y of the window isn't moved.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-01
+
+    Binding to center the mouse
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-06-01
+
+    Adjust for recent core changes
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-05-31
+
+    Adjust the pan-distance to the zoom level
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-05-31
+
+    Adjust description of sync_mouse (No longer a must)
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-05-31
+
+    Whitespace
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-05-31
+
+    Remove unused sensitivity setting
+
+Kristian Lyngstøl <kristian@albus.(none)>	2007-05-31
+
+    Don't center on the mouse when triggering a zoom in binding
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-30
+
+    Take zoom level into account when drawing the mouse cursor
+    
+    This lets us disable "sync mouse" and still show a sane mouse pointer.
+    This also makes the demand for restricting the cursor and diffrent panning
+    modes obvious.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-30
+
+    Remove debug output
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-30
+
+    Scale the mouse pointer
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-29
+
+    Stop caring about screen grabs
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-29
+
+    Option to allways fit the focused window to the zoom area even when zoomed out
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-29
+
+    Option to fit zoom area to the window when focus tracking triggers
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-29
+
+    Don't divide by zero when zooming out.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-29
+
+    zoomToWindow only needs a CompWindow
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-28
+
+    Fix zoomArea math.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-28
+
+    Add a fit zoom area to window action
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-28
+
+    Reverse logic of setScale value selection
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-28
+
+    Comment updates
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-28
+
+    More code reordering
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Slightly increase focus tracking precision
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Remove redundant and broken option handeling code. Fixes zoomOut binding.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Improve the focus tracking precision
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Improve focus tracking precision and add keyboard panning
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Remove obsolete/unused API file
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Adjust default settings
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Enum instead of macro list of options.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Reorder and comment
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Only update mouse for the grabbed screen
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Make sure we allways know where the mouse is
+    
+    This is needed for syncCenterToMouse to work correctly, as it relies on this
+    data.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Whitespace
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Whitespace
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-24
+
+    Janitor work...
+    
+    Move code to the correct places and whitespace fixes.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-23
+
+    Reduce the amount of mouse syncing and moving around
+    
+    Don't sync mouse when we're about to zoom all the way out.
+    Use 0.0f as a base translation when starting.
+    Instant translation on setZoomArea
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-23
+
+    Pre-defined zoom levels by hotkey
+    
+    Might change this to use alist instead.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-22
+
+    Sane default speed
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-22
+
+    Linear filtering based on the option only, not zoom factor and velocity
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-22
+
+    Gradually move the zoom area instead of instantly.
+    
+    Uses a target and a real(current) translation state: Mouse movement will
+    update both (You don't want the zoom area to lagg behind the mouse), while
+    anything else will update the target, causing a gradual shift. (Making focus
+    tracking actually workable). Also syncs the mouse properly along the way and
+    adds the concept of a "moving" state. Needs some brushes.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-22
+
+    Remove occurences of an extra sync_mouse in the .xml
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-21
+
+    Add mouse poll timeout and options for the previously hardcoded variables
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-20
+
+    Clean up, will use launchpad for timeline/specs etc.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-20
+
+    Improved the borked math in setZoomArea
+    
+    This is still not correct. The factor to multiply by is only correct
+    when newZoom == 0.5f, when it's lower, it'll gradually become more
+    incorrect.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-20
+
+    Only act on focus change if mouse hasn't moved in a couple of seconds.
+    
+    The delay will be configurable.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-20
+
+    Detect screen grabs during focus tracking
+    
+    This might have to get tuned a bit. The idea is that plugins like
+    move will push a grab, then a focusIn event will trigger, we detect it,
+    which is easy, but we also store it, because once move releases the
+    grab, it will trigger another FocusIn event, and this time there's
+    no screen grab (since it was just removed).
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-20
+
+    Documentation update
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-19
+
+    Update authors
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-19
+
+    Center the screen at the requested area (AKA: fix focus tracking effect)
+    
+    This makes sure the center at the zoom area is at the center of the screen,
+    if possible. So far, only the focus tracking uses this, but it will hopefully
+    be used elsewhere too eventually.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-19
+
+    Move the code around
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-19
+
+    Basic focus tracking
+    
+    The actual focus tracking works fairly well, except it needs some
+    anti sloppy-focus work possibly. The setZoomArea() however, does not
+    work well, and since it's ued by focus following, focus following appears
+    broken too.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-18
+
+    Use setScale for setting the zoom level.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-18
+
+    Dirty input-enabled zoom.
+    
+    This is a quick hack, and needs to be properly cleaned up. It works quite
+    well, but there is a lot of dead code.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-18
+
+    Input-enabled original zoom.... not pretty.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-18
+
+    Original zoom plugin
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-18
+
+    Remove old ezoom stuff
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-18
+
+    Add the beryl inputzoom and core compiz zoom plugin
+    
+    These aren't really "old", nor do I really plan to modify them. Just
+    keeping them here for practical reasons.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-18
+
+    Add license file, adjust ezoom.c for recent vtable changes
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-05-01
+
+    Skeleton of a build system
+    
+    Based on ADDHelper, Makefile froum compiz-scheme.
+    Nothing to see here, move along.
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-04-30
+
+    Rename CONCEPT to Concept
+
+Kristian Lyngstol <kristian@bohemians.org>	2007-04-30
+
+    Concept documentation and timeline/todo
+
+kristian <kristian@de35.org>	2007-04-30
+
+    Dummy commit
