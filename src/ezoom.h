@@ -44,6 +44,7 @@
 #include <composite/composite.h>
 #include <opengl/opengl.h>
 #include <mousepoll/mousepoll.h>
+#include <accessibility/accessibility.h>
 
 
 #include "ezoom_options.h"
