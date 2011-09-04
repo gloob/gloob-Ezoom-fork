@@ -604,6 +604,12 @@ EZoomScreen::enableMousePolling ()
     mouse = MousePoller::getCurrentPosition ();
 }
 
+void
+EZoomScreen::enableAccessibility ()
+{
+    ;
+}
+
 /* Sets the zoom (or scale) level.
  * Cleans up if we are suddenly zoomed out.
  */
@@ -1793,6 +1799,13 @@ EZoomScreen::handleEvent (XEvent *event)
     screen->handleEvent (event);
 }
 
+void
+EZoomScreen::handleA11yEvent (const A11yEvent *event)
+{
+    compLogMessage ("EZoom", CompLogLevelInfo,
+                    "event->type: %s\n", event->type);
+}
+
 /* TODO: Use this ctor carefully */
 
 EZoomScreen::CursorTexture::CursorTexture () :
@@ -1869,6 +1882,10 @@ EZoomScreen::EZoomScreen (CompScreen *screen) :
     pollHandle.setCallback (boost::bind (
 				&EZoomScreen::updateMouseInterval, this, _1));
 
+    a11yHandle = new Accessibility();
+    a11yHandle->registerEventHandler ("object:", boost::bind (
+                        &EZoomScreen::handleA11yEvent, this, _1));
+
     optionSetZoomInButtonInitiate (boost::bind (&EZoomScreen::zoomIn, this, _1,
 						_2, _3));
     optionSetZoomOutButtonInitiate (boost::bind (&EZoomScreen::zoomOut, this, _1,
@@ -1928,6 +1945,9 @@ EZoomScreen::~EZoomScreen ()
 
     if (pollHandle.active ())
 	pollHandle.stop ();
+
+    if (a11yHandle->active ())
+    a11yHandle->unregisterAll ();
 
     if (zooms.size ())
 	zooms.clear ();

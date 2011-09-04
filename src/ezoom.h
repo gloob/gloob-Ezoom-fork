@@ -185,6 +185,8 @@ class EZoomScreen :
 
 	MousePoller		 pollHandle; // mouse poller object
 
+    Accessibility    *a11yHandle; // Accessibility object
+
      private:
 
 	bool fixesSupported;
@@ -212,6 +214,9 @@ class EZoomScreen :
 
 	void
 	handleEvent (XEvent *);
+
+    void
+    handleA11yEvent (const A11yEvent *);
 
     public:
 
@@ -250,6 +255,9 @@ class EZoomScreen :
 
 	void
 	enableMousePolling ();
+
+    void
+    enableAccessibility ();
 
 	void
 	setScale (int out, float value);
