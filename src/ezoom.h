@@ -216,7 +216,7 @@ class EZoomScreen :
 	handleEvent (XEvent *);
 
     void
-    handleA11yEvent (const A11yEvent *);
+    handleAccessibilityEvent (AccessibilityEvent *event);
 
     public:
 

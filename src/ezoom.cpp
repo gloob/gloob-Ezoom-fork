@@ -1800,10 +1800,32 @@ EZoomScreen::handleEvent (XEvent *event)
 }
 
 void
-EZoomScreen::handleA11yEvent (const A11yEvent *event)
+EZoomScreen::handleAccessibilityEvent (AccessibilityEvent *event)
 {
+    AccessibleObject *object = event->getAccessibleObject ();
+    
     compLogMessage ("EZoom", CompLogLevelInfo,
                     "event->type: %s\n", event->type);
+    
+    if (object->is (Component))
+    {
+        AccessibilityComponent *e = dynamic_cast<AccessibilityComponent *> (object->get (Component));
+        CompRect rect = e->getExtents ();
+
+        compLogMessage ("Ezoom", CompLogLevelInfo,
+                        "ensureVisibilityArea [%d, %d] [%d, %d]\n",
+                        rect.x1(), rect.y1(), rect.x2(), rect.y2());
+
+        if (optionGetZoomMode () == EzoomOptions::ZoomModePanArea)
+        {
+            ensureVisibilityArea (rect.x1(),
+                                  rect.y1(),
+                                  rect.x2(),
+                                  rect.y2(),
+                                  optionGetRestrainMargin (),
+                                  NORTHWEST);
+        }
+    }
 }
 
 /* TODO: Use this ctor carefully */
@@ -1884,7 +1906,7 @@ EZoomScreen::EZoomScreen (CompScreen *screen) :
 
     a11yHandle = new Accessibility();
     a11yHandle->registerEventHandler ("object:", boost::bind (
-                        &EZoomScreen::handleA11yEvent, this, _1));
+                        &EZoomScreen::handleAccessibilityEvent, this, _1));
 
     optionSetZoomInButtonInitiate (boost::bind (&EZoomScreen::zoomIn, this, _1,
 						_2, _3));
