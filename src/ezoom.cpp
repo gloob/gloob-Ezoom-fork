@@ -1830,6 +1830,29 @@ EZoomScreen::handleAccessibilityEvent (AccessibilityEvent *event)
                                   NORTHWEST);
         }
     }
+
+    if (object->is (Text))
+    {
+        AccessibilityText::Ptr at = 
+            boost::static_pointer_cast<AccessibilityText>
+            (object->getEntity (Text));
+
+        CompRect rect = at->getCharacterExtents (at->getCaretOffset ());
+
+        compLogMessage ("Ezoom", CompLogLevelInfo,
+                        "TEXT - [%d, %d] [%d, %d]\n",
+                        rect.x1(), rect.y1(), rect.x2(), rect.y2());
+
+        if (optionGetZoomMode () == EzoomOptions::ZoomModePanArea)
+        {
+            ensureVisibilityArea (rect.x1(),
+                                  rect.y1(),
+                                  rect.x2(),
+                                  rect.y2(),
+                                  optionGetRestrainMargin (),
+                                  NORTHWEST);
+        }
+    }
 }
 
 /* TODO: Use this ctor carefully */
@@ -1910,6 +1933,8 @@ EZoomScreen::EZoomScreen (CompScreen *screen) :
 
     a11yHandle = new Accessibility();
     a11yHandle->registerEventHandler ("object:state-changed", boost::bind (
+                        &EZoomScreen::handleAccessibilityEvent, this, _1));
+    a11yHandle->registerEventHandler ("object:text-changed", boost::bind (
                         &EZoomScreen::handleAccessibilityEvent, this, _1));
 
     optionSetZoomInButtonInitiate (boost::bind (&EZoomScreen::zoomIn, this, _1,
