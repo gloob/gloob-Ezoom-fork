@@ -1806,11 +1806,15 @@ EZoomScreen::handleAccessibilityEvent (AccessibilityEvent *event)
     
     compLogMessage ("EZoom", CompLogLevelInfo,
                     "event->type: %s\n", event->type);
-    
+
     if (object->is (Component))
     {
-        AccessibilityComponent *e = dynamic_cast<AccessibilityComponent *> (object->get (Component));
-        CompRect rect = e->getExtents ();
+        
+        AccessibilityComponent::Ptr ac = 
+            boost::static_pointer_cast<AccessibilityComponent>
+            (object->getEntity (Component));
+
+        CompRect rect = ac->getExtents ();
 
         compLogMessage ("Ezoom", CompLogLevelInfo,
                         "ensureVisibilityArea [%d, %d] [%d, %d]\n",
@@ -1905,7 +1909,7 @@ EZoomScreen::EZoomScreen (CompScreen *screen) :
 				&EZoomScreen::updateMouseInterval, this, _1));
 
     a11yHandle = new Accessibility();
-    a11yHandle->registerEventHandler ("object:", boost::bind (
+    a11yHandle->registerEventHandler ("object:state-changed", boost::bind (
                         &EZoomScreen::handleAccessibilityEvent, this, _1));
 
     optionSetZoomInButtonInitiate (boost::bind (&EZoomScreen::zoomIn, this, _1,
