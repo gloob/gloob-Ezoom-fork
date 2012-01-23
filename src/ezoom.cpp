@@ -1805,7 +1805,7 @@ EZoomScreen::handleAccessibilityEvent (AccessibilityEvent *event)
     AccessibleObject *object = event->getAccessibleObject ();
     
     compLogMessage ("EZoom", CompLogLevelInfo,
-                    "event->type: %s\n", event->type);
+                    "event->type: %s\n", event->getType());
 
     if (object->is (Component))
     {
