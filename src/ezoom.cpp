@@ -1751,11 +1751,9 @@ EZoomScreen::focusTrack (XEvent *event)
 void
 EZoomScreen::handleEvent (XEvent *event)
 {
-    XMotionEvent *mev;
 
     switch (event->type) {
 	case MotionNotify:
-	    mev =  (XMotionEvent *) event;
 	    if (grabIndex)
 	    {
 	        if (pointerX < clickPos.x ())
