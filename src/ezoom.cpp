@@ -1996,7 +1996,7 @@ EZoomScreen::~EZoomScreen ()
 	pollHandle.stop ();
 
     if (a11yHandle->active ())
-    a11yHandle->unregisterAll ();
+	a11yHandle->unregisterAll ();
 
     if (zooms.size ())
 	zooms.clear ();
